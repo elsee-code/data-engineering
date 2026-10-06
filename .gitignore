@@ -1,0 +1,11 @@
+# Clés et identifiants : jamais dans le dépôt
+*.key.json
+*-key.json
+cle*.json
+service-account*.json
+.clasprc.json
+.env
+.env.*
+
+node_modules/
+.DS_Store
