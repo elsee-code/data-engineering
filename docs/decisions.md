@@ -10,7 +10,7 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 | 0. Informations et accès manquants | Faite le 5 oct. ; réponses reçues le 6 oct. (voir ci-dessous) |
 | 1. Découverte | Requêtes écrites dans [`sql/decouverte/`](../sql/decouverte/), **pas encore exécutées** : la clé fournie est incomplète (voir l'entrée du 6 oct., 2e session) |
 | 2. Calcul (config du graphe + vues) | À faire après validation de l'étape 1 |
-| 3. Affichage (Apps Script ou Odoo : à trancher) | À faire |
+| 3. Affichage Apps Script | À faire |
 | 4. Automatisation et alertes | À faire |
 | 5. Documentation | À faire |
 
@@ -18,14 +18,9 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 
 Non bloquantes pour l'étape 1.
 
-- **Outil d'affichage** : le brief du dépôt prévoit une page web Apps Script ;
-  le texte de mission renvoyé le 6 oct. (2e session) parle d'un module Odoo 17
-  sur backoffice.elsee.care. Lequel fait foi ? Les étapes 1 et 2 (découverte,
-  vues BigQuery) sont les mêmes dans les deux cas.
-- **Passages sur plusieurs sessions** (à trancher à l'étape 2, chiffres de la
-  requête 08 à l'appui) : les explorations GA4 comptent une étape même si elle
-  a lieu dans une autre session, des heures plus tard ; le brief exige la même
-  session pour un passage. Voir l'entrée du 6 oct., 2e session.
+- **Passage /mon-panier → /bienvenue-chez-elsee** : accepter une session
+  différente du même utilisateur, et dans quel délai (proposition : 24 h) ? Voir
+  l'entrée « Réponses d'Eglantine » du 6 oct., 2e session.
 - **Réglages GA4** (utiles pour expliquer les écarts à la recette) : mode de
   consentement (Consent Mode v2 basique ou avancé, outil de consentement),
   identité pour les rapports (combinée, observée ou basée sur l'appareil).
@@ -41,6 +36,29 @@ Non bloquantes pour l'étape 1.
 - Pour les étapes 3 et 4 : compte propriétaire du script Apps Script, qui doit
   voir la page (tout le monde en @elsee.care ?), destinataires des alertes, qui
   lance `clasp push`.
+
+## 2026-10-06 (2e session) — Réponses d'Eglantine
+
+- **Affichage : page web Apps Script**, pas de module Odoo (Eglantine ne peut
+  pas l'ouvrir dans Odoo). Le brief du dépôt reste valable ; le texte de mission
+  qui parlait d'Odoo est écarté.
+- **Une page de paiement sépare /mon-panier et /bienvenue-chez-elsee** : le
+  retour du paiement ouvre sans doute une nouvelle session. Avec la règle du
+  brief (passage dans la même session), la flèche /mon-panier →
+  /bienvenue-chez-elsee serait presque toujours vide.
+
+  Proposition, à valider : pour cette seule flèche, compter le passage si le
+  même utilisateur (`user_pseudo_id`) voit /bienvenue-chez-elsee après
+  /mon-panier, dans la même session ou dans une session suivante, **dans les
+  24 h**. Le parcours (offre directe, long form, compléments, carte cadeau) est
+  celui du dernier /mon-panier vu avant. Les autres flèches gardent la règle de
+  la même session. Les requêtes 05 et 08 de l'étape 1 diront d'où reviennent
+  ces sessions (domaine de paiement) et si l'utilisateur garde bien le même
+  identifiant.
+
+  À noter : ajouter le domaine de paiement aux « sites référents indésirables »
+  de GA4 éviterait la coupure de session à l'avenir (sans effet sur
+  l'historique). Ce réglage GA4 relève d'Eglantine : nous ne modifions pas GA4.
 
 ## 2026-10-06 (2e session) — Nouveau fichier de référence, clé d'accès
 
