@@ -8,7 +8,7 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 | Étape | État |
 |---|---|
 | 0. Informations et accès manquants | Faite le 5 oct. ; réponses reçues le 6 oct. (voir ci-dessous) |
-| 1. Découverte | Requêtes écrites dans [`sql/decouverte/`](../sql/decouverte/), **pas encore exécutées** : la clé fournie est incomplète (voir l'entrée du 6 oct., 2e session) |
+| 1. Découverte | Requêtes écrites dans [`sql/decouverte/`](../sql/decouverte/), **pas encore exécutées** : la clé fournie n'est pas une clé active du compte (voir l'entrée du 6 oct., 3e session) |
 | 2. Calcul (config du graphe + vues) | À faire après validation de l'étape 1 |
 | 3. Affichage Apps Script | À faire |
 | 4. Automatisation et alertes | À faire |
@@ -36,6 +36,26 @@ Non bloquantes pour l'étape 1.
 - Pour les étapes 3 et 4 : compte propriétaire du script Apps Script, qui doit
   voir la page (tout le monde en @elsee.care ?), destinataires des alertes, qui
   lance `clasp push`.
+
+## 2026-10-06 (3e session) — Clé du compte de service : complète mais refusée
+
+`GCP_SA_KEY_JSON` contient maintenant le fichier JSON complet, cohérent
+(`client_email`, `client_x509_cert_url` et `project_id` désignent tous
+`funnel-dev@ga4-chemin-form.iam.gserviceaccount.com`), et la clé privée est
+lisible (RSA 2048 bits). Mais Google refuse la connexion (« Invalid JWT
+Signature »), deux fois de suite, l'horloge de la session étant à l'heure.
+
+Cause : comparée aux certificats publics du compte, la clé du fichier (ID
+commençant par `12a4df00`) ne fait partie d'aucune des deux clés actives
+(`1e9c0cfe…`, `b40ed416…`). Elle a donc été supprimée après téléchargement, ou
+le fichier a été modifié à la main (clé privée ou ID venant d'ailleurs).
+
+À faire par Eglantine : console Google Cloud → IAM et administration → Comptes
+de service → `funnel-dev` → onglet Clés → Ajouter une clé → Créer une clé →
+JSON. Mettre le fichier téléchargé **tel quel, sans le modifier**, dans
+`GCP_SA_KEY_JSON` (base64 sur une ligne : `base64 -i cle.json | pbcopy`), puis
+ouvrir une nouvelle session. Les clés inutilisées pourront ensuite être
+supprimées.
 
 ## 2026-10-06 (2e session) — Réponses d'Eglantine
 
