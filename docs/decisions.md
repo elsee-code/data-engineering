@@ -81,6 +81,17 @@ Constats principaux :
 
 Rien n'a été créé dans BigQuery (lecture seule).
 
+Branches : `main` contient tout le travail. La suppression des anciennes
+branches demandée par Eglantine a échoué : GitHub refuse la suppression depuis
+la session (erreur 403), et la branche par défaut du dépôt était encore
+`claude/beautiful-turing-haxwv7` (une branche par défaut ne peut pas être
+supprimée). Les deux anciennes branches sont entièrement contenues dans `main` :
+les supprimer ne perd rien. À faire par Eglantine sur GitHub :
+
+1. Settings → General → Default branch → choisir `main` ;
+2. puis onglet Code → Branches → supprimer `claude/beautiful-turing-haxwv7` et
+   `claude/gifted-ride-oin2dt` (icône corbeille).
+
 ## 2026-10-06 (4e session) — Une seule branche principale : `main`
 
 Demande d'Eglantine : fusionner le travail dans une branche principale, pour que
