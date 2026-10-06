@@ -8,7 +8,7 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 | Étape | État |
 |---|---|
 | 0. Informations et accès manquants | Faite le 5 oct. ; réponses reçues le 6 oct. (voir ci-dessous) |
-| 1. Découverte | Requêtes écrites dans [`sql/decouverte/`](../sql/decouverte/), **pas encore exécutées** : la clé fournie n'est pas une clé active du compte (voir l'entrée du 6 oct., 3e session) |
+| 1. Découverte | Requêtes écrites dans [`sql/decouverte/`](../sql/decouverte/), **pas encore exécutées** : la clé fonctionne, mais le compte de service n'a pas le droit de lire l'export GA4 (voir l'entrée du 6 oct., 4e session) |
 | 2. Calcul (config du graphe + vues) | À faire après validation de l'étape 1 |
 | 3. Affichage Apps Script | À faire |
 | 4. Automatisation et alertes | À faire |
@@ -36,6 +36,51 @@ Non bloquantes pour l'étape 1.
 - Pour les étapes 3 et 4 : compte propriétaire du script Apps Script, qui doit
   voir la page (tout le monde en @elsee.care ?), destinataires des alertes, qui
   lance `clasp push`.
+- Pour l'étape 2 : le compte de service devra écrire dans `elsee_funnel`, qui
+  n'existe pas encore. Soit Eglantine crée ce dataset (même région que l'export)
+  et donne au compte le rôle « Éditeur de données BigQuery » dessus, soit elle
+  lui donne le droit de créer des datasets dans le projet (rôle « Utilisateur
+  BigQuery »). À trancher avant l'étape 2.
+
+## 2026-10-06 (4e session) — Une seule branche principale : `main`
+
+Demande d'Eglantine : fusionner le travail dans une branche principale, pour que
+les prochaines sessions partent toujours du bon endroit.
+
+- Avant : chaque session travaillait sur sa propre branche `claude/…`, et la
+  branche par défaut du dépôt (`claude/beautiful-turing-haxwv7`) était restée
+  au premier commit. Une nouvelle session repartait donc d'un état périmé.
+- Désormais : **`main` contient tout le travail.** Chaque session part de
+  `main`, travaille sur sa branche de session, puis fusionne son travail dans
+  `main` (avance rapide, sans réécrire l'historique) et pousse `main` avant de
+  finir. Règle ajoutée à [`CLAUDE.md`](../CLAUDE.md).
+- À faire par Eglantine : sur GitHub, dépôt `data-engineering` → Settings →
+  General → Default branch → choisir `main`. Ensuite, les anciennes branches
+  `claude/beautiful-turing-haxwv7` et `claude/gifted-ride-oin2dt` pourront être
+  supprimées (sur son accord).
+
+## 2026-10-06 (4e session) — Clé acceptée, mais pas de droit de lecture
+
+La nouvelle clé (base64) est acceptée par Google :
+[`scripts/activer_cle_gcp.sh`](../scripts/activer_cle_gcp.sh) active bien
+`funnel-dev@ga4-chemin-form.iam.gserviceaccount.com`. L'avertissement « Cloud
+Resource Manager API has not been used » qui s'affiche est sans effet sur
+BigQuery.
+
+Mais le compte peut seulement lancer des requêtes : il ne voit aucun dataset du
+projet, et la lecture de `analytics_383563328` est refusée
+(« bigquery.tables.list denied », « User does not have permission to query
+table … events_* »). **L'étape 1 n'a toujours pas pu être exécutée.**
+
+À faire par Eglantine : dans la console Google Cloud, BigQuery → ouvrir le
+dataset `analytics_383563328` → Partage → Autorisations → Ajouter un compte
+principal : `funnel-dev@ga4-chemin-form.iam.gserviceaccount.com`, rôle
+**Lecteur de données BigQuery** (`roles/bigquery.dataViewer`). Ce rôle donne la
+lecture seule, sur ce seul dataset. Pas besoin de changer la clé ; le droit
+peut mettre quelques minutes à s'appliquer.
+
+Le script vérifie maintenant ce droit de lecture à la fin (requête simulée, rien
+n'est lu ni facturé) et le signale clairement s'il manque.
 
 ## 2026-10-06 (3e session) — Clé du compte de service : complète mais refusée
 

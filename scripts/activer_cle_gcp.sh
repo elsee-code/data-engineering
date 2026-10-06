@@ -60,5 +60,23 @@ PY
 
 chmod 600 "$cle"
 env -u CLOUDSDK_AUTH_ACCESS_TOKEN gcloud auth activate-service-account --key-file="$cle" --quiet
+# L'avertissement « Cloud Resource Manager API has not been used » qui peut
+# suivre est sans effet sur BigQuery.
 env -u CLOUDSDK_AUTH_ACCESS_TOKEN gcloud config set project ga4-chemin-form --quiet
 echo "Compte de service activé. Clé écrite dans ${cle} (hors du dépôt)."
+
+# Vérifie le droit de lecture sur l'export GA4 (simulation : rien n'est lu ni
+# facturé).
+if erreur=$(env -u CLOUDSDK_AUTH_ACCESS_TOKEN bq query --project_id=ga4-chemin-form \
+     --use_legacy_sql=false --dry_run \
+     'SELECT event_date FROM `ga4-chemin-form.analytics_383563328.events_*` LIMIT 1' \
+     2>&1); then
+  echo "Lecture de analytics_383563328 : autorisée."
+elif grep -q "Access Denied" <<<"$erreur"; then
+  echo "Lecture de analytics_383563328 : refusée. Donner au compte de service le rôle « Lecteur de données BigQuery » sur ce dataset (voir docs/decisions.md)." >&2
+  exit 2
+else
+  echo "Test de lecture de analytics_383563328 en échec :" >&2
+  echo "$erreur" >&2
+  exit 2
+fi

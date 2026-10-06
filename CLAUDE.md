@@ -21,3 +21,7 @@ projet, décisions, questions ouvertes), puis [`docs/brief.md`](docs/brief.md).
 - Ne modifier ni GTM ni GA4.
 - Ne rien deviner : si une information manque, la demander.
 - Tenir `docs/decisions.md` à jour à chaque décision.
+- Branche principale : `main`. Partir de `main` ; en fin de session, fusionner
+  le travail de la branche de session dans `main` (avance rapide, sans
+  réécrire l'historique) et pousser `main`, pour que la session suivante parte
+  du bon endroit.
