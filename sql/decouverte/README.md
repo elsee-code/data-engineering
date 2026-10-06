@@ -14,6 +14,20 @@ de BigQuery.
 | `06_transitions_tunnel.sql` | Transitions réellement observées entre pages du tunnel (flèches, raccourcis NON, transitions hors schéma) |
 | `07_pages_intercalees.sql` | Pages hors motif vues juste après une page du tunnel (étapes oubliées par le motif ?) |
 | `08_ruptures_de_session.sql` | Pages du tunnel sur lesquelles une session démarre (rupture inter-domaines, retour de paiement, inactivité) |
+| `09_identite_www_vers_app.sql` | Sessions ouvertes sur app.elsee.care depuis www.elsee.care : la personne garde-t-elle son identifiant GA4 ? |
+| `10_evenements_formulaire_paiement.sql` | Pages et paramètres des événements `step_form`, `form_start`, `click_form`, `add_to_cart`, `order_paid` ; pages `/success` et `/bienvenue-chez-elsee` |
+| `11_identite_retour_vers_www.sql` | Retour vers www.elsee.care (depuis app ou Stripe) : même identifiant, même session ? |
+| `12_nouvelle_etape_par_heure.sql` | Après `/signup/medecine_douce_step`, heure par heure : `en_savoir_plus_sur_vous` ou `depenses_sports` ? |
+| `13_provenance_entrees_app.sql` | Arrivées sur le formulaire selon la page de www.elsee.care d'origine (réponse : la provenance est réduite au domaine) |
+
+Les requêtes 09 à 13 ont été ajoutées après une première lecture des résultats.
+Résultats du 5 octobre 2026 (agrégats seulement) :
+[`resultats/20261005/`](resultats/20261005/). Analyse :
+[`docs/etape1_decouverte.md`](../../docs/etape1_decouverte.md).
+
+Attention : le motif `motif_tunnel` des requêtes 04 à 08 attrape aussi
+`/remboursements`, une page de l'espace membre (préfixe « remboursement ») ;
+l'ignorer dans les résultats.
 
 ## Lancer une requête
 
@@ -58,5 +72,4 @@ Eglantine avant l'étape 2 :
 
 Note : les requêtes trient les pages d'une session avec `event_timestamp` puis
 les champs `batch_ordering_id`, `batch_page_id` et `batch_event_index` de
-l'export. Si ces champs n'existent pas dans le schéma de la table, les retirer
-des clauses `ORDER BY`.
+l'export (présents dans les tables, vérifié le 6 oct.).

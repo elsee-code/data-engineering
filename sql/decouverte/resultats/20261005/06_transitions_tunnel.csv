@@ -1,0 +1,212 @@
+depuis,vers,utilisateurs,passages
+app.elsee.care/mon-offre,(aucune autre page du tunnel),80,87
+app.elsee.care/mon-offre,app.elsee.care/mon-panier,47,61
+app.elsee.care/mon-offre,app.elsee.care/pricing/cartecadeau,12,14
+app.elsee.care/mon-offre,app.elsee.care/signup/offre_en_preparation,7,9
+app.elsee.care/mon-offre,app.elsee.care/signup,6,6
+app.elsee.care/mon-offre,app.elsee.care/signup/final_step,2,2
+app.elsee.care/mon-offre,app.elsee.care/signup/depenses_complements,2,2
+app.elsee.care/mon-offre,app.elsee.care/social_signup,2,2
+app.elsee.care/mon-offre,www.elsee.care/obtenir-mon-offre,1,1
+app.elsee.care/mon-offre,app.elsee.care/offres,1,1
+app.elsee.care/mon-offre,app.elsee.care/signup/en_savoir_plus_sur_vous,1,1
+app.elsee.care/mon-panier,(aucune autre page du tunnel),46,50
+app.elsee.care/mon-panier,app.elsee.care/mon-offre,17,19
+app.elsee.care/mon-panier,www.elsee.care/bienvenue-chez-elsee,3,3
+app.elsee.care/mon-panier,app.elsee.care/remboursements,3,3
+app.elsee.care/mon-panier,app.elsee.care/offres,2,3
+app.elsee.care/mon-panier,www.elsee.care/obtenir-mon-offre,2,2
+app.elsee.care/mon-panier,app.elsee.care/signup/en_savoir_plus_sur_vous,1,1
+app.elsee.care/mon-panier,app.elsee.care/signup,1,2
+app.elsee.care/offres,(aucune autre page du tunnel),27,30
+app.elsee.care/offres,app.elsee.care/signup/bilan,5,5
+app.elsee.care/offres,app.elsee.care/mon-panier,5,7
+app.elsee.care/offres,www.elsee.care/obtenir-mon-offre,1,1
+app.elsee.care/offres,app.elsee.care/signup,1,1
+app.elsee.care/offres,app.elsee.care/social_signup,1,1
+app.elsee.care/pricing/cartecadeau,app.elsee.care/mon-offre,8,9
+app.elsee.care/pricing/cartecadeau,(aucune autre page du tunnel),4,4
+app.elsee.care/pricing/cartecadeau,app.elsee.care/mon-panier,2,2
+app.elsee.care/remboursements,(aucune autre page du tunnel),105,122
+app.elsee.care/remboursements,www.elsee.care/obtenir-mon-offre,2,2
+app.elsee.care/remboursements,app.elsee.care/signup,1,1
+app.elsee.care/remboursements,app.elsee.care/mon-offre,1,1
+app.elsee.care/remboursements,www.elsee.care/remboursement-endometriose,1,1
+app.elsee.care/signup,app.elsee.care/signup/depenses_complements,157,169
+app.elsee.care/signup,(aucune autre page du tunnel),26,26
+app.elsee.care/signup,app.elsee.care/mon-offre,11,11
+app.elsee.care/signup,app.elsee.care/signup/montant_complements,1,1
+app.elsee.care/signup,app.elsee.care/signup_social,1,2
+app.elsee.care/signup,www.elsee.care/obtenir-mon-offre,1,1
+app.elsee.care/signup,app.elsee.care/social_signup,1,1
+app.elsee.care/signup,www.elsee.care/offres-remboursement-elsee,1,1
+app.elsee.care/signup,www.elsee.care/remboursement-complements-alimentaires,1,1
+app.elsee.care/signup-corpo,app.elsee.care/signup,2,2
+app.elsee.care/signup-corpo,app.elsee.care/signup/depenses_complements,2,4
+app.elsee.care/signup-corpo,(aucune autre page du tunnel),1,1
+app.elsee.care/signup/bilan,app.elsee.care/offres,31,32
+app.elsee.care/signup/bilan,(aucune autre page du tunnel),7,7
+app.elsee.care/signup/bilan,app.elsee.care/signup/bonus-abonnement,2,2
+app.elsee.care/signup/bilan,app.elsee.care/signup-corpo,1,1
+app.elsee.care/signup/bilan,app.elsee.care/signup/recap_marques,1,1
+app.elsee.care/signup/bonus-abonnement,app.elsee.care/signup/bilan,35,38
+app.elsee.care/signup/bonus-abonnement,app.elsee.care/signup/recap_remboursements,5,6
+app.elsee.care/signup/bonus-abonnement,(aucune autre page du tunnel),5,5
+app.elsee.care/signup/bonus-abonnement,app.elsee.care/signup/recap_marques,1,1
+app.elsee.care/signup/bonus-abonnement,app.elsee.care/signup/network_complements,1,1
+app.elsee.care/signup/bonus-abonnement,app.elsee.care/signup,1,1
+app.elsee.care/signup/depenses_app,app.elsee.care/signup/final_step,47,47
+app.elsee.care/signup/depenses_app,app.elsee.care/signup/out_of_network_app,44,52
+app.elsee.care/signup/depenses_app,app.elsee.care/signup/offre_en_preparation,6,6
+app.elsee.care/signup/depenses_app,app.elsee.care/signup/out_of_network_produit,2,2
+app.elsee.care/signup/depenses_app,app.elsee.care/signup/depenses_produit,1,1
+app.elsee.care/signup/depenses_app,app.elsee.care/signup/preparation-offre,1,1
+app.elsee.care/signup/depenses_app,(aucune autre page du tunnel),1,1
+app.elsee.care/signup/depenses_complements,app.elsee.care/signup/montant_complements,179,209
+app.elsee.care/signup/depenses_complements,app.elsee.care/signup/sante_mentale_seances,21,21
+app.elsee.care/signup/depenses_complements,(aucune autre page du tunnel),10,10
+app.elsee.care/signup/depenses_complements,app.elsee.care/signup,8,8
+app.elsee.care/signup/depenses_complements,app.elsee.care/social_signup,3,3
+app.elsee.care/signup/depenses_complements,app.elsee.care/signup/network_complements,2,2
+app.elsee.care/signup/depenses_complements,app.elsee.care/mon-offre,1,1
+app.elsee.care/signup/depenses_complements_step,app.elsee.care/signup/sante_mentale_seances,90,95
+app.elsee.care/signup/depenses_complements_step,app.elsee.care/signup/recap_marques,5,5
+app.elsee.care/signup/depenses_complements_step,app.elsee.care/signup/montant_sante_mentale,1,1
+app.elsee.care/signup/depenses_produit,app.elsee.care/signup/network_produit,72,94
+app.elsee.care/signup/depenses_produit,app.elsee.care/signup/depenses_app,22,23
+app.elsee.care/signup/depenses_produit,app.elsee.care/signup/out_of_network_produit,5,5
+app.elsee.care/signup/depenses_sports,app.elsee.care/signup/network_sport,76,106
+app.elsee.care/signup/depenses_sports,app.elsee.care/signup/sport_step,15,16
+app.elsee.care/signup/depenses_sports,app.elsee.care/signup/out_of_network_sport,7,7
+app.elsee.care/signup/depenses_sports,app.elsee.care/signup/medecine_douce_step,1,1
+app.elsee.care/signup/depenses_sports,(aucune autre page du tunnel),1,1
+app.elsee.care/signup/en_savoir_plus_sur_vous,app.elsee.care/signup/depenses_sports,14,15
+app.elsee.care/signup/en_savoir_plus_sur_vous,(aucune autre page du tunnel),7,7
+app.elsee.care/signup/en_savoir_plus_sur_vous,app.elsee.care/signup-corpo,1,1
+app.elsee.care/signup/en_savoir_plus_sur_vous,app.elsee.care/mon-offre,1,1
+app.elsee.care/signup/en_savoir_plus_sur_vous,www.elsee.care/offres-remboursement-elsee,1,1
+app.elsee.care/signup/en_savoir_plus_sur_vous,app.elsee.care/signup/medecine_douce_step,1,2
+app.elsee.care/signup/en_savoir_plus_sur_vous,app.elsee.care/signup,1,2
+app.elsee.care/signup/final_step,app.elsee.care/signup/offre_en_preparation,90,91
+app.elsee.care/signup/final_step,(aucune autre page du tunnel),4,4
+app.elsee.care/signup/final_step,app.elsee.care/signup/out_of_network_app,3,3
+app.elsee.care/signup/final_step,app.elsee.care/signup/depenses_produit,2,2
+app.elsee.care/signup/final_step,app.elsee.care/signup/depenses_app,1,1
+app.elsee.care/signup/md_seances,app.elsee.care/signup/montant_medecine_douce,101,109
+app.elsee.care/signup/md_seances,app.elsee.care/signup/soins_seances,6,6
+app.elsee.care/signup/md_seances,app.elsee.care/signup/montant_sante_mentale,2,2
+app.elsee.care/signup/md_seances,app.elsee.care/signup/sante_mentale_step,1,1
+app.elsee.care/signup/md_seances,(aucune autre page du tunnel),1,1
+app.elsee.care/signup/medecine_douce_step,app.elsee.care/signup/depenses_sports,84,86
+app.elsee.care/signup/medecine_douce_step,app.elsee.care/signup/en_savoir_plus_sur_vous,22,26
+app.elsee.care/signup/medecine_douce_step,app.elsee.care/signup-corpo,1,1
+app.elsee.care/signup/medecine_douce_step,app.elsee.care/signup/network_sport,1,1
+app.elsee.care/signup/medecine_douce_step,app.elsee.care/signup/md_seances,1,1
+app.elsee.care/signup/medecine_douce_step,(aucune autre page du tunnel),1,1
+app.elsee.care/signup/montant_complements,app.elsee.care/signup/network_complements,178,229
+app.elsee.care/signup/montant_complements,app.elsee.care/signup/depenses_complements,14,20
+app.elsee.care/signup/montant_complements,(aucune autre page du tunnel),6,6
+app.elsee.care/signup/montant_complements,app.elsee.care/social_signup,2,2
+app.elsee.care/signup/montant_medecine_douce,app.elsee.care/signup/soins_seances,101,110
+app.elsee.care/signup/montant_medecine_douce,app.elsee.care/signup/md_seances,4,4
+app.elsee.care/signup/montant_medecine_douce,app.elsee.care/signup/montant_soins,1,1
+app.elsee.care/signup/montant_medecine_douce,app.elsee.care/signup/network_info,1,1
+app.elsee.care/signup/montant_sante_mentale,app.elsee.care/signup/md_seances,62,64
+app.elsee.care/signup/montant_sante_mentale,app.elsee.care/signup/sante_mentale_seances,2,2
+app.elsee.care/signup/montant_sante_mentale,app.elsee.care/signup/recap_marques,1,1
+app.elsee.care/signup/montant_sante_mentale,app.elsee.care/signup/montant_medecine_douce,1,3
+app.elsee.care/signup/montant_sante_mentale,(aucune autre page du tunnel),1,1
+app.elsee.care/signup/montant_sante_mentale,app.elsee.care/signup/depenses_complements,1,1
+app.elsee.care/signup/montant_soins,app.elsee.care/signup/network_info,84,86
+app.elsee.care/signup/montant_soins,app.elsee.care/signup/soins_seances,6,6
+app.elsee.care/signup/montant_soins,app.elsee.care/signup/prete_a-changer,3,4
+app.elsee.care/signup/montant_soins,app.elsee.care/signup/medecine_douce_step,2,2
+app.elsee.care/signup/network_complements,app.elsee.care/signup/recap_marques,138,159
+app.elsee.care/signup/network_complements,(aucune autre page du tunnel),33,33
+app.elsee.care/signup/network_complements,app.elsee.care/signup/montant_complements,31,46
+app.elsee.care/signup/network_complements,app.elsee.care/signup/depenses_complements,5,5
+app.elsee.care/signup/network_complements,app.elsee.care/signup/depenses_complements_step,1,1
+app.elsee.care/signup/network_complements,www.elsee.care/offres-remboursement-elsee,1,1
+app.elsee.care/signup/network_complements,app.elsee.care/signup,1,1
+app.elsee.care/signup/network_info,app.elsee.care/signup/prete_a-changer,84,87
+app.elsee.care/signup/network_info,app.elsee.care/signup/medecine_douce_step,2,3
+app.elsee.care/signup/network_produit,app.elsee.care/signup/out_of_network_produit,73,77
+app.elsee.care/signup/network_produit,app.elsee.care/signup/depenses_produit,17,22
+app.elsee.care/signup/network_sport,app.elsee.care/signup/out_of_network_sport,78,83
+app.elsee.care/signup/network_sport,app.elsee.care/signup/depenses_sports,24,26
+app.elsee.care/signup/network_sport,(aucune autre page du tunnel),2,2
+app.elsee.care/signup/network_sport,app.elsee.care/signup/sport_step,1,1
+app.elsee.care/signup/offre_en_preparation,app.elsee.care/mon-offre,96,99
+app.elsee.care/signup/offre_en_preparation,app.elsee.care/signup/final_step,4,5
+app.elsee.care/signup/offre_en_preparation,(aucune autre page du tunnel),2,2
+app.elsee.care/signup/offre_en_preparation,app.elsee.care/signup/out_of_network_app,1,1
+app.elsee.care/signup/out_of_network_app,app.elsee.care/signup/final_step,44,45
+app.elsee.care/signup/out_of_network_app,app.elsee.care/signup/depenses_app,7,7
+app.elsee.care/signup/out_of_network_app,(aucune autre page du tunnel),3,3
+app.elsee.care/signup/out_of_network_app,app.elsee.care/signup/preparation-offre,1,1
+app.elsee.care/signup/out_of_network_produit,app.elsee.care/signup/depenses_app,75,78
+app.elsee.care/signup/out_of_network_produit,app.elsee.care/signup/network_produit,5,5
+app.elsee.care/signup/out_of_network_produit,(aucune autre page du tunnel),1,1
+app.elsee.care/signup/out_of_network_sport,app.elsee.care/signup/sport_step,79,82
+app.elsee.care/signup/out_of_network_sport,app.elsee.care/signup/network_sport,5,5
+app.elsee.care/signup/out_of_network_sport,app.elsee.care/signup/depenses_produit,2,3
+app.elsee.care/signup/preparation-offre,app.elsee.care/mon-offre,1,1
+app.elsee.care/signup/preparation-offre,app.elsee.care/signup-corpo,1,1
+app.elsee.care/signup/prete_a-changer,app.elsee.care/signup/medecine_douce_step,83,86
+app.elsee.care/signup/prete_a-changer,app.elsee.care/signup/network_info,2,2
+app.elsee.care/signup/prete_a-changer,app.elsee.care/signup/depenses_sports,1,1
+app.elsee.care/signup/prete_a-changer,app.elsee.care/signup/sante_mentale_seances,1,1
+app.elsee.care/signup/prete_a-changer,app.elsee.care/signup/en_savoir_plus_sur_vous,1,1
+app.elsee.care/signup/recap_marques,app.elsee.care/signup/depenses_complements_step,90,100
+app.elsee.care/signup/recap_marques,app.elsee.care/signup/recap_remboursements,43,48
+app.elsee.care/signup/recap_marques,app.elsee.care/signup/network_complements,10,12
+app.elsee.care/signup/recap_marques,(aucune autre page du tunnel),5,5
+app.elsee.care/signup/recap_marques,app.elsee.care/signup/sante_mentale_seances,2,2
+app.elsee.care/signup/recap_marques,app.elsee.care/signup-corpo,1,1
+app.elsee.care/signup/recap_remboursements,app.elsee.care/signup/bonus-abonnement,42,50
+app.elsee.care/signup/recap_remboursements,(aucune autre page du tunnel),3,3
+app.elsee.care/signup/recap_remboursements,app.elsee.care/signup/recap_marques,1,1
+app.elsee.care/signup/sante_mentale_seances,app.elsee.care/signup/montant_sante_mentale,62,68
+app.elsee.care/signup/sante_mentale_seances,app.elsee.care/signup/sante_mentale_step,46,47
+app.elsee.care/signup/sante_mentale_seances,app.elsee.care/signup/md_seances,5,6
+app.elsee.care/signup/sante_mentale_seances,app.elsee.care/signup/medecine_douce_step,1,1
+app.elsee.care/signup/sante_mentale_seances,(aucune autre page du tunnel),1,1
+app.elsee.care/signup/sante_mentale_seances,app.elsee.care/signup/depenses_complements,1,1
+app.elsee.care/signup/sante_mentale_step,app.elsee.care/signup/md_seances,44,44
+app.elsee.care/signup/sante_mentale_step,app.elsee.care/signup/sante_mentale_seances,2,2
+app.elsee.care/signup/sante_mentale_step,app.elsee.care/signup/soins_seances,1,1
+app.elsee.care/signup/sante_mentale_step,(aucune autre page du tunnel),1,1
+app.elsee.care/signup/soins_seances,app.elsee.care/signup/montant_soins,89,97
+app.elsee.care/signup/soins_seances,app.elsee.care/signup/medecine_douce_step,21,21
+app.elsee.care/signup/soins_seances,app.elsee.care/signup/montant_medecine_douce,4,4
+app.elsee.care/signup/soins_seances,app.elsee.care/signup,1,1
+app.elsee.care/signup/soins_seances,app.elsee.care/signup/network_info,1,1
+app.elsee.care/signup/sport_step,app.elsee.care/signup/depenses_produit,94,94
+app.elsee.care/signup/sport_step,app.elsee.care/signup/depenses_sports,3,3
+app.elsee.care/signup/sport_step,app.elsee.care/signup/depenses_app,1,1
+app.elsee.care/signup/sport_step,app.elsee.care/signup,1,1
+app.elsee.care/signup_social,app.elsee.care/signup,1,1
+app.elsee.care/signup_social,app.elsee.care/social_signup,1,1
+app.elsee.care/social_signup,app.elsee.care/signup/depenses_complements,46,50
+app.elsee.care/social_signup,(aucune autre page du tunnel),6,7
+app.elsee.care/social_signup,app.elsee.care/mon-offre,1,1
+app.elsee.care/social_signup,www.elsee.care/obtenir-mon-offre,1,1
+app.elsee.care/social_signup,app.elsee.care/signup,1,1
+www.elsee.care/bienvenue-chez-elsee,(aucune autre page du tunnel),3,3
+www.elsee.care/bienvenue-chez-elsee,www.elsee.care/obtenir-mon-offre,1,1
+www.elsee.care/bienvenue-chez-elsee,app.elsee.care/remboursements,1,1
+www.elsee.care/obtenir-mon-offre,(aucune autre page du tunnel),27,28
+www.elsee.care/obtenir-mon-offre,app.elsee.care/signup,10,10
+www.elsee.care/obtenir-mon-offre,app.elsee.care/social_signup,2,2
+www.elsee.care/obtenir-mon-offre,app.elsee.care/offres,2,2
+www.elsee.care/obtenir-mon-offre,app.elsee.care/mon-offre,1,1
+www.elsee.care/obtenir-mon-offre,app.elsee.care/signup/offre_en_preparation,1,1
+www.elsee.care/obtenir-mon-offre,www.elsee.care/offres-remboursement-elsee,1,2
+www.elsee.care/offres-remboursement-elsee,(aucune autre page du tunnel),57,57
+www.elsee.care/offres-remboursement-elsee,app.elsee.care/signup,9,11
+www.elsee.care/offres-remboursement-elsee,www.elsee.care/obtenir-mon-offre,2,2
+www.elsee.care/offres-remboursement-elsee,app.elsee.care/social_signup,2,2
+www.elsee.care/remboursement-complements-alimentaires,app.elsee.care/signup/depenses_complements,1,1
+www.elsee.care/remboursement-endometriose,(aucune autre page du tunnel),2,2
+www.elsee.care/remboursement-endometriose,www.elsee.care/obtenir-mon-offre,1,1
+www.elsee.care/remboursement-endometriose,app.elsee.care/remboursements,1,1

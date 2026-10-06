@@ -8,7 +8,7 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 | Étape | État |
 |---|---|
 | 0. Informations et accès manquants | Faite le 5 oct. ; réponses reçues le 6 oct. (voir ci-dessous) |
-| 1. Découverte | Requêtes écrites dans [`sql/decouverte/`](../sql/decouverte/), **pas encore exécutées** : la clé fonctionne, mais le compte de service n'a pas le droit de lire l'export GA4 (voir l'entrée du 6 oct., 4e session) |
+| 1. Découverte | Exécutée le 6 oct. sur la seule journée disponible (5 oct.). Résultats et questions : [`etape1_decouverte.md`](etape1_decouverte.md). **En attente de validation par Eglantine** |
 | 2. Calcul (config du graphe + vues) | À faire après validation de l'étape 1 |
 | 3. Affichage Apps Script | À faire |
 | 4. Automatisation et alertes | À faire |
@@ -16,11 +16,18 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 
 ## Questions encore ouvertes
 
-Non bloquantes pour l'étape 1.
+**Questions de l'étape 1, à trancher avant l'étape 2** : voir la section 7 de
+[`etape1_decouverte.md`](etape1_decouverte.md) (correspondance, raccourci NON
+des compléments, `en_savoir_plus_sur_vous`, sauts hors schéma, entrées, carte
+cadeau, suivi www → app, pages hors schéma, filtres).
+
+Autres questions :
 
 - **Passage /mon-panier → /bienvenue-chez-elsee** : accepter une session
   différente du même utilisateur, et dans quel délai (proposition : 24 h) ? Voir
-  l'entrée « Réponses d'Eglantine » du 6 oct., 2e session.
+  l'entrée « Réponses d'Eglantine » du 6 oct., 2e session. Le 5 oct., les 2
+  personnes revenues de Stripe ont gardé leur identifiant et leur session : à
+  revoir sur 7 jours avant de trancher.
 - **Réglages GA4** (utiles pour expliquer les écarts à la recette) : mode de
   consentement (Consent Mode v2 basique ou avancé, outil de consentement),
   identité pour les rapports (combinée, observée ou basée sur l'appareil).
@@ -30,9 +37,11 @@ Non bloquantes pour l'étape 1.
   le montre pas.
 - **Recette** : le fichier de référence couvre le 8 sept. – 5 oct., avant
   l'export BigQuery. Il faudra le même export des quatre explorations sur une
-  période d'au moins 7 jours couverte par l'export.
-- **Domaines de test** qui enverraient des données dans la propriété (staging,
-  webflow.io, localhost…).
+  période d'au moins 7 jours couverte par l'export (au plus tôt du 5 au 11 oct.,
+  disponible le 12 oct.).
+- **Domaines de test** : la découverte en trouve trois (elsee-v-0.webflow.io,
+  appelsee-2k24.firebaseapp.com, helloelsee.outgrow.us). Proposition : ne
+  garder que app.elsee.care et www.elsee.care (question 9 de l'étape 1).
 - Pour les étapes 3 et 4 : compte propriétaire du script Apps Script, qui doit
   voir la page (tout le monde en @elsee.care ?), destinataires des alertes, qui
   lance `clasp push`.
@@ -41,6 +50,36 @@ Non bloquantes pour l'étape 1.
   et donne au compte le rôle « Éditeur de données BigQuery » dessus, soit elle
   lui donne le droit de créer des datasets dans le projet (rôle « Utilisateur
   BigQuery »). À trancher avant l'étape 2.
+
+## 2026-10-06 (4e session, suite) — Étape 1 exécutée
+
+Eglantine a donné au compte de service le rôle « Lecteur de données BigQuery »
+sur `analytics_383563328` : la lecture fonctionne. Les requêtes 01 à 08 ont
+tourné sur la seule table disponible (5 oct.), complétées par les requêtes 09 à
+13 pour creuser ce qu'elles montraient. Analyse complète, tableau de
+correspondance et questions : [`etape1_decouverte.md`](etape1_decouverte.md).
+
+Constats principaux :
+
+- Dataset en région **EU**, fuseau Europe/Paris, une table par jour, pas
+  d'export en continu.
+- Les 41 étapes du schéma existent avec le chemin prévu. `/social_signup` et
+  `/signup/montant_sante_mentale` sont confirmés (`/signup/montant_sm`
+  n'existe pas).
+- Le formulaire est sur **app.elsee.care** (et non sur elsee.care comme le dit
+  le brief) ; `/obtenir-mon-offre`, `/offres-remboursement-elsee`,
+  `/remboursement-complements-alimentaires` et `/bienvenue-chez-elsee` sont sur
+  www.elsee.care.
+- Le raccourci NON de `depenses_complements` mène à `sante_mentale_seances`
+  (pas à `depenses_complements_step`). Les autres raccourcis NON sont conformes
+  au schéma.
+- **GA4 perd l'identifiant entre www.elsee.care et app.elsee.care** (7 sessions
+  sur 281 le gardent). Les flèches www → app ne sont presque pas mesurables
+  tant que ce n'est pas corrigé côté balises (hors de notre périmètre).
+- Le paiement passe par checkout.stripe.com, puis revient sur
+  `/bienvenue-chez-elsee` (événement `order_paid`).
+
+Rien n'a été créé dans BigQuery (lecture seule).
 
 ## 2026-10-06 (4e session) — Une seule branche principale : `main`
 

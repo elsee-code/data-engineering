@@ -1,0 +1,22 @@
+event_name,evenements,utilisateurs,evenements_sur_une_page_signup
+page_view,6536,712,3545
+scroll,903,550,231
+user_engagement,853,342,80
+session_start,787,671,160
+Bot scenario shown,522,315,156
+first_visit,463,459,152
+Targeted chat shown,153,150,96
+form_start,148,108,33
+step_form,106,42,0
+add_to_cart,88,63,0
+click,80,20,0
+click_form,41,31,0
+view_search_results,15,11,0
+Targeted chat rejected by visitor,8,8,0
+order_paid,5,5,0
+Pre-chat form shown,5,5,0
+Targeted chat accepted by visitor,4,4,0
+Pre-chat form submitted,3,3,0
+Bot scenario started by visitor,2,2,0
+Bot reply option clicked,2,2,0
+Chat initiated by visitor,1,1,0
