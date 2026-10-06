@@ -11,6 +11,7 @@ chiffres sont calculés dans BigQuery à partir de l'export quotidien de GA4.
 - Décisions et état d'avancement : [`docs/decisions.md`](docs/decisions.md)
 - Documents de référence (schéma, explorations GA4) : [`docs/reference/`](docs/reference/)
 - Requêtes de découverte (étape 1) : [`sql/decouverte/`](sql/decouverte/)
+- Activation de la clé BigQuery dans une session cloud : [`scripts/activer_cle_gcp.sh`](scripts/activer_cle_gcp.sh)
 
 Le README complet (installation, configuration, ajout d'une étape, dépannage)
 viendra à l'étape 5.

@@ -26,7 +26,7 @@ Les sous-étapes 1 à 4 de /obtenir-mon-offre, les pop-ups (dont « POPUP LEAD �
 - Le formulaire est sur elsee.care ; l'offre, le panier et le paiement sur app.elsee.care. Le suivi inter-domaines est configuré dans GA4 : vérifier dans les données qu'une même session continue bien d'un domaine à l'autre.
 - Une étape = une page (chemin d'URL).
 - Google Cloud : projet ga4-chemin-form, dataset d'export analytics_383563328 (propriété GA4 383563328). Export quotidien activé le 5 octobre 2026, donc aucune donnée avant cette date.
-- Référence chiffrée : trois explorations « entonnoir » GA4 (long form, compléments, short form) du 7 sept. au 4 oct. 2026 ([`reference/explorations-ga4_2026-09-07_2026-10-04.pdf`](reference/explorations-ga4_2026-09-07_2026-10-04.pdf)). Ordres de grandeur sur cette période : 4 726 entrées dans le long form, 2 954 utilisateurs sur /signup/recap_marques, 1 385 sur /obtenir-mon-offre.
+- Référence chiffrée : quatre explorations « entonnoir » GA4 (long form, compléments, offre directe, bloc compléments) du 8 sept. au 5 oct. 2026 ([`reference/explorations-ga4_2026-09-08_2026-10-05.pdf`](reference/explorations-ga4_2026-09-08_2026-10-05.pdf), remplace le fichier erroné du 7 sept. au 4 oct.). Ordres de grandeur sur cette période : 5 767 entrées dans le long form, 2 965 utilisateurs sur /signup/recap_marques, 659 sur /obtenir-mon-offre.
 
 ### Comment fonctionnent les flèches « NON »
 Ce sont des raccourcis, pas des branches parallèles. Plusieurs pages posent une question (par exemple « Avez-vous des dépenses en compléments ? »). Si l'utilisateur répond oui, il suit les pages de détail ; s'il répond non, le formulaire l'envoie directement plusieurs étapes plus loin, en sautant ces pages.
@@ -86,7 +86,7 @@ Fin du long form
 
 Points d'attention
 - /mon-offre, /mon-panier et /bienvenue-chez-elsee apparaissent dans plusieurs parcours (offre directe, long form, compléments, carte cadeau). Rattacher chaque passage au bon parcours d'après les pages précédentes de la session, sans jamais le compter deux fois.
-- Le schéma écrit /social_signup, les explorations GA4 /social-signup : utiliser le chemin réel. Même vigilance pour les deux nouvelles entrées.
+- Le chemin de l'entrée « social » est /social_signup (confirmé par Eglantine le 6 oct. ; l'ancien export qui écrivait /social-signup était faux). Le vérifier quand même dans les données, comme les deux nouvelles entrées.
 - Le schéma peut contenir des erreurs : toute transition observée dans les données mais absente du graphe doit être remontée, jamais ignorée.
 
 ### Définitions à respecter

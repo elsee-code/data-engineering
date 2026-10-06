@@ -20,13 +20,22 @@ de BigQuery.
 Les dates se règlent en tête de fichier (`DECLARE date_debut` / `date_fin`, au
 format `AAAAMMJJ`). Par défaut : du 5 octobre 2026 à hier.
 
+Dans une session cloud, activer d'abord la clé du compte de service (variable
+`GCP_SA_KEY_JSON`, jamais affichée) :
+
+```sh
+scripts/activer_cle_gcp.sh
+```
+
 - **Console BigQuery** : coller le fichier dans un onglet de requête, puis
   Exécuter. Le fichier est un script : le résultat est celui de la dernière
   instruction.
 - **Ligne de commande** :
   ```sh
-  bq query --project_id=ga4-chemin-form --use_legacy_sql=false < sql/decouverte/04_domaines_et_chemins.sql
+  env -u CLOUDSDK_AUTH_ACCESS_TOKEN bq query --project_id=ga4-chemin-form --use_legacy_sql=false < sql/decouverte/04_domaines_et_chemins.sql
   ```
+  (`env -u` retire le jeton factice que la session cloud définit et qui ferait
+  échouer `bq`.)
 
 Région et expiration par défaut du dataset d'export :
 
