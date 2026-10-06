@@ -12,6 +12,8 @@ chiffres sont calculés dans BigQuery à partir de l'export quotidien de GA4.
 - Documents de référence (schéma, explorations GA4) : [`docs/reference/`](docs/reference/)
 - Requêtes de découverte (étape 1) : [`sql/decouverte/`](sql/decouverte/)
 - Résultats de la découverte (étape 1) : [`docs/etape1_decouverte.md`](docs/etape1_decouverte.md)
+- Configuration du graphe (étapes et flèches) : [`config/graphe.json`](config/graphe.json), mode d'emploi dans [`config/README.md`](config/README.md)
+- Calcul (étape 2) : [`docs/etape2_calcul.md`](docs/etape2_calcul.md), requêtes générées dans [`sql/calcul/`](sql/calcul/) par `node scripts/generer_sql.mjs`
 - Activation de la clé BigQuery dans une session cloud : [`scripts/activer_cle_gcp.sh`](scripts/activer_cle_gcp.sh)
 
 Le README complet (installation, configuration, ajout d'une étape, dépannage)

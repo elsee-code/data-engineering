@@ -19,8 +19,10 @@ de BigQuery.
 | `11_identite_retour_vers_www.sql` | Retour vers www.elsee.care (depuis app ou Stripe) : même identifiant, même session ? |
 | `12_nouvelle_etape_par_heure.sql` | Après `/signup/medecine_douce_step`, heure par heure : `en_savoir_plus_sur_vous` ou `depenses_sports` ? |
 | `13_provenance_entrees_app.sql` | Arrivées sur le formulaire selon la page de www.elsee.care d'origine (réponse : la provenance est réduite au domaine) |
+| `14_parcours_sessions_precedentes.sql` | Sessions qui commencent sur `/mon-offre`, `/mon-panier` ou `/bienvenue-chez-elsee` : parcours suivi dans une session précédente ? |
+| `15_en_savoir_plus_selon_entree.sql` | Qui voit `/signup/en_savoir_plus_sur_vous`, selon la première page de la session |
 
-Les requêtes 09 à 13 ont été ajoutées après une première lecture des résultats.
+Les requêtes 09 à 13 ont été ajoutées après une première lecture des résultats, 14 et 15 pendant l'étape 2.
 Résultats du 5 octobre 2026 (agrégats seulement) :
 [`resultats/20261005/`](resultats/20261005/). Analyse :
 [`docs/etape1_decouverte.md`](../../docs/etape1_decouverte.md).

@@ -8,26 +8,29 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 | Étape | État |
 |---|---|
 | 0. Informations et accès manquants | Faite le 5 oct. ; réponses reçues le 6 oct. (voir ci-dessous) |
-| 1. Découverte | Exécutée le 6 oct. sur la seule journée disponible (5 oct.). Résultats et questions : [`etape1_decouverte.md`](etape1_decouverte.md). **En attente de validation par Eglantine** |
-| 2. Calcul (config du graphe + vues) | À faire après validation de l'étape 1 |
+| 1. Découverte | Faite et validée le 6 oct. : [`etape1_decouverte.md`](etape1_decouverte.md) |
+| 2. Calcul (config du graphe + calcul) | **En cours** : configuration et calcul écrits et testés en lecture seule. Création dans BigQuery en attente de deux décisions : [`etape2_calcul.md`](etape2_calcul.md), section 5 |
 | 3. Affichage Apps Script | À faire |
 | 4. Automatisation et alertes | À faire |
 | 5. Documentation | À faire |
 
 ## Questions encore ouvertes
 
-**Questions de l'étape 1, à trancher avant l'étape 2** : voir la section 7 de
-[`etape1_decouverte.md`](etape1_decouverte.md) (correspondance, raccourci NON
-des compléments, `en_savoir_plus_sur_vous`, sauts hors schéma, entrées, carte
-cadeau, suivi www → app, pages hors schéma, filtres).
+**À trancher pour finir l'étape 2** (détail dans
+[`etape2_calcul.md`](etape2_calcul.md), section 5) :
+
+- **Création dans BigQuery** : créer `elsee_funnel` (région EU) et la fonction
+  `elsee_funnel.agregats(date_debut, date_fin)` ? Qui crée le dataset : Eglantine
+  (puis rôle « Éditeur de données BigQuery » au compte de service) ou le compte
+  de service (rôle « Utilisateur BigQuery » sur le projet) ?
+- **Sessions qui commencent sur /mon-offre, /mon-panier ou
+  /bienvenue-chez-elsee** : les rattacher au dernier parcours suivi par la même
+  personne dans une session précédente ? Sans cela, aucune inscription
+  (/bienvenue-chez-elsee) n'est rattachée à un parcours. Cette règle
+  remplacerait celle des 24 h proposée pour /mon-panier → /bienvenue-chez-elsee.
 
 Autres questions :
 
-- **Passage /mon-panier → /bienvenue-chez-elsee** : accepter une session
-  différente du même utilisateur, et dans quel délai (proposition : 24 h) ? Voir
-  l'entrée « Réponses d'Eglantine » du 6 oct., 2e session. Le 5 oct., les 2
-  personnes revenues de Stripe ont gardé leur identifiant et leur session : à
-  revoir sur 7 jours avant de trancher.
 - **Réglages GA4** (utiles pour expliquer les écarts à la recette) : mode de
   consentement (Consent Mode v2 basique ou avancé, outil de consentement),
   identité pour les rapports (combinée, observée ou basée sur l'appareil).
@@ -39,17 +42,51 @@ Autres questions :
   l'export BigQuery. Il faudra le même export des quatre explorations sur une
   période d'au moins 7 jours couverte par l'export (au plus tôt du 5 au 11 oct.,
   disponible le 12 oct.).
-- **Domaines de test** : la découverte en trouve trois (elsee-v-0.webflow.io,
-  appelsee-2k24.firebaseapp.com, helloelsee.outgrow.us). Proposition : ne
-  garder que app.elsee.care et www.elsee.care (question 9 de l'étape 1).
 - Pour les étapes 3 et 4 : compte propriétaire du script Apps Script, qui doit
   voir la page (tout le monde en @elsee.care ?), destinataires des alertes, qui
   lance `clasp push`.
-- Pour l'étape 2 : le compte de service devra écrire dans `elsee_funnel`, qui
-  n'existe pas encore. Soit Eglantine crée ce dataset (même région que l'export)
-  et donne au compte le rôle « Éditeur de données BigQuery » dessus, soit elle
-  lui donne le droit de créer des datasets dans le projet (rôle « Utilisateur
-  BigQuery »). À trancher avant l'étape 2.
+
+## 2026-10-06 (4e session, suite) — Étape 1 validée, étape 2 commencée
+
+Réponses d'Eglantine aux questions de l'étape 1 (section 7 de
+[`etape1_decouverte.md`](etape1_decouverte.md)), avec un nouveau schéma qui
+remplace [`reference/schema-tunnel.pdf`](reference/schema-tunnel.pdf) :
+
+1. **Tableau de correspondance validé. Seuls app.elsee.care et www.elsee.care
+   comptent.**
+2. **Raccourci NON de `depenses_complements` → `sante_mentale_seances`.**
+3. **`en_savoir_plus_sur_vous`** recueille les coordonnées (e-mail, téléphone).
+   Entrée par `/obtenir-mon-offre`, `/offres-remboursement-elsee`,
+   `/signup-corpo` ou `/remboursement-complements-alimentaires` : coordonnées
+   recueillies juste avant `/signup/depenses_complements`. Entrée directe par
+   `/social_signup` ou `/signup` : recueillies plus tard, par une pop-up entre
+   `bonus-abonnement` et `bilan` (sans changement d'adresse) sur le chemin
+   compléments, ou par `en_savoir_plus_sur_vous` sur le long form. Donc **deux
+   passages** depuis `medecine_douce_step` : vers `en_savoir_plus_sur_vous` et
+   directement vers `depenses_sports`. Vérifié dans les données
+   ([requête 15](../sql/decouverte/15_en_savoir_plus_selon_entree.sql)).
+4. **Seuls les raccourcis du schéma existent** : pas de nouvelle flèche pour les
+   sauts observés. Ils ne sont pas dessinés ; ils comptent comme sorties (pas
+   comme abandons) et restent listés par le calcul (`etape2_calcul.md`, règle 8).
+5. **Entrées (nouveau schéma)** : `/signup-corpo`,
+   `/remboursement-complements-alimentaires` et `/offres-remboursement-elsee` →
+   `/signup` ; `/social_signup` → `/signup/depenses_complements`.
+6. **Carte cadeau** : une personne qui revient de `/pricing/cartecadeau` vers
+   `/mon-offre` puis va sur `/mon-panier` compte comme passée directement par le
+   chemin de gauche, sans avoir vu `/pricing/cartecadeau`.
+7. **Pas de chiffre faux** : rien n'est affiché sur les flèches www → app.
+8. **Pages hors schéma** (`/success`, `/signin_freemium`, carte cadeau…) :
+   ignorées.
+9. **Pas d'autre filtre** que les deux domaines.
+
+Étape 2 commencée : configuration [`config/graphe.json`](../config/graphe.json),
+générateur [`scripts/generer_sql.mjs`](../scripts/generer_sql.mjs), calcul et
+contrôle de cohérence dans [`sql/calcul/`](../sql/calcul/), testés en lecture
+seule sur le 5 oct. (contrôle sans écart négatif). Choix : une **fonction de
+table** `elsee_funnel.agregats(date_debut, date_fin)` à la place des vues (la
+période est un paramètre). Détail et décisions restantes :
+[`etape2_calcul.md`](etape2_calcul.md). [`brief.md`](brief.md) est mis à jour
+avec le nouveau graphe.
 
 ## 2026-10-06 (4e session, suite) — Étape 1 exécutée
 

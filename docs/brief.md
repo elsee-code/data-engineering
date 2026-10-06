@@ -37,6 +37,8 @@ Conséquences :
 - Les pages de convergence (les pages _step, /signup/sante_mentale_seances, /signup/md_seances, /signup/soins_seances, /signup/final_step) voient passer tous les parcours : ce sont les meilleurs points de contrôle.
 
 ### Le graphe du schéma (base de la configuration)
+Mis à jour avec le schéma du 6 oct. La référence est désormais le fichier de
+configuration [`config/graphe.json`](../config/graphe.json).
 Une ligne = une suite de flèches. Les chemins sont ceux du schéma ; les vrais chemins sont à confirmer avec les données.
 
 Short form et offre directe
@@ -44,15 +46,15 @@ Short form et offre directe
 - /signup → /mon-offre → /mon-panier → /bienvenue-chez-elsee (offre directe)
 - /signup → /signup/depenses_complements (entrée du long form)
 
-Autres entrées du long form (toutes mènent à /signup/depenses_complements)
-- /signup-corpo
-- /social_signup
-- /remboursement-complements-alimentaires
-- /offres-remboursement-elsee
+Autres entrées (schéma du 6 oct.)
+- /signup-corpo → /signup
+- /remboursement-complements-alimentaires → /signup
+- /offres-remboursement-elsee → /signup
+- /social_signup → /signup/depenses_complements
 
 Bloc compléments
 - /signup/depenses_complements → /signup/montant_complements (OUI) → /signup/network_complements → /signup/recap_marques → /signup/depenses_complements_step
-- Raccourci NON : /signup/depenses_complements → /signup/depenses_complements_step (saute montant, network et recap_marques) [sur le dernier schéma, la flèche semble arriver sur /signup/sante_mentale_seances : à trancher avec les données]
+- Raccourci NON : /signup/depenses_complements → /signup/sante_mentale_seances (saute montant, network, recap_marques et depenses_complements_step ; confirmé par les données et par Eglantine le 6 oct.)
 - /signup/recap_marques → /signup/recap_remboursements (branche compléments alimentaires)
 
 Branche compléments alimentaires (vert)
@@ -69,6 +71,7 @@ Médecine douce et soins
 - /signup/soins_seances → /signup/montant_soins (OUI) → /signup/network_info → /signup/prete_a-changer → /signup/medecine_douce_step
 - Raccourci NON : /signup/soins_seances → /signup/medecine_douce_step (saute montant_soins, network_info et prete_a-changer)
 - /signup/medecine_douce_step → /signup/en_savoir_plus_sur_vous (nouvelle étape) → /signup/depenses_sports
+- /signup/medecine_douce_step → /signup/depenses_sports (sans en_savoir_plus_sur_vous, quand les coordonnées ont déjà été recueillies : voir decisions.md, 6 oct.)
 
 Sport, produits, apps
 - /signup/depenses_sports → /signup/network_sport (OUI) → /signup/out_of_network_sport → /signup/sport_step
@@ -82,7 +85,7 @@ Sport, produits, apps
 Fin du long form
 - /signup/final_step → /signup/offre_en_preparation → /mon-offre
 - /mon-offre → /mon-panier → /bienvenue-chez-elsee
-- /mon-offre → /pricing/cartecadeau → /mon-panier → /bienvenue-chez-elsee
+- /mon-offre → /pricing/cartecadeau → /mon-panier → /bienvenue-chez-elsee (une personne qui revient de /pricing/cartecadeau vers /mon-offre puis va sur /mon-panier compte comme passée directement de /mon-offre à /mon-panier, sans avoir vu /pricing/cartecadeau)
 
 Points d'attention
 - /mon-offre, /mon-panier et /bienvenue-chez-elsee apparaissent dans plusieurs parcours (offre directe, long form, compléments, carte cadeau). Rattacher chaque passage au bon parcours d'après les pages précédentes de la session, sans jamais le compter deux fois.

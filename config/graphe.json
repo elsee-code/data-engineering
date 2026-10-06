@@ -1,0 +1,805 @@
+{
+  "version": 1,
+  "mis_a_jour_le": "2026-10-06",
+  "source": "docs/reference/schema-tunnel.pdf (schéma du 6 oct. 2026) et réponses d'Eglantine du 6 oct.",
+  "domaines": [
+    "app.elsee.care",
+    "www.elsee.care"
+  ],
+  "parcours": {
+    "entrees": {
+      "libelle": "Entrées",
+      "couleur": "#1A1A1A"
+    },
+    "short_form": {
+      "libelle": "Short form",
+      "couleur": "#3BB0F0"
+    },
+    "offre_directe": {
+      "libelle": "Offre directe",
+      "couleur": "#F2C200"
+    },
+    "long_form": {
+      "libelle": "Long form",
+      "couleur": "#1A1A1A"
+    },
+    "complements": {
+      "libelle": "Compléments alimentaires",
+      "couleur": "#1DB954"
+    },
+    "carte_cadeau": {
+      "libelle": "Carte cadeau",
+      "couleur": "#1A1A1A"
+    }
+  },
+  "etapes": [
+    {
+      "id": "signup_corpo",
+      "chemin": "/signup-corpo",
+      "domaine": "app.elsee.care",
+      "parcours": "entrees",
+      "position": {
+        "colonne": -4,
+        "ligne": 0
+      },
+      "libelle": "CORPO"
+    },
+    {
+      "id": "remboursement_complements_alimentaires",
+      "chemin": "/remboursement-complements-alimentaires",
+      "domaine": "www.elsee.care",
+      "parcours": "entrees",
+      "position": {
+        "colonne": -3,
+        "ligne": 0
+      }
+    },
+    {
+      "id": "offres_remboursement_elsee",
+      "chemin": "/offres-remboursement-elsee",
+      "domaine": "www.elsee.care",
+      "parcours": "entrees",
+      "position": {
+        "colonne": -2,
+        "ligne": 0
+      }
+    },
+    {
+      "id": "obtenir_mon_offre",
+      "chemin": "/obtenir-mon-offre",
+      "domaine": "www.elsee.care",
+      "parcours": "short_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 0
+      },
+      "libelle": "SITE"
+    },
+    {
+      "id": "signup",
+      "chemin": "/signup",
+      "domaine": "app.elsee.care",
+      "parcours": "short_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 1
+      }
+    },
+    {
+      "id": "mon_offre_directe",
+      "chemin": "/mon-offre",
+      "domaine": "app.elsee.care",
+      "parcours": "offre_directe",
+      "position": {
+        "colonne": 1,
+        "ligne": 1
+      }
+    },
+    {
+      "id": "mon_panier_directe",
+      "chemin": "/mon-panier",
+      "domaine": "app.elsee.care",
+      "parcours": "offre_directe",
+      "position": {
+        "colonne": 2,
+        "ligne": 1
+      }
+    },
+    {
+      "id": "bienvenue_directe",
+      "chemin": "/bienvenue-chez-elsee",
+      "domaine": "www.elsee.care",
+      "parcours": "offre_directe",
+      "position": {
+        "colonne": 3,
+        "ligne": 1
+      }
+    },
+    {
+      "id": "social_signup",
+      "chemin": "/social_signup",
+      "domaine": "app.elsee.care",
+      "parcours": "entrees",
+      "position": {
+        "colonne": -2,
+        "ligne": 2
+      },
+      "libelle": "SOCIAL"
+    },
+    {
+      "id": "depenses_complements",
+      "chemin": "/signup/depenses_complements",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 2
+      }
+    },
+    {
+      "id": "montant_complements",
+      "chemin": "/signup/montant_complements",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 3
+      }
+    },
+    {
+      "id": "network_complements",
+      "chemin": "/signup/network_complements",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 4
+      }
+    },
+    {
+      "id": "recap_marques",
+      "chemin": "/signup/recap_marques",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 5
+      }
+    },
+    {
+      "id": "depenses_complements_step",
+      "chemin": "/signup/depenses_complements_step",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 6
+      }
+    },
+    {
+      "id": "sante_mentale_seances",
+      "chemin": "/signup/sante_mentale_seances",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 7
+      }
+    },
+    {
+      "id": "montant_sante_mentale",
+      "chemin": "/signup/montant_sante_mentale",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 8
+      }
+    },
+    {
+      "id": "md_seances",
+      "chemin": "/signup/md_seances",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 9
+      }
+    },
+    {
+      "id": "montant_medecine_douce",
+      "chemin": "/signup/montant_medecine_douce",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 10
+      }
+    },
+    {
+      "id": "soins_seances",
+      "chemin": "/signup/soins_seances",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 11
+      }
+    },
+    {
+      "id": "montant_soins",
+      "chemin": "/signup/montant_soins",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 12
+      }
+    },
+    {
+      "id": "network_info",
+      "chemin": "/signup/network_info",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 13
+      }
+    },
+    {
+      "id": "prete_a_changer",
+      "chemin": "/signup/prete_a-changer",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 14
+      }
+    },
+    {
+      "id": "medecine_douce_step",
+      "chemin": "/signup/medecine_douce_step",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 15
+      }
+    },
+    {
+      "id": "en_savoir_plus_sur_vous",
+      "chemin": "/signup/en_savoir_plus_sur_vous",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 16
+      }
+    },
+    {
+      "id": "depenses_sports",
+      "chemin": "/signup/depenses_sports",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 17
+      }
+    },
+    {
+      "id": "network_sport",
+      "chemin": "/signup/network_sport",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 18
+      }
+    },
+    {
+      "id": "out_of_network_sport",
+      "chemin": "/signup/out_of_network_sport",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 19
+      }
+    },
+    {
+      "id": "sport_step",
+      "chemin": "/signup/sport_step",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 20
+      }
+    },
+    {
+      "id": "depenses_produit",
+      "chemin": "/signup/depenses_produit",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 21
+      }
+    },
+    {
+      "id": "network_produit",
+      "chemin": "/signup/network_produit",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 22
+      }
+    },
+    {
+      "id": "out_of_network_produit",
+      "chemin": "/signup/out_of_network_produit",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 23
+      }
+    },
+    {
+      "id": "depenses_app",
+      "chemin": "/signup/depenses_app",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 24
+      }
+    },
+    {
+      "id": "out_of_network_app",
+      "chemin": "/signup/out_of_network_app",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 25
+      }
+    },
+    {
+      "id": "final_step",
+      "chemin": "/signup/final_step",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 26
+      }
+    },
+    {
+      "id": "offre_en_preparation",
+      "chemin": "/signup/offre_en_preparation",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 27
+      }
+    },
+    {
+      "id": "sante_mentale_step",
+      "chemin": "/signup/sante_mentale_step",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 1,
+        "ligne": 8
+      }
+    },
+    {
+      "id": "recap_remboursements",
+      "chemin": "/signup/recap_remboursements",
+      "domaine": "app.elsee.care",
+      "parcours": "complements",
+      "position": {
+        "colonne": -2,
+        "ligne": 6
+      }
+    },
+    {
+      "id": "bonus_abonnement",
+      "chemin": "/signup/bonus-abonnement",
+      "domaine": "app.elsee.care",
+      "parcours": "complements",
+      "position": {
+        "colonne": -2,
+        "ligne": 7
+      }
+    },
+    {
+      "id": "bilan",
+      "chemin": "/signup/bilan",
+      "domaine": "app.elsee.care",
+      "parcours": "complements",
+      "position": {
+        "colonne": -2,
+        "ligne": 8
+      }
+    },
+    {
+      "id": "offres",
+      "chemin": "/offres",
+      "domaine": "app.elsee.care",
+      "parcours": "complements",
+      "position": {
+        "colonne": -2,
+        "ligne": 9
+      }
+    },
+    {
+      "id": "mon_panier_complements",
+      "chemin": "/mon-panier",
+      "domaine": "app.elsee.care",
+      "parcours": "complements",
+      "position": {
+        "colonne": -2,
+        "ligne": 10
+      }
+    },
+    {
+      "id": "bienvenue_complements",
+      "chemin": "/bienvenue-chez-elsee",
+      "domaine": "www.elsee.care",
+      "parcours": "complements",
+      "position": {
+        "colonne": -2,
+        "ligne": 11
+      }
+    },
+    {
+      "id": "mon_offre_long_form",
+      "chemin": "/mon-offre",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 28
+      }
+    },
+    {
+      "id": "mon_panier_long_form",
+      "chemin": "/mon-panier",
+      "domaine": "app.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 30
+      }
+    },
+    {
+      "id": "bienvenue_long_form",
+      "chemin": "/bienvenue-chez-elsee",
+      "domaine": "www.elsee.care",
+      "parcours": "long_form",
+      "position": {
+        "colonne": 0,
+        "ligne": 31
+      }
+    },
+    {
+      "id": "cartecadeau",
+      "chemin": "/pricing/cartecadeau",
+      "domaine": "app.elsee.care",
+      "parcours": "carte_cadeau",
+      "position": {
+        "colonne": 1,
+        "ligne": 29
+      },
+      "effacer_si_retour": true
+    },
+    {
+      "id": "mon_panier_carte_cadeau",
+      "chemin": "/mon-panier",
+      "domaine": "app.elsee.care",
+      "parcours": "carte_cadeau",
+      "position": {
+        "colonne": 1,
+        "ligne": 30
+      }
+    },
+    {
+      "id": "bienvenue_carte_cadeau",
+      "chemin": "/bienvenue-chez-elsee",
+      "domaine": "www.elsee.care",
+      "parcours": "carte_cadeau",
+      "position": {
+        "colonne": 1,
+        "ligne": 31
+      }
+    }
+  ],
+  "fleches": [
+    {
+      "de": "obtenir_mon_offre",
+      "vers": "signup",
+      "type": "normale",
+      "mesurable": false,
+      "raison": "Passage de www.elsee.care à app.elsee.care : GA4 perd l'identifiant (étape 1, section 6)."
+    },
+    {
+      "de": "offres_remboursement_elsee",
+      "vers": "signup",
+      "type": "normale",
+      "mesurable": false,
+      "raison": "Passage de www.elsee.care à app.elsee.care : GA4 perd l'identifiant (étape 1, section 6)."
+    },
+    {
+      "de": "remboursement_complements_alimentaires",
+      "vers": "signup",
+      "type": "normale",
+      "mesurable": false,
+      "raison": "Passage de www.elsee.care à app.elsee.care : GA4 perd l'identifiant (étape 1, section 6)."
+    },
+    {
+      "de": "signup_corpo",
+      "vers": "signup",
+      "type": "normale"
+    },
+    {
+      "de": "signup",
+      "vers": "mon_offre_directe",
+      "type": "normale"
+    },
+    {
+      "de": "mon_offre_directe",
+      "vers": "mon_panier_directe",
+      "type": "normale"
+    },
+    {
+      "de": "mon_panier_directe",
+      "vers": "bienvenue_directe",
+      "type": "normale"
+    },
+    {
+      "de": "signup",
+      "vers": "depenses_complements",
+      "type": "normale"
+    },
+    {
+      "de": "social_signup",
+      "vers": "depenses_complements",
+      "type": "normale"
+    },
+    {
+      "de": "depenses_complements",
+      "vers": "montant_complements",
+      "type": "oui"
+    },
+    {
+      "de": "depenses_complements",
+      "vers": "sante_mentale_seances",
+      "type": "non"
+    },
+    {
+      "de": "montant_complements",
+      "vers": "network_complements",
+      "type": "normale"
+    },
+    {
+      "de": "network_complements",
+      "vers": "recap_marques",
+      "type": "normale"
+    },
+    {
+      "de": "recap_marques",
+      "vers": "depenses_complements_step",
+      "type": "normale"
+    },
+    {
+      "de": "recap_marques",
+      "vers": "recap_remboursements",
+      "type": "normale"
+    },
+    {
+      "de": "depenses_complements_step",
+      "vers": "sante_mentale_seances",
+      "type": "normale"
+    },
+    {
+      "de": "recap_remboursements",
+      "vers": "bonus_abonnement",
+      "type": "normale"
+    },
+    {
+      "de": "bonus_abonnement",
+      "vers": "bilan",
+      "type": "normale"
+    },
+    {
+      "de": "bilan",
+      "vers": "offres",
+      "type": "normale"
+    },
+    {
+      "de": "offres",
+      "vers": "mon_panier_complements",
+      "type": "normale"
+    },
+    {
+      "de": "mon_panier_complements",
+      "vers": "bienvenue_complements",
+      "type": "normale"
+    },
+    {
+      "de": "sante_mentale_seances",
+      "vers": "montant_sante_mentale",
+      "type": "oui"
+    },
+    {
+      "de": "sante_mentale_seances",
+      "vers": "sante_mentale_step",
+      "type": "non"
+    },
+    {
+      "de": "montant_sante_mentale",
+      "vers": "md_seances",
+      "type": "normale"
+    },
+    {
+      "de": "sante_mentale_step",
+      "vers": "md_seances",
+      "type": "normale"
+    },
+    {
+      "de": "md_seances",
+      "vers": "montant_medecine_douce",
+      "type": "oui"
+    },
+    {
+      "de": "md_seances",
+      "vers": "soins_seances",
+      "type": "non"
+    },
+    {
+      "de": "montant_medecine_douce",
+      "vers": "soins_seances",
+      "type": "normale"
+    },
+    {
+      "de": "soins_seances",
+      "vers": "montant_soins",
+      "type": "oui"
+    },
+    {
+      "de": "soins_seances",
+      "vers": "medecine_douce_step",
+      "type": "non"
+    },
+    {
+      "de": "montant_soins",
+      "vers": "network_info",
+      "type": "normale"
+    },
+    {
+      "de": "network_info",
+      "vers": "prete_a_changer",
+      "type": "normale"
+    },
+    {
+      "de": "prete_a_changer",
+      "vers": "medecine_douce_step",
+      "type": "normale"
+    },
+    {
+      "de": "medecine_douce_step",
+      "vers": "en_savoir_plus_sur_vous",
+      "type": "normale"
+    },
+    {
+      "de": "medecine_douce_step",
+      "vers": "depenses_sports",
+      "type": "normale",
+      "note": "Coordonnées déjà recueillies : en_savoir_plus_sur_vous n'est pas montrée."
+    },
+    {
+      "de": "en_savoir_plus_sur_vous",
+      "vers": "depenses_sports",
+      "type": "normale"
+    },
+    {
+      "de": "depenses_sports",
+      "vers": "network_sport",
+      "type": "oui"
+    },
+    {
+      "de": "depenses_sports",
+      "vers": "sport_step",
+      "type": "non"
+    },
+    {
+      "de": "network_sport",
+      "vers": "out_of_network_sport",
+      "type": "normale"
+    },
+    {
+      "de": "out_of_network_sport",
+      "vers": "sport_step",
+      "type": "normale"
+    },
+    {
+      "de": "sport_step",
+      "vers": "depenses_produit",
+      "type": "normale"
+    },
+    {
+      "de": "depenses_produit",
+      "vers": "network_produit",
+      "type": "oui"
+    },
+    {
+      "de": "depenses_produit",
+      "vers": "depenses_app",
+      "type": "non"
+    },
+    {
+      "de": "network_produit",
+      "vers": "out_of_network_produit",
+      "type": "normale"
+    },
+    {
+      "de": "out_of_network_produit",
+      "vers": "depenses_app",
+      "type": "normale"
+    },
+    {
+      "de": "depenses_app",
+      "vers": "out_of_network_app",
+      "type": "oui"
+    },
+    {
+      "de": "depenses_app",
+      "vers": "final_step",
+      "type": "non"
+    },
+    {
+      "de": "out_of_network_app",
+      "vers": "final_step",
+      "type": "normale"
+    },
+    {
+      "de": "final_step",
+      "vers": "offre_en_preparation",
+      "type": "normale"
+    },
+    {
+      "de": "offre_en_preparation",
+      "vers": "mon_offre_long_form",
+      "type": "normale"
+    },
+    {
+      "de": "mon_offre_long_form",
+      "vers": "mon_panier_long_form",
+      "type": "normale"
+    },
+    {
+      "de": "mon_panier_long_form",
+      "vers": "bienvenue_long_form",
+      "type": "normale"
+    },
+    {
+      "de": "mon_offre_long_form",
+      "vers": "cartecadeau",
+      "type": "normale"
+    },
+    {
+      "de": "cartecadeau",
+      "vers": "mon_panier_carte_cadeau",
+      "type": "normale"
+    },
+    {
+      "de": "mon_panier_carte_cadeau",
+      "vers": "bienvenue_carte_cadeau",
+      "type": "normale"
+    }
+  ]
+}
