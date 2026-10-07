@@ -35,6 +35,17 @@ Autres questions :
   disponible le 12 oct.).
 - Pour l'étape 4 : destinataires des e-mails d'alerte.
 
+## 2026-10-07 — Affichage des taux (Eglantine)
+
+- **Tous les taux d'abandon sont dans les étapes** (en rouge, après le nombre
+  d'arrivées), et plus jamais sur les flèches. Cela remplace la règle du brief
+  (« juste au-dessus du nombre de la flèche : le taux d'abandon de l'étape A »),
+  qui mettait le taux tantôt sur la flèche, tantôt dans l'étape.
+- Les flèches portent le nombre de personnes passées et, quand l'étape de départ
+  a plusieurs sorties, la répartition en %. **Cette répartition fait toujours
+  100 %** : arrondi par la méthode des plus forts restes (avant : OUI 90 % +
+  NON 11 % = 101 %).
+
 ## 2026-10-07 — Étape 2 validée, étape 3 : la page Apps Script
 
 Eglantine a répondu aux questions posées pour l'étape 3, ce qui vaut validation

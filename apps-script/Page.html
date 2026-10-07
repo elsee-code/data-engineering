@@ -107,8 +107,8 @@
 <main>
   <div class="legende">
     <span><b>En gras</b> dans chaque étape : personnes arrivées sur l’étape</span>
-    <span><span class="g">En gris</span> sur chaque flèche : personnes passées d’une étape à l’autre</span>
-    <span><span class="r">En rouge</span> : taux d’abandon de l’étape de départ</span>
+    <span><span class="r">En rouge</span> dans chaque étape : taux d’abandon de l’étape</span>
+    <span><span class="g">En gris</span> sur chaque flèche : personnes passées d’une étape à l’autre, et en % la répartition entre les sorties d’une étape qui en a plusieurs</span>
     <span>Survolez une étape ou une flèche pour le détail</span>
   </div>
   <div class="zone" id="zone">
@@ -329,6 +329,25 @@ function passages(f) {
   return etat.index.fleche[f.de + '>' + f.vers] || 0;
 }
 
+// Répartition en % entre les sorties d'une étape, arrondie pour que le total
+// fasse exactement 100 % (méthode des plus forts restes).
+function repartir(valeurs) {
+  const total = valeurs.reduce((s, v) => s + v, 0);
+  if (!total) return valeurs.map(() => null);
+  const bruts = valeurs.map((v) => (v * 100) / total);
+  const entiers = bruts.map(Math.floor);
+  const reste = 100 - entiers.reduce((s, v) => s + v, 0);
+  const ordre = bruts.map((b, i) => [b - entiers[i], i]).sort((a, b) => b[0] - a[0]);
+  for (let k = 0; k < reste; k++) entiers[ordre[k][1]]++;
+  return entiers;
+}
+function partEnTexte(f) {
+  const mesurables = etat.graphe.fleches.filter((x) => x.de === f.de && x.mesurable !== false);
+  const parts = repartir(mesurables.map(passages));
+  const p = parts[mesurables.indexOf(f)];
+  return p === null || p === undefined ? '–' : p + '\u202f%';
+}
+
 // ---------------------------------------------------------------------------
 // Dessin du schéma
 // ---------------------------------------------------------------------------
@@ -420,18 +439,15 @@ function dessiner() {
       `<path class="trait${f.mesurable === false ? ' tirets' : ''}" d="${t.d}" stroke="${couleur}" marker-end="url(#${idCouleur(couleur)})"/>` +
       `<path class="zonef" d="${t.d}"/>`;
     const sortiesA = sorties[f.de] || [];
-    let haut = '';
     if (n !== null) {
       if (sortiesA.length > 1) {
-        const total = sortiesA.reduce((s, x) => s + (passages(x) || 0), 0);
+        // Plusieurs sorties : répartition en %, puis le nombre de personnes.
         const prefixe = f.type === 'oui' ? 'OUI ' : f.type === 'non' ? 'NON ' : '';
-        haut = `<tspan class="part">${prefixe}${pourcent(total ? n / total : null)}</tspan>`;
+        svg += `<text class="part" x="${t.lx}" y="${t.ly - 2}" text-anchor="${t.ancre}">${prefixe}${partEnTexte(f)}</text>` +
+          `<text class="nb" x="${t.lx}" y="${t.ly + 11}" text-anchor="${t.ancre}">${nombre(n)}</text>`;
       } else {
-        const ab = tauxAbandon(f.de);
-        haut = ab === null ? '' : `<tspan class="ab">${pourcent(ab)}</tspan>`;
+        svg += `<text class="nb" x="${t.lx}" y="${t.ly + 4}" text-anchor="${t.ancre}">${nombre(n)}</text>`;
       }
-      svg += `<text x="${t.lx}" y="${t.ly - 2}" text-anchor="${t.ancre}">${haut}</text>` +
-        `<text class="nb" x="${t.lx}" y="${t.ly + 11}" text-anchor="${t.ancre}">${nombre(n)}</text>`;
     } else if (f.type === 'non') {
       svg += `<text class="non" x="${t.lx}" y="${t.ly}" text-anchor="${t.ancre}">NON</text>`;
     }
@@ -442,7 +458,6 @@ function dessiner() {
   // Étapes
   for (const { e, x, y, lignes, h } of Object.values(noeuds)) {
     const id = 'e:' + e.id;
-    const multi = (sorties[e.id] || []).length > 1;
     const ab = tauxAbandon(e.id);
     let corps = `<g class="noeud" data-bulle="${echapper(id)}">` +
       `<rect class="boite" x="${x - NOEUD_L / 2}" y="${y - h / 2}" width="${NOEUD_L}" height="${h}" rx="8"/>`;
@@ -452,7 +467,7 @@ function dessiner() {
     });
     const yA = y - h / 2 + 18 + 14 * lignes.length + 2;
     corps += `<text x="${x}" y="${yA}" text-anchor="middle"><tspan class="arr">${nombre(arrivees(e.id))}</tspan>` +
-      (multi && ab !== null ? `<tspan class="ab" dx="6">abandon ${pourcent(ab)}</tspan>` : '') + '</text></g>';
+      (ab !== null ? `<tspan class="ab" dx="6">abandon ${pourcent(ab)}</tspan>` : '') + '</text></g>';
     svg += corps;
     bulles.set(id, () => bulleEtape(e, sorties[e.id] || []));
   }
@@ -551,10 +566,9 @@ function bulleFleche(f, sortiesA) {
   if (f.type === 'non') h += '<div class="petit">Raccourci NON : la personne a répondu non et saute des pages.</div>';
   if (f.type === 'oui') h += '<div class="petit">Réponse OUI.</div>';
   if (n === null) return h + `<div>Non mesurable. ${echapper(f.raison || '')}</div>`;
-  const total = sortiesA.reduce((s, x) => s + (passages(x) || 0), 0);
   h += `<table><tr><td>Personnes passées</td><td class="n"><b>${nombre(n)}</b></td></tr>` +
     `<tr><td>Part des personnes arrivées sur l’étape de départ</td><td class="n">${pourcent(arrivees(f.de) ? n / arrivees(f.de) : null)}</td></tr>`;
-  if (sortiesA.length > 1) h += `<tr><td>Part des sorties de l’étape de départ</td><td class="n">${pourcent(total ? n / total : null)}</td></tr>`;
+  if (sortiesA.length > 1) h += `<tr><td>Part des sorties de l’étape de départ</td><td class="n">${partEnTexte(f)}</td></tr>`;
   h += '</table>';
   if (f.note) h += `<div class="petit">${echapper(f.note)}</div>`;
   return h;
