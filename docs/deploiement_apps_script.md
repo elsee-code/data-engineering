@@ -83,12 +83,39 @@ Dans la colonne de gauche, la rubrique **Services** doit maintenant afficher
 6. **Déployer**, puis copier l'**URL de l'application Web** (elle se termine
    par `/exec`). C'est l'adresse à partager avec l'équipe.
 
+## 6. Installer les alertes
+
+Une vérification tourne chaque jour entre 15 h et 16 h (heure de Paris) et
+écrit à **hello@elsee.care** seulement en cas de gros problème :
+
+- aucune nouvelle journée GA4 depuis plus de 2 jours (un retard d'un jour,
+  qui arrive parfois, ne déclenche rien) ;
+- le calcul du tunnel échoue (fonction BigQuery disparue ou en erreur) ;
+- aucune personne sur les étapes du tunnel alors que GA4 a des données
+  (adresses du formulaire changées, par exemple).
+
+Tant qu'un même problème dure, il n'est rappelé que tous les 3 jours.
+
+1. Dans l'éditeur, choisir la fonction **installerDeclencheur**, puis
+   **Exécuter**. Google demande de nouvelles autorisations (envoyer des e-mails,
+   s'exécuter à heure fixe) : les accepter comme à l'étape 3.
+2. Le journal d'exécution confirme : « Vérification installée : chaque jour
+   entre 15 h et 16 h… ». La rubrique **Déclencheurs** (icône réveil, colonne de
+   gauche) montre une ligne `verifierChaqueJour`.
+3. Facultatif : lancer **testerAlerte** pour recevoir un e-mail d'essai, et
+   **verifierChaqueJour** pour faire la vérification tout de suite (le journal
+   affiche « Vérification : tout va bien. »).
+
+Relancer **installerDeclencheur** ne crée pas de doublon.
+
 ## Mettre à jour la page plus tard
 
 Quand un fichier change dans le dépôt (par exemple `Graphe.gs` après l'ajout
 d'une étape) :
 
 1. Remplacer le contenu du fichier dans l'éditeur Apps Script, enregistrer.
+   Si `Code.gs` a changé et que de nouvelles autorisations sont nécessaires,
+   lancer une fois **testerInstallation** pour les accepter.
 2. **Déployer** → **Gérer les déploiements** → sélectionner le déploiement →
    crayon (**Modifier**) → Version : **Nouvelle version** → **Déployer**.
    L'adresse `/exec` ne change pas.
@@ -105,3 +132,6 @@ Les résultats sont gardés en cache quelques heures : une modification de
 | « Access Denied » ou « Permission denied » | Le compte qui a déployé n'a pas accès au projet `ga4-chemin-form` : déployer avec hello@elsee.care. |
 | « Not found: … elsee_funnel.agregats » | La fonction BigQuery a disparu : la recréer avec `sql/calcul/creer_fonction.sql` (voir `config/README.md`). |
 | « Les données d'hier ne sont pas encore arrivées » | Normal le matin : GA4 envoie la journée de la veille dans la matinée. |
+| Alerte « Aucune nouvelle donnée GA4 depuis le … » | L'export GA4 vers BigQuery est arrêté : dans GA4, Administration → rubrique des liaisons de produits (*Product links*) → BigQuery : vérifier que la liaison et l'export quotidien sont actifs. |
+| Alerte « Le calcul du tunnel … échoue » | Recréer la fonction avec `sql/calcul/creer_fonction.sql` (voir `config/README.md`), ou me transmettre le message. |
+| Alerte « Aucune personne comptée sur les étapes du tunnel » | Les adresses des pages du formulaire ont sans doute changé : les reporter dans `config/graphe.json`, puis suivre `config/README.md`. |

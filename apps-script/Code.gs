@@ -7,6 +7,10 @@
  * renvoie que des agrégats, aucun identifiant de personne ne sort de BigQuery.
  * Les résultats sont gardés en cache quelques heures.
  *
+ * Alertes : verifierChaqueJour, lancé chaque jour par un déclencheur (installé
+ * une fois avec installerDeclencheur), écrit à hello@elsee.care seulement en cas
+ * de gros problème (export GA4 arrêté, calcul en échec, tunnel à zéro).
+ *
  * Graphe.gs (généré à partir de config/graphe.json) définit GRAPHE.
  */
 
@@ -19,6 +23,10 @@ const FUSEAU = 'Europe/Paris';
 const DUREE_CACHE_ETAT = 15 * 60; // secondes
 const DUREE_CACHE_TUNNEL = 6 * 60 * 60; // le maximum permis par CacheService
 const PERIODE_MAX_JOURS = 400;
+const DESTINATAIRE_ALERTES = 'hello@elsee.care';
+const HEURE_VERIFICATION = 15; // heure de Paris
+const RETARD_MAX_JOURS = 2; // alerte si ni hier ni avant-hier ne sont arrivés
+const RAPPEL_JOURS = 3; // un même problème n'est rappelé que tous les 3 jours
 
 /** Page d'accueil de l'application web. */
 function doGet() {
@@ -40,8 +48,12 @@ function doGet() {
  */
 function lireEtat() {
   verifierAcces_();
+  return Object.assign({}, etatDonnees_(false), { graphe: GRAPHE, aujourdhui: aujourdhui_() });
+}
+
+function etatDonnees_(sansCache) {
   const cle = 'etat|' + GRAPHE.empreinte;
-  let etat = lireCache_(cle);
+  let etat = sansCache ? null : lireCache_(cle);
   if (!etat) {
     const [ligne] = requete_(
       "SELECT\n" +
@@ -58,10 +70,7 @@ function lireEtat() {
     };
     ecrireCache_(cle, etat, DUREE_CACHE_ETAT);
   }
-  return Object.assign({}, etat, {
-    graphe: GRAPHE,
-    aujourdhui: Utilities.formatDate(new Date(), FUSEAU, 'yyyy-MM-dd'),
-  });
+  return etat;
 }
 
 /**
@@ -73,7 +82,7 @@ function lireEtat() {
 function lireTunnel(debut, fin) {
   verifierAcces_();
   verifierPeriode_(debut, fin);
-  const etat = lireEtat();
+  const etat = etatDonnees_(false);
   const cle = ['tunnel', debut, fin, etat.miseAJour, GRAPHE.empreinte].join('|');
   let resultat = lireCache_(cle);
   if (!resultat) {
@@ -114,6 +123,110 @@ function testerInstallation() {
 }
 
 // ---------------------------------------------------------------------------
+// Alertes
+// ---------------------------------------------------------------------------
+
+/**
+ * Vérification quotidienne. N'écrit qu'en cas de gros problème :
+ * - aucune nouvelle journée GA4 depuis plus de RETARD_MAX_JOURS jours ;
+ * - la fonction de calcul elsee_funnel.agregats échoue ;
+ * - aucune personne sur les étapes du tunnel alors que GA4 a des données.
+ */
+function verifierChaqueJour() {
+  const problemes = [];
+  const aujourdhui = aujourdhui_();
+  let etat = null;
+  try {
+    etat = etatDonnees_(true);
+  } catch (e) {
+    problemes.push('Lecture de l’export GA4 impossible dans BigQuery : ' + e.message);
+  }
+  if (etat && !etat.dernierJour) problemes.push('Aucune table de l’export GA4 dans BigQuery.');
+  if (etat && etat.dernierJour) {
+    if (etat.dernierJour < ajouterJours_(aujourdhui, -RETARD_MAX_JOURS)) {
+      problemes.push('Aucune nouvelle donnée GA4 depuis le ' + etat.dernierJour + ' : l’export quotidien ' +
+        'de GA4 vers BigQuery semble arrêté (vérifier la liaison BigQuery dans l’administration de GA4).');
+    }
+    try {
+      const lignes = requete_(
+        'SELECT de, utilisateurs FROM ' + FONCTION + "(@jour, @jour) WHERE jour IS NULL AND genre = 'arrivees'",
+        [parametreDate_('jour', etat.dernierJour)]
+      );
+      const total = lignes.reduce((s, l) => s + Number(l[1] || 0), 0);
+      if (total === 0) {
+        problemes.push('Aucune personne comptée sur les étapes du tunnel le ' + etat.dernierJour +
+          ', alors que GA4 a envoyé des données : les adresses des pages du formulaire ont peut-être ' +
+          'changé (à reporter dans config/graphe.json).');
+      }
+    } catch (e) {
+      problemes.push('Le calcul du tunnel (fonction BigQuery elsee_funnel.agregats) échoue : ' + e.message);
+    }
+  }
+  signaler_(problemes);
+}
+
+/** À lancer une fois depuis l'éditeur : installe la vérification quotidienne. */
+function installerDeclencheur() {
+  for (const d of ScriptApp.getProjectTriggers()) {
+    if (d.getHandlerFunction() === 'verifierChaqueJour') ScriptApp.deleteTrigger(d);
+  }
+  ScriptApp.newTrigger('verifierChaqueJour').timeBased().everyDays(1)
+    .atHour(HEURE_VERIFICATION).inTimezone(FUSEAU).create();
+  console.log('Vérification installée : chaque jour entre ' + HEURE_VERIFICATION + ' h et ' +
+    (HEURE_VERIFICATION + 1) + ' h (heure de Paris). Alertes envoyées à ' + DESTINATAIRE_ALERTES + '.');
+}
+
+/** À lancer depuis l'éditeur pour vérifier que les e-mails d'alerte arrivent. */
+function testerAlerte() {
+  MailApp.sendEmail(DESTINATAIRE_ALERTES, '[Tunnel Elsee] Essai d’alerte',
+    'Ceci est un essai : les alertes du schéma du tunnel d’inscription arrivent bien à cette adresse.');
+  console.log('E-mail d’essai envoyé à ' + DESTINATAIRE_ALERTES + '.');
+}
+
+function signaler_(problemes) {
+  const proprietes = PropertiesService.getScriptProperties();
+  if (!problemes.length) {
+    proprietes.deleteProperty('derniere_alerte');
+    console.log('Vérification : tout va bien.');
+    return;
+  }
+  const texte = problemes.map((p) => '- ' + p).join('\n');
+  const precedente = JSON.parse(proprietes.getProperty('derniere_alerte') || 'null');
+  const maintenant = Date.now();
+  if (precedente && precedente.texte === texte && maintenant - precedente.le < RAPPEL_JOURS * 86400000) {
+    console.log('Problème déjà signalé, pas de nouvel e-mail :\n' + texte);
+    return;
+  }
+  let adresse = '';
+  try {
+    adresse = ScriptApp.getService().getUrl() || '';
+  } catch (e) {
+    adresse = '';
+  }
+  MailApp.sendEmail(DESTINATAIRE_ALERTES, '[Tunnel Elsee] Problème sur le schéma du tunnel',
+    'Bonjour,\n\n' +
+    'La vérification quotidienne du schéma du tunnel d’inscription a trouvé un problème :\n\n' +
+    texte + '\n\n' +
+    (adresse ? 'La page : ' + adresse + '\n' : '') +
+    'Que faire : voir la rubrique « Dépannage » de docs/deploiement_apps_script.md dans le dépôt ' +
+    'data-engineering, ou transmettre ce message.\n\n' +
+    'Cet e-mail n’est envoyé qu’en cas de problème important. Tant que le problème dure, ' +
+    'il est rappelé tous les ' + RAPPEL_JOURS + ' jours.\n');
+  proprietes.setProperty('derniere_alerte', JSON.stringify({ texte: texte, le: maintenant }));
+  console.log('Alerte envoyée à ' + DESTINATAIRE_ALERTES + ' :\n' + texte);
+}
+
+// ---------------------------------------------------------------------------
+
+function aujourdhui_() {
+  return Utilities.formatDate(new Date(), FUSEAU, 'yyyy-MM-dd');
+}
+
+function ajouterJours_(jour, n) {
+  const d = new Date(jour + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
 
 function verifierAcces_() {
   const email = (Session.getActiveUser().getEmail() || '').toLowerCase();

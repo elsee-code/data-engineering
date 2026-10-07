@@ -11,7 +11,7 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 | 1. Découverte | Faite et validée le 6 oct. : [`etape1_decouverte.md`](etape1_decouverte.md) |
 | 2. Calcul (config du graphe + calcul) | Fait et validé le 7 oct. : fonction `elsee_funnel.agregats(date_debut, date_fin)` ([`etape2_calcul.md`](etape2_calcul.md)) |
 | 3. Affichage Apps Script | **En cours** : page écrite et testée hors ligne ; mise en ligne par Eglantine avec [`deploiement_apps_script.md`](deploiement_apps_script.md) (déploiement de test, puis publication) |
-| 4. Automatisation et alertes | À faire |
+| 4. Automatisation et alertes | **En cours** : vérification quotidienne et alertes écrites et testées hors ligne ; à installer par Eglantine ([`deploiement_apps_script.md`](deploiement_apps_script.md), section 6) |
 | 5. Documentation | À faire |
 
 ## Questions encore ouvertes
@@ -33,7 +33,29 @@ Autres questions :
   l'export BigQuery. Il faudra le même export des quatre explorations sur une
   période d'au moins 7 jours couverte par l'export (au plus tôt du 5 au 11 oct.,
   disponible le 12 oct.).
-- Pour l'étape 4 : destinataires des e-mails d'alerte.
+
+## 2026-10-07 — Alertes (étape 4)
+
+Eglantine : alertes à **hello@elsee.care**, **seulement en cas de gros
+problème**. Retenu comme « gros problème » (la page afficherait des chiffres
+faux ou périmés) :
+
+1. **aucune nouvelle journée GA4 depuis plus de 2 jours** (ni hier ni
+   avant-hier) : l'export GA4 vers BigQuery semble arrêté. Un retard d'un jour,
+   qui arrive parfois, ne déclenche rien ;
+2. **le calcul échoue** : la fonction `elsee_funnel.agregats` a disparu ou
+   renvoie une erreur ;
+3. **le tunnel tombe à zéro** sur la dernière journée alors que GA4 a des
+   données (adresses du formulaire changées, par exemple).
+
+Vérification chaque jour entre 15 h et 16 h (heure de Paris), par un
+déclencheur Apps Script (`verifierChaqueJour`), installé une fois par
+Eglantine avec `installerDeclencheur`. Un même problème n'est rappelé que tous
+les 3 jours ; un problème résolu n'envoie rien. Cela remplace la règle du brief
+(« e-mail si la table de la veille manque ou si la recréation des vues
+échoue ») : il n'y a plus de vues à recréer, et un seul jour de retard n'est
+pas un gros problème. Testé hors ligne sur 10 scénarios (imitations des
+services Google).
 
 ## 2026-10-07 — Affichage des taux (Eglantine)
 
