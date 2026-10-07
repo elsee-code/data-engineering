@@ -9,21 +9,14 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 |---|---|
 | 0. Informations et accès manquants | Faite le 5 oct. ; réponses reçues le 6 oct. (voir ci-dessous) |
 | 1. Découverte | Faite et validée le 6 oct. : [`etape1_decouverte.md`](etape1_decouverte.md) |
-| 2. Calcul (config du graphe + calcul) | **En cours** : configuration et calcul écrits et testés en lecture seule ([`etape2_calcul.md`](etape2_calcul.md) ; sa section 5.2 est tranchée par l'entrée du 7 oct.). Création de `elsee_funnel` et de la fonction en attente de la confirmation explicite d'Eglantine |
+| 2. Calcul (config du graphe + calcul) | Fait le 7 oct. : fonction `elsee_funnel.agregats(date_debut, date_fin)` en place ([`etape2_calcul.md`](etape2_calcul.md)). **À valider par Eglantine** |
 | 3. Affichage Apps Script | À faire |
 | 4. Automatisation et alertes | À faire |
 | 5. Documentation | À faire |
 
 ## Questions encore ouvertes
 
-**À trancher pour finir l'étape 2** (détail dans
-[`etape2_calcul.md`](etape2_calcul.md), section 5) :
-
-- **Création dans BigQuery** : Eglantine a changé le rôle du compte de service
-  (7 oct.) pour qu'il crée `elsee_funnel` (région EU) et la fonction
-  `elsee_funnel.agregats(date_debut, date_fin)`. La création a été bloquée par
-  le garde-fou de la session cloud (action sur une ressource partagée) : il faut
-  la confirmation explicite d'Eglantine pour la lancer.
+**Validation de l'étape 2** par Eglantine ([`etape2_calcul.md`](etape2_calcul.md)).
 
 Autres questions :
 
@@ -41,6 +34,23 @@ Autres questions :
 - Pour les étapes 3 et 4 : compte propriétaire du script Apps Script, qui doit
   voir la page (tout le monde en @elsee.care ?), destinataires des alertes, qui
   lance `clasp push`.
+
+## 2026-10-07 — `elsee_funnel` et la fonction de calcul créés
+
+Sur confirmation écrite d'Eglantine (« oui, crée elsee_funnel et la
+fonction »), après qu'elle a donné au compte de service le droit de créer des
+datasets :
+
+- dataset `ga4-chemin-form.elsee_funnel` créé en région EU (expiration par
+  défaut des tables et vues : 60 jours, imposée par le bac à sable) ;
+- fonction de table `elsee_funnel.agregats(date_debut, date_fin)` créée. Elle
+  n'a pas de date d'expiration : **pas besoin de recréer des vues chaque jour**,
+  le déclencheur quotidien de l'étape 4 n'aura qu'à vérifier l'arrivée des
+  données (et que la fonction existe toujours) ;
+- première tentative refusée par BigQuery (texte de fonction limité à 32 Ko,
+  le nôtre en faisait 100) : le générateur encode désormais le graphe de façon
+  compacte (19 Ko) et vérifie la taille. Résultats identiques, ligne par ligne,
+  avant et après, et entre la fonction et `agregats.sql`.
 
 ## 2026-10-07 — Rattachement des personnes qui reviennent (Eglantine)
 

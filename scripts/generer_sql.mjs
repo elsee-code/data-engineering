@@ -99,18 +99,20 @@ const sansSortieMesurable = etapes
   })
   .map((e) => e.id);
 
-// Pour chaque page multiple : étape selon la page précédente.
-const casPagesMultiples = pagesMultiples
-  .map(([page, ids]) => {
-    const quand = fleches
-      .filter((f) => ids.includes(f.vers))
-      .map((f) => `WHEN ${q(f.de)} THEN ${q(f.vers)}`)
-      .join(" ");
-    return `      WHEN ${q(page)} THEN CASE precedente ${quand} END`;
+// Encodages compacts : le texte d'une fonction BigQuery est limité à 32 Ko.
+// Chaque étape a un numéro (1, 2, …) dans l'ordre de la configuration.
+const numero = new Map(etapes.map((e, i) => [e.id, i + 1]));
+// atteint : chaîne de 0 et de 1 ; le n-ième caractère vaut 1 si l'étape
+// numéro n est plus loin en suivant les flèches.
+const atteint = new Map(
+  etapes.map((e) => {
+    const plusLoin = new Set(atteignables.filter(([a]) => a === e.id).map(([, b]) => b));
+    return [e.id, etapes.map((x) => (plusLoin.has(x.id) ? "1" : "0")).join("")];
   })
-  .join("\n");
-// Pour chaque page multiple : étape selon la dernière étape vue par la personne
-// (dans cette session ou une précédente). On prend l'étape de cette page la plus
+);
+// rattache : pour chaque page à plusieurs parcours (dans l'ordre de
+// pagesMultiples), numéro de l'étape à retenir quand cette étape-ci est la
+// dernière vue par la personne (0 : aucune). On prend l'étape de la page la plus
 // proche en suivant les flèches (ex. après /offres, /mon-panier du parcours
 // compléments) ; si aucune n'est atteignable, celle du même parcours.
 function distances(depart) {
@@ -122,21 +124,19 @@ function distances(depart) {
   }
   return d;
 }
-const distancesDepuis = new Map(etapes.map((e) => [e.id, distances(e.id)]));
-const casDerniereEtape = pagesMultiples
-  .map(([page, ids]) => {
-    const quand = etapes
-      .map((e) => {
-        const d = distancesDepuis.get(e.id);
+const rattache = new Map(
+  etapes.map((e) => {
+    const d = distances(e.id);
+    return [
+      e.id,
+      pagesMultiples.map(([, ids]) => {
         const proches = ids.filter((i) => d.has(i)).sort((a, b) => d.get(a) - d.get(b));
         const choix = proches[0] ?? ids.find((i) => parId.get(i).parcours === e.parcours);
-        return choix ? `WHEN ${q(e.id)} THEN ${q(choix)}` : null;
-      })
-      .filter(Boolean)
-      .join(" ");
-    return `      WHEN ${q(page)} THEN CASE derniere_etape_personne ${quand} END`;
+        return choix ? numero.get(choix) : 0;
+      }),
+    ];
   })
-  .join("\n");
+);
 const nbPasses = pagesMultiples.length + 2;
 const JOURS_RECUL = 60;
 
@@ -149,16 +149,8 @@ function passe(n) {
   --   3. sinon, d'après la dernière étape vue par la personne, dans cette session
   --      ou une précédente (${JOURS_RECUL} jours au plus) : l'étape de cette page la
   --      plus proche en suivant les flèches, à défaut celle du même parcours.
-  SELECT * EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_personne),
-    COALESCE(
-      id_unique,
-      CASE cle
-${casPagesMultiples}
-      END,
-      derniere_meme_page,
-      CASE cle
-${casDerniereEtape}
-      END) AS etape
+  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_personne),
+    COALESCE(x.id_unique, pp.etape, x.derniere_meme_page, pd.etape) AS etape
   FROM (
     SELECT *,
       LAG(etape) OVER (PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang) AS precedente,
@@ -169,15 +161,19 @@ ${casDerniereEtape}
         PARTITION BY user_pseudo_id ORDER BY rang_personne
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_personne
     FROM passe${n - 1}
-  )
+  ) AS x
+  LEFT JOIN par_precedente AS pp ON pp.cle = x.cle AND pp.precedente = x.precedente
+  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle AND pd.derniere = x.derniere_etape_personne
 )`;
 }
 
 // Corps commun : des pages vues jusqu'aux passages classés, une ligne par page
 // du graphe vue (après rechargements et détours effacés), avec la page suivante.
 const corps = `etapes AS (
-  SELECT * FROM UNNEST(ARRAY<STRUCT<id STRING, cle STRING, ordre INT64>>[
-${liste(etapes.map((e, i) => `(${q(e.id)}, ${q(cle(e))}, ${i + 1})`))}
+  -- n : numéro de l'étape ; atteint : n-ième caractère à 1 si l'étape n est plus
+  -- loin en suivant les flèches ; rattache : voir par_derniere.
+  SELECT * FROM UNNEST(ARRAY<STRUCT<id STRING, cle STRING, n INT64, atteint STRING, rattache ARRAY<INT64>>>[
+${liste(etapes.map((e) => `(${q(e.id)}, ${q(cle(e))}, ${numero.get(e.id)}, ${q(atteint.get(e.id))}, [${rattache.get(e.id).join(", ")}])`))}
   ])
 ),
 chemins AS (
@@ -192,11 +188,26 @@ fleches AS (
 ${liste(fleches.map((f) => `(${q(f.de)}, ${q(f.vers)})`))}
   ])
 ),
-atteignables AS (
-  -- (de, vers) : vers est plus loin que de en suivant les flèches.
-  SELECT * FROM UNNEST(ARRAY<STRUCT<de STRING, vers STRING>>[
-${liste(atteignables.map(([a, b]) => `(${q(a)}, ${q(b)})`))}
+pages_multiples AS (
+  SELECT * FROM UNNEST(ARRAY<STRUCT<k INT64, cle STRING>>[
+${liste(pagesMultiples.map(([page], k) => `(${k}, ${q(page)})`))}
   ])
+),
+par_precedente AS (
+  -- Page à plusieurs parcours : étape selon la page précédente (flèche).
+  SELECT pm.cle, f.de AS precedente, f.vers AS etape
+  FROM fleches AS f
+  JOIN etapes AS ev ON ev.id = f.vers
+  JOIN pages_multiples AS pm ON pm.cle = ev.cle
+),
+par_derniere AS (
+  -- Page à plusieurs parcours : étape selon la dernière étape vue par la
+  -- personne (la plus proche en suivant les flèches, à défaut le même parcours).
+  SELECT pm.cle, e.id AS derniere, c.id AS etape
+  FROM etapes AS e
+  CROSS JOIN UNNEST(e.rattache) AS r WITH OFFSET AS k
+  JOIN pages_multiples AS pm ON pm.k = k
+  JOIN etapes AS c ON c.n = r
 ),
 pages AS (
   -- Pages vues : ${JOURS_RECUL} jours avant la période, pour retrouver le parcours des
@@ -252,16 +263,16 @@ sans_detours AS (
   -- Détours effacés : pour ${effaces.length ? effaces.join(", ") : "aucune étape"}, une visite suivie d'un
   -- retour à la page d'où l'on venait, puis d'une flèche partant de cette page,
   -- compte comme si la personne n'avait pas vu l'étape.
-  SELECT * EXCEPT (p, n1, n2)
+  SELECT d.* EXCEPT (p, n1, n2)
   FROM (
     SELECT *,
       LAG(e) OVER w AS p, LEAD(e) OVER w AS n1, LEAD(e, 2) OVER w AS n2
     FROM sans_rechargements
     WINDOW w AS (PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang)
-  )
-  WHERE NOT IFNULL(${effaces.length ? `e IN (${effaces.map(q).join(", ")})` : "FALSE"}
-                   AND n1 = p AND n2 != e
-                   AND CONCAT(p, '>', n2) IN UNNEST(${sqlTableau(fleches.map((f) => `${f.de}>${f.vers}`))}), FALSE)
+  ) AS d
+  LEFT JOIN fleches AS f ON f.de = d.p AND f.vers = d.n2
+  WHERE NOT IFNULL(${effaces.length ? `d.e IN (${effaces.map(q).join(", ")})` : "FALSE"}
+                   AND d.n1 = d.p AND d.n2 != d.e AND f.de IS NOT NULL, FALSE)
 ),
 suites AS (
   -- Après l'effacement d'un détour, la page d'avant et celle d'après sont
@@ -285,14 +296,14 @@ classees AS (
       WHEN s.vers IS NULL THEN 'fin'
       WHEN STARTS_WITH(s.vers, '?') THEN 'autre'
       WHEN f.de IS NOT NULL THEN 'fleche'
-      WHEN a.de IS NOT NULL THEN 'saut'
-      WHEN r.de IS NOT NULL THEN 'retour'
+      WHEN SUBSTR(ed.atteint, ev.n, 1) = '1' THEN 'saut'
+      WHEN SUBSTR(ev.atteint, ed.n, 1) = '1' THEN 'retour'
       ELSE 'autre'
     END AS genre
   FROM suites AS s
   LEFT JOIN fleches AS f ON f.de = s.e AND f.vers = s.vers
-  LEFT JOIN atteignables AS a ON a.de = s.e AND a.vers = s.vers
-  LEFT JOIN atteignables AS r ON r.de = s.vers AND r.vers = s.e
+  LEFT JOIN etapes AS ed ON ed.id = s.e
+  LEFT JOIN etapes AS ev ON ev.id = s.vers
 ),
 periode AS (
   SELECT * FROM classees WHERE jour BETWEEN date_debut AND date_fin
@@ -348,6 +359,18 @@ const entete = (titre, lignes) =>
 const declarations = `DECLARE date_debut DATE DEFAULT DATE '2026-10-05';
 DECLARE date_fin   DATE DEFAULT DATE_SUB(CURRENT_DATE('Europe/Paris'), INTERVAL 1 DAY);
 `;
+
+// Texte de la fonction, sans les commentaires : BigQuery le limite à 32 Ko.
+const corpsFonction = `WITH\n${corps}\nSELECT * FROM resultat`
+  .split("\n")
+  .filter((l) => !/^\s*--/.test(l))
+  .join("\n");
+const tailleFonction = Buffer.byteLength(corpsFonction, "utf8");
+const TAILLE_MAX = 32768;
+if (tailleFonction > TAILLE_MAX) {
+  console.error(`Texte de la fonction trop long : ${tailleFonction} octets (maximum ${TAILLE_MAX}).`);
+  process.exit(1);
+}
 
 const fichiers = {
   "agregats.sql":
@@ -407,7 +430,7 @@ SELECT
 FROM etapes AS e
 LEFT JOIN par_depart AS d ON d.etape = e.id
 LEFT JOIN par_arrivee AS a ON a.etape = e.id
-ORDER BY e.ordre;
+ORDER BY e.n;
 `,
 
   "creer_fonction.sql":
@@ -415,7 +438,7 @@ ORDER BY e.ordre;
       "À lancer seulement après validation (écriture dans elsee_funnel).",
       "Même calcul et même résultat que agregats.sql.",
       "Exemple : SELECT * FROM `ga4-chemin-form.elsee_funnel.agregats`(DATE '2026-10-05', DATE '2026-10-11')",
-    ]) + `CREATE OR REPLACE TABLE FUNCTION ${FONCTION}(date_debut DATE, date_fin DATE) AS (\nWITH\n${corps}\nSELECT * FROM resultat\n);\n`,
+    ]) + `CREATE OR REPLACE TABLE FUNCTION ${FONCTION}(date_debut DATE, date_fin DATE) AS (\n${corpsFonction}\n);\n`,
 };
 
 const dossier = join(racine, "sql/calcul");
@@ -424,5 +447,6 @@ for (const [nom, texte] of Object.entries(fichiers)) writeFileSync(join(dossier,
 console.log(
   `Configuration valide : ${etapes.length} étapes, ${fleches.length} flèches, ` +
     `${pagesMultiples.length} pages à plusieurs parcours, ${atteignables.length} paires atteignables.\n` +
+    `Texte de la fonction : ${tailleFonction} octets sur ${TAILLE_MAX}.\n` +
     `Écrit : ${Object.keys(fichiers).map((n) => "sql/calcul/" + n).join(", ")}`
 );

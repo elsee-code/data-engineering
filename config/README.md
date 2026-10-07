@@ -36,8 +36,10 @@ précédente. Une page précédente ne doit donc mener qu'à une seule de ces é
 1. Ajouter l'étape dans `etapes`, et ses flèches dans `fleches` (en remplaçant
    la flèche qu'elle coupe, s'il y en a une).
 2. Régénérer les requêtes : `node scripts/generer_sql.mjs`. Le script vérifie
-   la configuration (identifiants, flèches, pages à question, boucles) et
+   la configuration (identifiants, flèches, pages à question, boucles, taille
+   de la fonction : 32 Ko au plus) et
    s'arrête en cas d'erreur.
 3. Vérifier avec `sql/calcul/controle_coherence.sql` (aucun écart négatif).
-4. Recréer la fonction dans BigQuery avec `sql/calcul/creer_fonction.sql`
-   (une fois l'étape 2 validée et `elsee_funnel` créé).
+4. Recréer la fonction dans BigQuery :
+   `env -u CLOUDSDK_AUTH_ACCESS_TOKEN bq query --project_id=ga4-chemin-form --use_legacy_sql=false < sql/calcul/creer_fonction.sql`
+   (après `scripts/activer_cle_gcp.sh` dans une session cloud).

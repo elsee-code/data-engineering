@@ -1,9 +1,8 @@
 # Étape 2 — Calcul : configuration du graphe et requêtes
 
-> **En cours.** La configuration et le calcul sont écrits et testés en lecture
-> seule sur la journée du 5 octobre 2026. Rien n'a encore été créé dans
-> BigQuery : la création de `elsee_funnel` et de la fonction de calcul attend la
-> validation d'Eglantine (section 5).
+> **Terminée, à valider par Eglantine.** Le calcul est en place dans BigQuery
+> depuis le 7 octobre 2026 : fonction `elsee_funnel.agregats(date_debut,
+> date_fin)`, testée sur la journée du 5 octobre (section 5).
 
 ## 1. Les fichiers
 
@@ -13,7 +12,7 @@
 | [`scripts/generer_sql.mjs`](../scripts/generer_sql.mjs) | Vérifie la configuration, puis écrit les requêtes de `sql/calcul/`. À relancer après chaque modification de la configuration : `node scripts/generer_sql.mjs`. |
 | [`sql/calcul/agregats.sql`](../sql/calcul/agregats.sql) | Calcul complet sur une période (dates en tête du fichier). Ne renvoie que des agrégats. |
 | [`sql/calcul/controle_coherence.sql`](../sql/calcul/controle_coherence.sql) | Contrôle « sorties + abandons ≈ arrivées » pour chaque étape. |
-| [`sql/calcul/creer_fonction.sql`](../sql/calcul/creer_fonction.sql) | Crée la fonction `elsee_funnel.agregats(date_debut, date_fin)`, que la page interrogera. **Pas encore lancé.** |
+| [`sql/calcul/creer_fonction.sql`](../sql/calcul/creer_fonction.sql) | Crée (ou remplace) la fonction `elsee_funnel.agregats(date_debut, date_fin)`, que la page interrogera. Lancé le 7 oct. ; à relancer après chaque modification de la configuration. |
 
 ## 2. Le graphe (schéma du 6 oct. et réponses d'Eglantine)
 
@@ -49,11 +48,19 @@ une série jour par jour.
    (sans paramètres, en minuscules, sans « / » final) sont dans le graphe. Les
    autres pages sont ignorées.
 2. **Étape d'une page à plusieurs parcours** (`/mon-offre`, `/mon-panier`,
-   `/bienvenue-chez-elsee`) : déduite de la page du graphe vue juste avant dans
-   la session (par exemple `/mon-panier` après `/offres` = parcours compléments).
-   Si la page précédente ne donne pas le parcours (retour en arrière), c'est le
-   même parcours que la dernière fois que cette page a été vue dans la session.
-   Sinon, la page n'est rattachée à aucun parcours (voir 5.2).
+   `/bienvenue-chez-elsee`), dans l'ordre (règle validée le 7 oct.) :
+   1. d'après la page du graphe vue juste avant dans la session (par exemple
+      `/mon-panier` après `/offres` = parcours compléments) ;
+   2. sinon (retour en arrière), le même parcours que la dernière fois que cette
+      page a été vue dans la session ;
+   3. sinon (personne qui revient par un lien, un e-mail, le paiement), d'après
+      la dernière étape qu'elle a vue, dans cette session ou une précédente,
+      sur 60 jours au plus : l'étape de la page la plus proche en suivant les
+      flèches (après `/offres`, `/mon-panier` du parcours compléments ; après
+      `/signup`, l'offre directe), à défaut celle du même parcours ;
+   4. sinon, la page n'est rattachée à aucun parcours et n'est pas affichée
+      (décision du 6 oct. sur les arrivées sans page précédente). Le calcul la
+      compte à part (genre `non_rattache`) pour contrôle.
 3. **Rechargements** : la même étape vue plusieurs fois de suite compte une
    fois.
 4. **Carte cadeau** : une personne qui va de `/mon-offre` à
@@ -94,42 +101,36 @@ Les passages calculés correspondent à ceux de l'étape 1, par exemple :
 Taux d'abandon notables (une seule journée : à confirmer) :
 `network_complements` 23 % (42 sur 180), `en_savoir_plus_sur_vous` 36 % (8 sur
 22), `bonus-abonnement` 17 %, `/offres` 86 % (32 sur 37), `/mon-offre` du long
-form 54 % (52 sur 96), `/pricing/cartecadeau` 83 % (10 sur 12).
+form 54 % (53 sur 98), `/pricing/cartecadeau` 83 % (10 sur 12).
 
-## 5. Décisions à prendre avant de créer quoi que ce soit
+Pages non rattachées à un parcours le 5 oct. : 33 personnes sur `/mon-offre`,
+21 sur `/mon-panier` et les 5 personnes arrivées sur `/bienvenue-chez-elsee`.
+Leurs visites précédentes datent d'avant le début de l'export (5 oct.) : la
+règle 2.3 en rattachera de plus en plus au fil des jours. Tant que ce n'est pas
+le cas, les inscriptions et les abandons sur `/mon-panier` (100 % ce jour-là)
+sont à lire avec prudence.
 
-### 5.1 Création dans BigQuery
+## 5. Mise en place dans BigQuery (7 octobre)
 
-Proposition : créer le dataset `elsee_funnel` (région **EU**, comme l'export),
-puis la fonction de table `elsee_funnel.agregats(date_debut, date_fin)` avec
-[`creer_fonction.sql`](../sql/calcul/creer_fonction.sql). La page l'interrogera
-pour la période choisie et ne recevra que des agrégats. Une fonction remplace les
-vues prévues : elle prend la période en paramètre et ne lit que les tables
-utiles (environ 6 Mo par jour de données, soit au plus 350 Mo pour 60 jours,
-dans le quota gratuit du bac à sable). À vérifier juste après création : qu'une
-fonction de table est autorisée en bac à sable et si elle expire.
+Validé par Eglantine, qui a donné au compte de service le droit de créer des
+datasets.
 
-Le compte de service ne peut pas créer le dataset aujourd'hui. Deux
-possibilités : Eglantine crée `elsee_funnel` (région EU) et donne au compte le
-rôle « Éditeur de données BigQuery » dessus, ou elle donne au compte le rôle
-« Utilisateur BigQuery » sur le projet pour qu'il le crée.
+- Dataset **`elsee_funnel`** créé en région **EU**, comme l'export. Le bac à sable
+  y applique une expiration de 60 jours aux tables et aux vues ; nous n'en créons
+  pas.
+- Fonction de table **`elsee_funnel.agregats(date_debut, date_fin)`** créée avec
+  [`creer_fonction.sql`](../sql/calcul/creer_fonction.sql). Elle n'a pas de date
+  d'expiration. Elle renvoie exactement les mêmes 546 lignes que
+  [`agregats.sql`](../sql/calcul/agregats.sql) sur le 5 oct. Exemple :
 
-### 5.2 Sessions qui commencent sur `/mon-offre`, `/mon-panier` ou `/bienvenue-chez-elsee`
+  ```sql
+  SELECT * FROM `ga4-chemin-form.elsee_funnel.agregats`(DATE '2026-10-05', DATE '2026-10-11')
+  ```
 
-Des personnes reviennent plus tard directement sur ces pages (lien dans un
-e-mail, retour du paiement). Sans page précédente dans la session, on ne sait
-pas à quel parcours les rattacher. Le 5 oct. : 38 personnes sur `/mon-offre`,
-24 sur `/mon-panier` et **les 5 personnes arrivées sur `/bienvenue-chez-elsee`**
-ne sont rattachées à aucun parcours. Le schéma n'afficherait donc aucune
-inscription, et un taux d'abandon de 100 % sur `/mon-panier`.
-
-Proposition : rattacher ces sessions au dernier parcours que la même personne a
-suivi dans une session précédente (sur les 60 jours conservés). Les personnes
-sans parcours connu ne sont pas affichées (décision du 6 oct. sur les arrivées
-sans page précédente). Le 5 oct., seules 3 personnes avaient une session
-précédente le même jour ([requête 14](../sql/decouverte/14_parcours_sessions_precedentes.sql)) :
-l'export ne commence que le 5 oct., l'effet se mesurera au fil des jours.
-
-Cette règle remplacerait la règle des 24 h proposée pour `/mon-panier →
-/bienvenue-chez-elsee` : le 5 oct., les personnes revenues du paiement Stripe
-ont toutes gardé leur session.
+- Le texte d'une fonction BigQuery est limité à 32 Ko : le générateur décrit
+  donc le graphe de façon compacte et refuse de produire une fonction trop
+  longue (19 Ko aujourd'hui, pour 48 étapes).
+- Coût : la fonction lit les 60 jours qui précèdent la période (règle 2.3),
+  soit environ 6 Mo par jour de données, au plus 370 Mo par appel. Le quota
+  gratuit du bac à sable (1 To par mois) permet plus de 2 500 appels par mois ;
+  la page gardera les résultats en cache.
