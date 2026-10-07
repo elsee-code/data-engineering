@@ -9,14 +9,16 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 |---|---|
 | 0. Informations et accès manquants | Faite le 5 oct. ; réponses reçues le 6 oct. (voir ci-dessous) |
 | 1. Découverte | Faite et validée le 6 oct. : [`etape1_decouverte.md`](etape1_decouverte.md) |
-| 2. Calcul (config du graphe + calcul) | Fait le 7 oct. : fonction `elsee_funnel.agregats(date_debut, date_fin)` en place ([`etape2_calcul.md`](etape2_calcul.md)). **À valider par Eglantine** |
-| 3. Affichage Apps Script | À faire |
+| 2. Calcul (config du graphe + calcul) | Fait et validé le 7 oct. : fonction `elsee_funnel.agregats(date_debut, date_fin)` ([`etape2_calcul.md`](etape2_calcul.md)) |
+| 3. Affichage Apps Script | **En cours** : page écrite et testée hors ligne ; mise en ligne par Eglantine avec [`deploiement_apps_script.md`](deploiement_apps_script.md) (déploiement de test, puis publication) |
 | 4. Automatisation et alertes | À faire |
 | 5. Documentation | À faire |
 
 ## Questions encore ouvertes
 
-**Validation de l'étape 2** par Eglantine ([`etape2_calcul.md`](etape2_calcul.md)).
+**Étape 3** : Eglantine met la page en ligne en suivant
+[`deploiement_apps_script.md`](deploiement_apps_script.md), d'abord en
+déploiement de test, et fait ses retours avant la publication.
 
 Autres questions :
 
@@ -31,9 +33,44 @@ Autres questions :
   l'export BigQuery. Il faudra le même export des quatre explorations sur une
   période d'au moins 7 jours couverte par l'export (au plus tôt du 5 au 11 oct.,
   disponible le 12 oct.).
-- Pour les étapes 3 et 4 : compte propriétaire du script Apps Script, qui doit
-  voir la page (tout le monde en @elsee.care ?), destinataires des alertes, qui
-  lance `clasp push`.
+- Pour l'étape 4 : destinataires des e-mails d'alerte.
+
+## 2026-10-07 — Étape 2 validée, étape 3 : la page Apps Script
+
+Eglantine a répondu aux questions posées pour l'étape 3, ce qui vaut validation
+de l'étape 2 (les questions étaient posées à cette condition) :
+
+1. **Propriétaire du script : hello@elsee.care**, propriétaire du projet
+   `ga4-chemin-form`. La page s'exécute avec ce compte (« Exécuter en tant que :
+   moi ») : aucune clé à stocker.
+2. **Accès : tout le monde en @elsee.care** (déploiement réservé au domaine,
+   plus une vérification de l'adresse par le script).
+3. **Mise en ligne par Eglantine**, par copier-coller dans l'éditeur Apps
+   Script (pas d'installation) : guide
+   [`deploiement_apps_script.md`](deploiement_apps_script.md).
+
+Réalisé :
+
+- [`apps-script/`](../apps-script/) : `Code.gs` (serveur : état des données,
+  appel de `elsee_funnel.agregats`, cache de 6 h vidé à chaque nouvelle donnée
+  ou configuration, fonction `testerInstallation`), `Page.html` (schéma SVG,
+  filtre période, bulles d'aide avec courbe des arrivées par jour, export PNG,
+  détails et contrôles), `Graphe.gs` (généré à partir de `config/graphe.json`),
+  `appsscript.json`.
+- Périodes : hier, 7 jours, 28 jours, mois en cours, mois précédent, période
+  libre ; ramenées aux jours disponibles, avec la période réellement couverte
+  affichée. Message si les données d'hier ne sont pas encore arrivées.
+- Flèches www → app en pointillés, sans chiffre (non mesurables). Taux
+  d'abandon en rouge sur la flèche (une seule sortie) ou dans l'étape (plusieurs
+  sorties, avec la répartition en % sur chaque flèche). Passages hors schéma et
+  pages sans parcours listés sous le schéma.
+- Testé hors Apps Script : page avec les vrais agrégats du 5 oct. dans Chromium
+  (aucune erreur, bulles, export PNG, affichage sur téléphone) ; serveur avec
+  des imitations des services Google (pagination BigQuery, cache découpé,
+  refus des comptes extérieurs).
+- Dans la configuration, les étapes de l'offre directe sont espacées (colonnes
+  1,3 / 2,6 / 3,9) pour laisser la place aux chiffres, et chaque parcours peut
+  avoir un titre positionné (`titre`).
 
 ## 2026-10-07 — `elsee_funnel` et la fonction de calcul créés
 

@@ -1,19 +1,22 @@
 #!/usr/bin/env node
-// Génère les requêtes de calcul du tunnel à partir de config/graphe.json.
+// Génère, à partir de config/graphe.json, les requêtes de calcul du tunnel et la
+// configuration de la page Apps Script.
 //
 // Usage : node scripts/generer_sql.mjs
-// Écrit, dans sql/calcul/ :
+// Écrit apps-script/Graphe.gs (le graphe pour la page) et, dans sql/calcul/ :
 //   - agregats.sql            : script autonome (dates en tête), renvoie les agrégats ;
 //   - controle_coherence.sql  : script autonome, contrôle « sorties + abandons ≈ arrivées » ;
 //   - creer_fonction.sql      : crée la fonction de table elsee_funnel.agregats(date_debut, date_fin).
 // Ne jamais modifier ces fichiers à la main : modifier la configuration, puis relancer.
 
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
-const graphe = JSON.parse(readFileSync(join(racine, "config/graphe.json"), "utf8"));
+const texteConfig = readFileSync(join(racine, "config/graphe.json"), "utf8");
+const graphe = JSON.parse(texteConfig);
 const SOURCE = "`ga4-chemin-form.analytics_383563328.events_*`";
 const FONCTION = "`ga4-chemin-form.elsee_funnel.agregats`";
 
@@ -444,9 +447,23 @@ ORDER BY e.n;
 const dossier = join(racine, "sql/calcul");
 mkdirSync(dossier, { recursive: true });
 for (const [nom, texte] of Object.entries(fichiers)) writeFileSync(join(dossier, nom), texte);
+
+// Graphe pour la page Apps Script, avec une empreinte de la configuration (le
+// cache de la page en dépend : une nouvelle configuration vide le cache).
+const empreinte = createHash("sha1").update(texteConfig).digest("hex").slice(0, 10);
+mkdirSync(join(racine, "apps-script"), { recursive: true });
+writeFileSync(
+  join(racine, "apps-script/Graphe.gs"),
+  [
+    "// FICHIER GÉNÉRÉ par scripts/generer_sql.mjs à partir de config/graphe.json :",
+    "// ne pas modifier à la main.",
+    `const GRAPHE = ${JSON.stringify({ ...graphe, empreinte }, null, 2)};`,
+    "",
+  ].join("\n")
+);
 console.log(
   `Configuration valide : ${etapes.length} étapes, ${fleches.length} flèches, ` +
     `${pagesMultiples.length} pages à plusieurs parcours, ${atteignables.length} paires atteignables.\n` +
     `Texte de la fonction : ${tailleFonction} octets sur ${TAILLE_MAX}.\n` +
-    `Écrit : ${Object.keys(fichiers).map((n) => "sql/calcul/" + n).join(", ")}`
+    `Écrit : ${Object.keys(fichiers).map((n) => "sql/calcul/" + n).join(", ")}, apps-script/Graphe.gs`
 );

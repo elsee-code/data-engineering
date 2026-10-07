@@ -1,7 +1,7 @@
 # Configuration du graphe : `graphe.json`
 
 Seule description du tunnel. Le calcul (requêtes de `sql/calcul/`) et la page
-(étape 3) s'en servent. Ajouter une page au formulaire = modifier ce fichier,
+(`apps-script/Graphe.gs`) en sont générés. Ajouter une page au formulaire = modifier ce fichier,
 puis régénérer les requêtes.
 
 ## Contenu
@@ -43,3 +43,6 @@ précédente. Une page précédente ne doit donc mener qu'à une seule de ces é
 4. Recréer la fonction dans BigQuery :
    `env -u CLOUDSDK_AUTH_ACCESS_TOKEN bq query --project_id=ga4-chemin-form --use_legacy_sql=false < sql/calcul/creer_fonction.sql`
    (après `scripts/activer_cle_gcp.sh` dans une session cloud).
+5. Mettre à jour la page : remplacer le contenu de `Graphe.gs` dans le projet
+   Apps Script par `apps-script/Graphe.gs` (régénéré à l'étape 2), puis publier
+   une nouvelle version (voir [`docs/deploiement_apps_script.md`](../docs/deploiement_apps_script.md)).

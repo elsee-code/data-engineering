@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<title>Tunnel d’inscription Elsee</title>
+<style>
+  :root {
+    --texte: #1a1a1a;
+    --doux: #5f5f5f;
+    --gris: #8c8c8c;
+    --trait: #dcdcdc;
+    --fond: #ffffff;
+    --fond-2: #f6f6f4;
+    --abandon: #c8372d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--texte);
+    background: var(--fond);
+    font-size: 14px;
+  }
+  header {
+    position: sticky; top: 0; z-index: 5;
+    background: rgba(255, 255, 255, 0.97);
+    border-bottom: 1px solid var(--trait);
+    padding: 12px 16px 10px;
+  }
+  .ligne { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+  h1 { font-size: 17px; margin: 0 8px 0 0; font-weight: 650; }
+  .periodes { display: flex; flex-wrap: wrap; gap: 6px; }
+  button {
+    font: inherit; font-size: 13px; cursor: pointer;
+    border: 1px solid var(--trait); background: #fff; color: var(--texte);
+    border-radius: 999px; padding: 5px 12px;
+  }
+  button:hover { border-color: var(--gris); }
+  button[aria-pressed="true"] { background: var(--texte); color: #fff; border-color: var(--texte); }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .libre { display: none; align-items: center; gap: 6px; font-size: 13px; }
+  .libre.visible { display: flex; }
+  .libre input { font: inherit; font-size: 13px; padding: 4px 6px; border: 1px solid var(--trait); border-radius: 6px; }
+  .infos { margin-top: 8px; font-size: 12.5px; color: var(--doux); display: flex; flex-wrap: wrap; gap: 4px 16px; }
+  .messages { padding: 0 16px; }
+  .message {
+    margin-top: 10px; padding: 8px 12px; border-radius: 8px; font-size: 13px;
+    background: #fff6e6; border: 1px solid #f0cf8f; color: #6f4700;
+  }
+  .message.erreur { background: #fdecea; border-color: #f2b8b1; color: #8a1c12; }
+  main { padding: 8px 16px 40px; }
+  .legende { font-size: 12.5px; color: var(--doux); margin: 8px 0 4px; display: flex; flex-wrap: wrap; gap: 4px 18px; }
+  .legende b { color: var(--texte); }
+  .legende .r { color: var(--abandon); font-weight: 600; }
+  .legende .g { color: var(--gris); font-weight: 700; }
+  .zone { overflow-x: auto; position: relative; }
+  .zone.chargement svg { opacity: 0.35; }
+  #attente { position: absolute; top: 40px; left: 0; right: 0; text-align: center; font-size: 14px; color: var(--doux); display: none; }
+  .zone.chargement #attente { display: block; }
+  svg#schema { display: block; width: 100%; min-width: 1150px; height: auto; }
+  #bulle {
+    position: fixed; z-index: 20; pointer-events: none; display: none;
+    max-width: 320px; background: #fff; border: 1px solid var(--trait); border-radius: 10px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12); padding: 10px 12px; font-size: 12.5px; line-height: 1.45;
+  }
+  #bulle h3 { margin: 0 0 4px; font-size: 13px; word-break: break-all; }
+  #bulle .petit { color: var(--doux); }
+  #bulle table { border-collapse: collapse; margin-top: 4px; width: 100%; }
+  #bulle td { padding: 1px 0; vertical-align: top; }
+  #bulle td.n { text-align: right; padding-left: 10px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  details { margin-top: 18px; border-top: 1px solid var(--trait); padding-top: 10px; }
+  summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+  .details-contenu { font-size: 13px; color: var(--doux); }
+  .details-contenu table { border-collapse: collapse; margin: 8px 0 14px; max-width: 100%; }
+  .details-contenu td { overflow-wrap: anywhere; }
+  .details-contenu th, .details-contenu td { text-align: left; padding: 3px 14px 3px 0; border-bottom: 1px solid #eee; }
+  .details-contenu td.n, .details-contenu th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  #apercu {
+    position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, 0.55);
+    display: none; align-items: flex-start; justify-content: center; overflow: auto; padding: 24px 12px;
+  }
+  #apercu.visible { display: flex; }
+  #apercu .cadre { background: #fff; border-radius: 12px; padding: 14px; max-width: 1100px; width: 100%; }
+  #apercu img { width: 100%; height: auto; border: 1px solid var(--trait); margin-top: 10px; }
+  #apercu .ligne { justify-content: space-between; }
+  #apercu a { font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="ligne">
+    <h1>Tunnel d’inscription Elsee</h1>
+    <div class="periodes" id="periodes"></div>
+    <div class="libre" id="libre">
+      du <input type="date" id="libre-debut"> au <input type="date" id="libre-fin">
+      <button type="button" id="libre-ok">Afficher</button>
+    </div>
+    <button type="button" id="export" disabled>Exporter en PNG</button>
+  </div>
+  <div class="infos">
+    <span id="info-periode">Chargement…</span>
+    <span id="info-donnees"></span>
+  </div>
+</header>
+<div class="messages" id="messages"></div>
+<main>
+  <div class="legende">
+    <span><b>En gras</b> dans chaque étape : personnes arrivées sur l’étape</span>
+    <span><span class="g">En gris</span> sur chaque flèche : personnes passées d’une étape à l’autre</span>
+    <span><span class="r">En rouge</span> : taux d’abandon de l’étape de départ</span>
+    <span>Survolez une étape ou une flèche pour le détail</span>
+  </div>
+  <div class="zone" id="zone">
+    <div id="attente">Calcul en cours…</div>
+    <svg id="schema" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schéma du tunnel d’inscription"></svg>
+  </div>
+  <details id="details">
+    <summary>Détails et contrôles</summary>
+    <div class="details-contenu" id="details-contenu"></div>
+  </details>
+</main>
+<div id="bulle"></div>
+<div id="apercu" role="dialog" aria-modal="true">
+  <div class="cadre">
+    <div class="ligne">
+      <a id="apercu-lien" download="tunnel-elsee.png" href="#">Télécharger l’image</a>
+      <span class="petit">Si le téléchargement ne démarre pas : clic droit sur l’image, puis « Enregistrer l’image sous ».</span>
+      <button type="button" id="apercu-fermer">Fermer</button>
+    </div>
+    <img id="apercu-image" alt="Schéma du tunnel exporté">
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ---------------------------------------------------------------------------
+// Dessin : dimensions (en pixels du schéma)
+// ---------------------------------------------------------------------------
+const COL_L = 205;      // largeur d'une colonne
+const LIG_H = 72;       // hauteur d'une ligne
+const NOEUD_L = 184;    // largeur d'une étape
+const MARGE = 28;
+const COULEUR_DEFAUT = '#333333';
+const COULEUR_NON_MESURABLE = '#b5b5b5';
+
+const etat = { serveur: null, graphe: null, periode: null, choix: '7j', donnees: null, index: null, demande: 0 };
+const bulles = new Map();
+
+// ---------------------------------------------------------------------------
+// Dates (chaînes AAAA-MM-JJ, calculs en UTC pour éviter les décalages)
+// ---------------------------------------------------------------------------
+const versDate = (s) => new Date(s + 'T00:00:00Z');
+const versTexte = (d) => d.toISOString().slice(0, 10);
+const ajouterJours = (s, n) => { const d = versDate(s); d.setUTCDate(d.getUTCDate() + n); return versTexte(d); };
+const debutMois = (s) => s.slice(0, 8) + '01';
+const dateLisible = (s) => versDate(s).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const dateCourte = (s) => versDate(s).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+const nbJours = (d, f) => Math.round((versDate(f) - versDate(d)) / 86400000) + 1;
+
+const PERIODES = [
+  { cle: 'hier', libelle: 'Hier', calcul: (a) => [ajouterJours(a, -1), ajouterJours(a, -1)] },
+  { cle: '7j', libelle: '7 jours', calcul: (a) => [ajouterJours(a, -7), ajouterJours(a, -1)] },
+  { cle: '28j', libelle: '28 jours', calcul: (a) => [ajouterJours(a, -28), ajouterJours(a, -1)] },
+  { cle: 'mois', libelle: 'Mois en cours', calcul: (a) => [debutMois(a), ajouterJours(a, -1)] },
+  { cle: 'mois-precedent', libelle: 'Mois précédent', calcul: (a) => { const f = ajouterJours(debutMois(a), -1); return [debutMois(f), f]; } },
+  { cle: 'libre', libelle: 'Période libre', calcul: null },
+];
+
+// ---------------------------------------------------------------------------
+// Formats
+// ---------------------------------------------------------------------------
+const fmt = new Intl.NumberFormat('fr-FR');
+const nombre = (n) => (n === null || n === undefined ? '–' : fmt.format(n));
+const pourcent = (x) => (x === null || x === undefined || !isFinite(x) ? '–' : Math.round(x * 100) + ' %');
+const echapper = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// ---------------------------------------------------------------------------
+// Démarrage
+// ---------------------------------------------------------------------------
+function demarrer() {
+  google.script.run.withSuccessHandler(recevoirEtat).withFailureHandler(afficherErreur).lireEtat();
+}
+
+function recevoirEtat(serveur) {
+  etat.serveur = serveur;
+  etat.graphe = serveur.graphe;
+  const boutons = document.getElementById('periodes');
+  boutons.innerHTML = PERIODES.map((p) =>
+    `<button type="button" data-periode="${p.cle}" aria-pressed="false">${p.libelle}</button>`).join('');
+  boutons.addEventListener('click', (ev) => {
+    const b = ev.target.closest('button[data-periode]');
+    if (b) choisirPeriode(b.dataset.periode);
+  });
+  const [debut, fin] = [document.getElementById('libre-debut'), document.getElementById('libre-fin')];
+  for (const champ of [debut, fin]) {
+    if (serveur.premierJour) champ.min = serveur.premierJour;
+    if (serveur.dernierJour) champ.max = serveur.dernierJour;
+  }
+  document.getElementById('libre-ok').addEventListener('click', () => {
+    if (debut.value && fin.value) charger(debut.value, fin.value);
+  });
+  document.getElementById('export').addEventListener('click', exporterPng);
+  document.getElementById('apercu-fermer').addEventListener('click', () => document.getElementById('apercu').classList.remove('visible'));
+
+  if (!serveur.dernierJour) {
+    afficherMessage('Aucune donnée GA4 n’est encore disponible dans BigQuery.', true);
+    return;
+  }
+  const hier = ajouterJours(serveur.aujourdhui, -1);
+  const recu = serveur.miseAJour ? new Date(serveur.miseAJour).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Paris' }) : null;
+  document.getElementById('info-donnees').textContent =
+    `Données disponibles du ${dateLisible(serveur.premierJour)} au ${dateLisible(serveur.dernierJour)}` +
+    (recu ? ` (dernière mise à jour reçue le ${recu})` : '');
+  if (serveur.dernierJour < hier) {
+    afficherMessage(`Les données d’hier (${dateLisible(hier)}) ne sont pas encore arrivées : ` +
+      `GA4 les envoie en général dans la matinée. Dernière journée disponible : ${dateLisible(serveur.dernierJour)}.`);
+  }
+  choisirPeriode('7j');
+}
+
+function choisirPeriode(cle) {
+  etat.choix = cle;
+  for (const b of document.querySelectorAll('#periodes button')) b.setAttribute('aria-pressed', String(b.dataset.periode === cle));
+  document.getElementById('libre').classList.toggle('visible', cle === 'libre');
+  const p = PERIODES.find((x) => x.cle === cle);
+  if (!p.calcul) {
+    const debut = document.getElementById('libre-debut');
+    const fin = document.getElementById('libre-fin');
+    if (!fin.value) fin.value = etat.serveur.dernierJour;
+    if (!debut.value) debut.value = ajouterJours(fin.value, -6) < etat.serveur.premierJour ? etat.serveur.premierJour : ajouterJours(fin.value, -6);
+    return;
+  }
+  const [debut, fin] = p.calcul(etat.serveur.aujourdhui);
+  charger(debut, fin, p.libelle);
+}
+
+function charger(debutDemande, finDemandee, libelle) {
+  effacerMessages(true);
+  const s = etat.serveur;
+  if (debutDemande > finDemandee) {
+    afficherMessage('La date de début doit précéder la date de fin.', true);
+    return;
+  }
+  const debut = debutDemande < s.premierJour ? s.premierJour : debutDemande;
+  const fin = finDemandee > s.dernierJour ? s.dernierJour : finDemandee;
+  if (debut > fin) {
+    afficherMessage(`Aucune donnée sur cette période. Données disponibles du ${dateLisible(s.premierJour)} au ${dateLisible(s.dernierJour)}.`, true);
+    return;
+  }
+  etat.periode = { debut, fin, libelle };
+  const tronquee = debut !== debutDemande || fin !== finDemandee;
+  document.getElementById('info-periode').innerHTML =
+    `<b>${libelle ? libelle + ' : ' : ''}du ${dateLisible(debut)} au ${dateLisible(fin)}</b>` +
+    ` (${nbJours(debut, fin)} jour${nbJours(debut, fin) > 1 ? 's' : ''})` +
+    (tronquee ? ` · période ramenée aux jours disponibles (demandée : du ${dateLisible(debutDemande)} au ${dateLisible(finDemandee)})` : '');
+  document.getElementById('zone').classList.add('chargement');
+  document.getElementById('export').disabled = true;
+  const numero = ++etat.demande;
+  google.script.run
+    .withSuccessHandler((donnees) => { if (numero === etat.demande) afficher(donnees); })
+    .withFailureHandler((e) => { if (numero === etat.demande) afficherErreur(e); })
+    .lireTunnel(debut, fin);
+}
+
+function afficher(donnees) {
+  etat.donnees = donnees;
+  etat.index = indexer(donnees);
+  document.getElementById('zone').classList.remove('chargement');
+  document.getElementById('export').disabled = false;
+  dessiner();
+  remplirDetails();
+}
+
+function afficherErreur(e) {
+  document.getElementById('zone').classList.remove('chargement');
+  afficherMessage('Erreur : ' + (e && e.message ? e.message : e), true);
+}
+
+function afficherMessage(texte, erreur) {
+  const div = document.createElement('div');
+  div.className = 'message' + (erreur ? ' erreur' : '');
+  div.dataset.temporaire = erreur ? '1' : '';
+  div.textContent = texte;
+  document.getElementById('messages').appendChild(div);
+}
+
+function effacerMessages(seulementErreurs) {
+  for (const m of document.querySelectorAll('#messages .message')) {
+    if (!seulementErreurs || m.dataset.temporaire) m.remove();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Données
+// ---------------------------------------------------------------------------
+function indexer(d) {
+  const i = { arrivees: {}, continuent: {}, entrees: {}, fleche: {}, horsSchema: [], nonRattache: [], serie: {}, sauts: {} };
+  for (const [genre, de, vers, n] of d.totaux) {
+    if (genre === 'arrivees') i.arrivees[de] = n;
+    else if (genre === 'continuent') i.continuent[de] = n;
+    else if (genre === 'entrees_directes') i.entrees[de] = n;
+    else if (genre === 'fleche') i.fleche[de + '>' + vers] = n;
+    else if (genre === 'non_rattache') i.nonRattache.push({ chemin: de, n });
+    else if (genre === 'saut' || genre === 'retour' || genre === 'autre') {
+      i.horsSchema.push({ genre, de, vers, n });
+      if (genre === 'saut') i.sauts[de] = (i.sauts[de] || 0) + n;
+    }
+  }
+  for (const [genre, de, , jour, n] of d.jours) {
+    if (genre === 'arrivees') (i.serie[de] = i.serie[de] || {})[jour] = n;
+  }
+  return i;
+}
+
+const arrivees = (id) => etat.index.arrivees[id] || 0;
+// Taux d'abandon : vide pour une étape sans sortie (fin du tunnel), sans
+// arrivée, ou dont les sorties ne sont pas mesurables.
+function tauxAbandon(id) {
+  const a = arrivees(id);
+  if (!a || !etat.graphe.fleches.some((f) => f.de === id)) return null;
+  const c = etat.index.continuent[id];
+  if (c === null) return null;
+  return 1 - (c || 0) / a;
+}
+function passages(f) {
+  if (f.mesurable === false) return null;
+  return etat.index.fleche[f.de + '>' + f.vers] || 0;
+}
+
+// ---------------------------------------------------------------------------
+// Dessin du schéma
+// ---------------------------------------------------------------------------
+function nomAffiche(e) {
+  return e.chemin.startsWith('/signup/') ? e.chemin.slice(8) : e.chemin;
+}
+
+function couper(texte, max) {
+  if (texte.length <= max) return [texte];
+  let i = -1;
+  for (const sep of ['-', '_', '/']) {
+    const j = texte.lastIndexOf(sep, max - 1);
+    if (j > i) i = j;
+  }
+  if (i <= 0) return [texte];
+  return [texte.slice(0, i + 1), texte.slice(i + 1)];
+}
+
+function geometrie(graphe) {
+  const cols = [], ligs = [];
+  for (const e of graphe.etapes) { cols.push(e.position.colonne); ligs.push(e.position.ligne); }
+  for (const p of Object.values(graphe.parcours)) if (p.titre) { cols.push(p.titre.colonne); ligs.push(p.titre.ligne); }
+  const minC = Math.floor(Math.min(...cols)), maxC = Math.ceil(Math.max(...cols));
+  const minL = Math.min(...ligs), maxL = Math.max(...ligs);
+  const x = (c) => MARGE + NOEUD_L / 2 + (c - minC) * COL_L;
+  const y = (l) => MARGE + 24 + (l - minL) * LIG_H;
+  return { x, y, largeur: x(maxC) + NOEUD_L / 2 + MARGE, hauteur: y(maxL) + 40 + MARGE };
+}
+
+function dessiner() {
+  const g = etat.graphe;
+  const geo = geometrie(g);
+  const noeuds = {};
+  const occupe = new Set();
+  for (const e of g.etapes) {
+    const lignes = couper(nomAffiche(e), 26);
+    noeuds[e.id] = { e, x: geo.x(e.position.colonne), y: geo.y(e.position.ligne), lignes, h: 29 + 14 * lignes.length };
+    occupe.add(e.position.colonne + ':' + e.position.ligne);
+  }
+  const sorties = {};
+  for (const f of g.fleches) (sorties[f.de] = sorties[f.de] || []).push(f);
+  bulles.clear();
+
+  const couleurFleche = (f) => {
+    if (f.mesurable === false) return COULEUR_NON_MESURABLE;
+    const pv = g.parcours[noeuds[f.vers].e.parcours];
+    const pd = g.parcours[noeuds[f.de].e.parcours];
+    if (noeuds[f.vers].e.parcours === 'offre_directe') return pv.couleur;
+    if (noeuds[f.vers].e.parcours === 'complements' && noeuds[f.de].e.parcours === 'complements') return pd.couleur;
+    if (noeuds[f.vers].e.parcours === 'complements') return pv.couleur;
+    return COULEUR_DEFAUT;
+  };
+  const couleurs = [...new Set(g.fleches.map(couleurFleche))];
+  const idCouleur = (c) => 'pointe' + couleurs.indexOf(c);
+
+  let svg = `<style>
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .boite { fill: #fff; stroke: #cfcfcf; stroke-width: 1; }
+    .noeud:hover .boite, .noeud.actif .boite { stroke: #1a1a1a; }
+    .nom { font-size: 12px; fill: #1a1a1a; }
+    .arr { font-size: 13px; font-weight: 700; fill: #1a1a1a; }
+    .ab { font-size: 11px; font-weight: 600; fill: #c8372d; }
+    .lib { font-size: 11px; font-weight: 700; fill: #1a1a1a; letter-spacing: .04em; }
+    .titre { font-size: 13px; font-weight: 800; letter-spacing: .05em; }
+    .trait { fill: none; stroke-width: 1.6; }
+    .tirets { stroke-dasharray: 5 4; }
+    .zonef { fill: none; stroke: transparent; stroke-width: 14; }
+    .nb { font-size: 12px; font-weight: 700; fill: #8c8c8c; }
+    .part { font-size: 10.5px; font-weight: 600; fill: #5f5f5f; }
+    .non { font-size: 10px; font-weight: 700; fill: #1a1a1a; }
+  </style>
+  <rect x="0" y="0" width="${geo.largeur}" height="${geo.hauteur}" fill="#ffffff"/>
+  <defs>${couleurs.map((c) => `<marker id="${idCouleur(c)}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`).join('')}</defs>`;
+
+  // Titres des parcours
+  for (const [cle, p] of Object.entries(g.parcours)) {
+    if (!p.titre) continue;
+    svg += `<text class="titre" x="${geo.x(p.titre.colonne)}" y="${geo.y(p.titre.ligne)}" text-anchor="middle" fill="${p.couleur}">${echapper(p.libelle.toUpperCase())}</text>`;
+  }
+
+  // Flèches
+  for (const f of g.fleches) {
+    const a = noeuds[f.de], b = noeuds[f.vers];
+    const t = trace(a, b, f, occupe);
+    const couleur = couleurFleche(f);
+    const n = passages(f);
+    const id = 'f:' + f.de + '>' + f.vers;
+    svg += `<g class="fleche" data-bulle="${echapper(id)}">` +
+      `<path class="trait${f.mesurable === false ? ' tirets' : ''}" d="${t.d}" stroke="${couleur}" marker-end="url(#${idCouleur(couleur)})"/>` +
+      `<path class="zonef" d="${t.d}"/>`;
+    const sortiesA = sorties[f.de] || [];
+    let haut = '';
+    if (n !== null) {
+      if (sortiesA.length > 1) {
+        const total = sortiesA.reduce((s, x) => s + (passages(x) || 0), 0);
+        const prefixe = f.type === 'oui' ? 'OUI ' : f.type === 'non' ? 'NON ' : '';
+        haut = `<tspan class="part">${prefixe}${pourcent(total ? n / total : null)}</tspan>`;
+      } else {
+        const ab = tauxAbandon(f.de);
+        haut = ab === null ? '' : `<tspan class="ab">${pourcent(ab)}</tspan>`;
+      }
+      svg += `<text x="${t.lx}" y="${t.ly - 2}" text-anchor="${t.ancre}">${haut}</text>` +
+        `<text class="nb" x="${t.lx}" y="${t.ly + 11}" text-anchor="${t.ancre}">${nombre(n)}</text>`;
+    } else if (f.type === 'non') {
+      svg += `<text class="non" x="${t.lx}" y="${t.ly}" text-anchor="${t.ancre}">NON</text>`;
+    }
+    svg += '</g>';
+    bulles.set(id, () => bulleFleche(f, sortiesA));
+  }
+
+  // Étapes
+  for (const { e, x, y, lignes, h } of Object.values(noeuds)) {
+    const id = 'e:' + e.id;
+    const multi = (sorties[e.id] || []).length > 1;
+    const ab = tauxAbandon(e.id);
+    let corps = `<g class="noeud" data-bulle="${echapper(id)}">` +
+      `<rect class="boite" x="${x - NOEUD_L / 2}" y="${y - h / 2}" width="${NOEUD_L}" height="${h}" rx="8"/>`;
+    if (e.libelle) corps += `<text class="lib" x="${x}" y="${y - h / 2 - 6}" text-anchor="middle">${echapper(e.libelle)}</text>`;
+    lignes.forEach((l, i) => {
+      corps += `<text class="nom" x="${x}" y="${y - h / 2 + 18 + 14 * i}" text-anchor="middle">${echapper(l)}</text>`;
+    });
+    const yA = y - h / 2 + 18 + 14 * lignes.length + 2;
+    corps += `<text x="${x}" y="${yA}" text-anchor="middle"><tspan class="arr">${nombre(arrivees(e.id))}</tspan>` +
+      (multi && ab !== null ? `<tspan class="ab" dx="6">abandon ${pourcent(ab)}</tspan>` : '') + '</text></g>';
+    svg += corps;
+    bulles.set(id, () => bulleEtape(e, sorties[e.id] || []));
+  }
+
+  const el = document.getElementById('schema');
+  el.setAttribute('viewBox', `0 0 ${geo.largeur} ${geo.hauteur}`);
+  el.setAttribute('width', geo.largeur);
+  el.setAttribute('height', geo.hauteur);
+  el.innerHTML = svg;
+}
+
+// Tracé d'une flèche : chemin SVG et position de l'étiquette.
+function trace(a, b, f, occupe) {
+  const W = NOEUD_L / 2;
+  const ca = a.e.position.colonne, cb = b.e.position.colonne;
+  const la = a.e.position.ligne, lb = b.e.position.ligne;
+  const r = 8;
+  if (ca === cb) {
+    let libre = true;
+    for (let l = Math.min(la, lb) + 1; l < Math.max(la, lb); l++) if (occupe.has(ca + ':' + l)) libre = false;
+    if (libre && f.type !== 'non') {
+      const y1 = a.y + (lb > la ? a.h / 2 : -a.h / 2), y2 = b.y + (lb > la ? -b.h / 2 : b.h / 2);
+      return { d: `M${a.x},${y1} V${y2}`, lx: a.x + 8, ly: (y1 + y2) / 2, ancre: 'start' };
+    }
+    // Crochet sur le côté : à droite pour un raccourci NON, à gauche sinon.
+    const s = f.type === 'non' ? 1 : -1;
+    const xs = a.x + s * W, xl = a.x + s * (W + 26);
+    const y1 = a.y - 5, y2 = b.y + 5;
+    const sens = y2 > y1 ? 1 : -1;
+    return {
+      d: `M${xs},${y1} H${xl - s * r} Q${xl},${y1} ${xl},${y1 + sens * r} V${y2 - sens * r} Q${xl},${y2} ${xl - s * r},${y2} H${xs + s * 2}`,
+      lx: xl + s * 6, ly: (y1 + y2) / 2, ancre: s > 0 ? 'start' : 'end',
+    };
+  }
+  const s = cb > ca ? 1 : -1;
+  if (la === lb) {
+    const x1 = a.x + s * W, x2 = b.x - s * W;
+    return { d: `M${x1},${a.y} H${x2}`, lx: (x1 + x2) / 2, ly: a.y - 14, ancre: 'middle' };
+  }
+  if (cb === 0) {
+    // Descendre, puis rejoindre la colonne principale par le côté.
+    const y1 = a.y + a.h / 2, x2 = b.x - s * W;
+    return {
+      d: `M${a.x},${y1} V${b.y - r} Q${a.x},${b.y} ${a.x + s * r},${b.y} H${x2}`,
+      lx: a.x + 6, ly: (y1 + b.y) / 2, ancre: 'start',
+    };
+  }
+  // Quitter la colonne par le côté, puis descendre.
+  const x1 = a.x + s * W, y2 = b.y - b.h / 2;
+  if (s > 0) {
+    return {
+      d: `M${x1},${a.y} H${b.x - r} Q${b.x},${a.y} ${b.x},${a.y + r} V${y2}`,
+      lx: b.x + 6, ly: (a.y + y2) / 2 + 6, ancre: 'start',
+    };
+  }
+  return {
+    d: `M${x1},${a.y} H${b.x + r} Q${b.x},${a.y} ${b.x},${a.y + r} V${y2}`,
+    lx: (x1 + b.x) / 2, ly: a.y - 14, ancre: 'middle',
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Bulles d'aide
+// ---------------------------------------------------------------------------
+function nomEtape(id) {
+  const e = etat.graphe.etapes.find((x) => x.id === id);
+  if (!e) return id.startsWith('?') ? id.slice(1) : id;
+  const p = etat.graphe.parcours[e.parcours];
+  const multiples = etat.graphe.etapes.filter((x) => x.chemin === e.chemin).length > 1;
+  return e.chemin + (multiples ? ` (${p.libelle.toLowerCase()})` : '');
+}
+
+function bulleEtape(e, sortiesE) {
+  const a = arrivees(e.id);
+  const ab = tauxAbandon(e.id);
+  const c = etat.index.continuent[e.id];
+  let h = `<h3>${echapper(nomEtape(e.id))}</h3><div class="petit">${echapper(e.domaine)}</div><table>` +
+    `<tr><td>Personnes arrivées</td><td class="n"><b>${nombre(a)}</b></td></tr>`;
+  if (ab !== null) h += `<tr><td>Taux d’abandon</td><td class="n" style="color:#c8372d"><b>${pourcent(ab)}</b> (${nombre(a - (c || 0))})</td></tr>`;
+  else if (sortiesE.length) h += `<tr><td colspan="2" class="petit">Abandon non mesurable : GA4 perd la personne entre www.elsee.care et app.elsee.care.</td></tr>`;
+  for (const f of sortiesE) {
+    const n = passages(f);
+    h += `<tr><td>→ ${echapper(nomEtape(f.vers))}${f.type === 'non' ? ' (NON)' : f.type === 'oui' ? ' (OUI)' : ''}</td><td class="n">${n === null ? 'non mesurable' : nombre(n)}</td></tr>`;
+  }
+  const saut = etat.index.sauts[e.id];
+  if (saut) h += `<tr><td>→ plus loin, hors flèches du schéma</td><td class="n">${nombre(saut)}</td></tr>`;
+  const directes = etat.index.entrees[e.id];
+  if (directes) h += `<tr><td class="petit">Dont arrivées en début de session</td><td class="n petit">${nombre(directes)}</td></tr>`;
+  h += '</table>' + courbe(e.id);
+  return h;
+}
+
+function bulleFleche(f, sortiesA) {
+  const n = passages(f);
+  let h = `<h3>${echapper(nomEtape(f.de))} → ${echapper(nomEtape(f.vers))}</h3>`;
+  if (f.type === 'non') h += '<div class="petit">Raccourci NON : la personne a répondu non et saute des pages.</div>';
+  if (f.type === 'oui') h += '<div class="petit">Réponse OUI.</div>';
+  if (n === null) return h + `<div>Non mesurable. ${echapper(f.raison || '')}</div>`;
+  const total = sortiesA.reduce((s, x) => s + (passages(x) || 0), 0);
+  h += `<table><tr><td>Personnes passées</td><td class="n"><b>${nombre(n)}</b></td></tr>` +
+    `<tr><td>Part des personnes arrivées sur l’étape de départ</td><td class="n">${pourcent(arrivees(f.de) ? n / arrivees(f.de) : null)}</td></tr>`;
+  if (sortiesA.length > 1) h += `<tr><td>Part des sorties de l’étape de départ</td><td class="n">${pourcent(total ? n / total : null)}</td></tr>`;
+  h += '</table>';
+  if (f.note) h += `<div class="petit">${echapper(f.note)}</div>`;
+  return h;
+}
+
+// Petite courbe des arrivées jour par jour.
+function courbe(id) {
+  const p = etat.periode;
+  const jours = nbJours(p.debut, p.fin);
+  if (jours < 2) return '';
+  const serie = etat.index.serie[id] || {};
+  const valeurs = [];
+  for (let i = 0; i < jours; i++) valeurs.push(serie[ajouterJours(p.debut, i)] || 0);
+  const max = Math.max(1, ...valeurs);
+  const L = 280, H = 46;
+  const pts = valeurs.map((v, i) => `${(i / (jours - 1)) * L},${H - (v / max) * H}`).join(' ');
+  return `<div class="petit" style="margin-top:6px">Arrivées par jour (max ${nombre(Math.max(...valeurs))})</div>` +
+    `<svg width="${L}" height="${H + 14}" viewBox="0 -2 ${L} ${H + 16}"><polyline points="${pts}" fill="none" stroke="#1a1a1a" stroke-width="1.5"/>` +
+    `<text x="0" y="${H + 12}" font-size="10" fill="#8c8c8c">${dateCourte(p.debut)}</text>` +
+    `<text x="${L}" y="${H + 12}" font-size="10" fill="#8c8c8c" text-anchor="end">${dateCourte(p.fin)}</text></svg>`;
+}
+
+const bulle = document.getElementById('bulle');
+let bulleFixe = null;
+function montrerBulle(cible, x, y) {
+  const fabrique = bulles.get(cible.dataset.bulle);
+  if (!fabrique) return;
+  bulle.innerHTML = fabrique();
+  bulle.style.display = 'block';
+  const r = bulle.getBoundingClientRect();
+  const left = Math.min(x + 14, window.innerWidth - r.width - 8);
+  const top = y + 14 + r.height > window.innerHeight ? Math.max(8, y - r.height - 14) : y + 14;
+  bulle.style.left = Math.max(8, left) + 'px';
+  bulle.style.top = top + 'px';
+}
+const schema = document.getElementById('schema');
+schema.addEventListener('mousemove', (ev) => {
+  if (bulleFixe) return;
+  const cible = ev.target.closest('[data-bulle]');
+  if (cible) montrerBulle(cible, ev.clientX, ev.clientY); else bulle.style.display = 'none';
+});
+schema.addEventListener('mouseleave', () => { if (!bulleFixe) bulle.style.display = 'none'; });
+// Sur écran tactile : un appui affiche la bulle, un autre la ferme.
+schema.addEventListener('click', (ev) => {
+  const cible = ev.target.closest('[data-bulle]');
+  if (bulleFixe && bulleFixe === cible) { bulleFixe = null; bulle.style.display = 'none'; return; }
+  bulleFixe = cible || null;
+  if (cible) montrerBulle(cible, ev.clientX, ev.clientY); else bulle.style.display = 'none';
+});
+
+// ---------------------------------------------------------------------------
+// Détails et contrôles
+// ---------------------------------------------------------------------------
+function remplirDetails() {
+  const i = etat.index;
+  const libelles = { saut: 'Saut vers l’avant (pages intermédiaires non vues)', retour: 'Retour en arrière', autre: 'Autre' };
+  const lignes = i.horsSchema.slice().sort((a, b) => b.n - a.n);
+  let h = '<p>Passages observés qui ne suivent pas une flèche du schéma, par nombre de personnes. ' +
+    'Les sauts vers l’avant comptent comme une poursuite (pas un abandon) mais ne sont pas dessinés.</p>';
+  h += lignes.length
+    ? '<table><tr><th>De</th><th>Vers</th><th>Type</th><th class="n">Personnes</th></tr>' +
+      lignes.map((l) => `<tr><td>${echapper(nomEtape(l.de))}</td><td>${echapper(nomEtape(l.vers))}</td><td>${libelles[l.genre]}</td><td class="n">${nombre(l.n)}</td></tr>`).join('') +
+      '</table>'
+    : '<p>Aucun.</p>';
+  h += '<p>Pages vues sans parcours connu (personne revenue directement sur la page, sans étape antérieure ' +
+    'connue sur 60 jours) : non comptées dans le schéma.</p>';
+  h += i.nonRattache.length
+    ? '<table><tr><th>Page</th><th class="n">Personnes</th></tr>' +
+      i.nonRattache.map((l) => `<tr><td>${echapper(l.chemin)}</td><td class="n">${nombre(l.n)}</td></tr>`).join('') + '</table>'
+    : '<p>Aucune.</p>';
+  h += `<p>Calculé le ${new Date(etat.donnees.calculeLe).toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })} ` +
+    '(résultats gardés quelques heures). Unité : personnes distinctes (identifiant GA4) sur la période.</p>';
+  document.getElementById('details-contenu').innerHTML = h;
+}
+
+// ---------------------------------------------------------------------------
+// Export PNG
+// ---------------------------------------------------------------------------
+function exporterPng() {
+  const p = etat.periode;
+  const largeur = Number(schema.getAttribute('width'));
+  const hauteur = Number(schema.getAttribute('height'));
+  const entete = 48;
+  const copie = schema.cloneNode(true);
+  copie.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  const texte = new XMLSerializer().serializeToString(copie);
+  const image = new Image();
+  image.onload = () => {
+    const echelle = 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = largeur * echelle;
+    canvas.height = (hauteur + entete) * echelle;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(echelle, echelle);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, largeur, hauteur + entete);
+    ctx.fillStyle = '#1a1a1a';
+    ctx.font = '700 16px -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif';
+    ctx.fillText('Tunnel d’inscription Elsee', MARGE, 26);
+    ctx.font = '13px -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#5f5f5f';
+    ctx.fillText(`Du ${dateLisible(p.debut)} au ${dateLisible(p.fin)} · personnes distinctes · source GA4 (BigQuery)`, MARGE, 44);
+    ctx.drawImage(image, 0, entete, largeur, hauteur);
+    const url = canvas.toDataURL('image/png');
+    document.getElementById('apercu-image').src = url;
+    const lien = document.getElementById('apercu-lien');
+    lien.href = url;
+    lien.download = `tunnel-elsee_${p.debut}_${p.fin}.png`;
+    document.getElementById('apercu').classList.add('visible');
+  };
+  image.onerror = () => afficherMessage('L’export en image a échoué.', true);
+  image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(texte);
+}
+
+demarrer();
+</script>
+</body>
+</html>

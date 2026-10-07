@@ -1,4 +1,6 @@
-{
+// FICHIER GÉNÉRÉ par scripts/generer_sql.mjs à partir de config/graphe.json :
+// ne pas modifier à la main.
+const GRAPHE = {
   "version": 1,
   "mis_a_jour_le": "2026-10-07",
   "source": "docs/reference/schema-tunnel.pdf (schéma du 6 oct. 2026) et réponses d'Eglantine du 6 oct.",
@@ -813,5 +815,6 @@
       "vers": "bienvenue_carte_cadeau",
       "type": "normale"
     }
-  ]
-}
+  ],
+  "empreinte": "31b5223b1d"
+};

@@ -14,6 +14,7 @@ chiffres sont calculés dans BigQuery à partir de l'export quotidien de GA4.
 - Résultats de la découverte (étape 1) : [`docs/etape1_decouverte.md`](docs/etape1_decouverte.md)
 - Configuration du graphe (étapes et flèches) : [`config/graphe.json`](config/graphe.json), mode d'emploi dans [`config/README.md`](config/README.md)
 - Calcul (étape 2) : [`docs/etape2_calcul.md`](docs/etape2_calcul.md), requêtes générées dans [`sql/calcul/`](sql/calcul/) par `node scripts/generer_sql.mjs`
+- Page web (étape 3) : code Apps Script dans [`apps-script/`](apps-script/), mise en ligne pas à pas dans [`docs/deploiement_apps_script.md`](docs/deploiement_apps_script.md). Aperçu local sans Apps Script : `node scripts/apercu_page.mjs agregats.csv premier-jour dernier-jour sortie.html`
 - Activation de la clé BigQuery dans une session cloud : [`scripts/activer_cle_gcp.sh`](scripts/activer_cle_gcp.sh)
 
 Le README complet (installation, configuration, ajout d'une étape, dépannage)
