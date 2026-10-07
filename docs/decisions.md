@@ -9,7 +9,7 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 |---|---|
 | 0. Informations et accès manquants | Faite le 5 oct. ; réponses reçues le 6 oct. (voir ci-dessous) |
 | 1. Découverte | Faite et validée le 6 oct. : [`etape1_decouverte.md`](etape1_decouverte.md) |
-| 2. Calcul (config du graphe + calcul) | **En cours** : configuration et calcul écrits et testés en lecture seule. Création dans BigQuery en attente de deux décisions : [`etape2_calcul.md`](etape2_calcul.md), section 5 |
+| 2. Calcul (config du graphe + calcul) | **En cours** : configuration et calcul écrits et testés en lecture seule ([`etape2_calcul.md`](etape2_calcul.md) ; sa section 5.2 est tranchée par l'entrée du 7 oct.). Création de `elsee_funnel` et de la fonction en attente de la confirmation explicite d'Eglantine |
 | 3. Affichage Apps Script | À faire |
 | 4. Automatisation et alertes | À faire |
 | 5. Documentation | À faire |
@@ -19,15 +19,11 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 **À trancher pour finir l'étape 2** (détail dans
 [`etape2_calcul.md`](etape2_calcul.md), section 5) :
 
-- **Création dans BigQuery** : créer `elsee_funnel` (région EU) et la fonction
-  `elsee_funnel.agregats(date_debut, date_fin)` ? Qui crée le dataset : Eglantine
-  (puis rôle « Éditeur de données BigQuery » au compte de service) ou le compte
-  de service (rôle « Utilisateur BigQuery » sur le projet) ?
-- **Sessions qui commencent sur /mon-offre, /mon-panier ou
-  /bienvenue-chez-elsee** : les rattacher au dernier parcours suivi par la même
-  personne dans une session précédente ? Sans cela, aucune inscription
-  (/bienvenue-chez-elsee) n'est rattachée à un parcours. Cette règle
-  remplacerait celle des 24 h proposée pour /mon-panier → /bienvenue-chez-elsee.
+- **Création dans BigQuery** : Eglantine a changé le rôle du compte de service
+  (7 oct.) pour qu'il crée `elsee_funnel` (région EU) et la fonction
+  `elsee_funnel.agregats(date_debut, date_fin)`. La création a été bloquée par
+  le garde-fou de la session cloud (action sur une ressource partagée) : il faut
+  la confirmation explicite d'Eglantine pour la lancer.
 
 Autres questions :
 
@@ -45,6 +41,29 @@ Autres questions :
 - Pour les étapes 3 et 4 : compte propriétaire du script Apps Script, qui doit
   voir la page (tout le monde en @elsee.care ?), destinataires des alertes, qui
   lance `clasp push`.
+
+## 2026-10-07 — Rattachement des personnes qui reviennent (Eglantine)
+
+**Validé** : une personne dont la session commence sur `/mon-offre`,
+`/mon-panier` ou `/bienvenue-chez-elsee` (retour par un lien, un e-mail) est
+rattachée au parcours de la dernière étape qu'elle a vue dans une session
+précédente, sur les 60 jours conservés. Cette règle **remplace celle des 24 h**
+proposée pour `/mon-panier → /bienvenue-chez-elsee`.
+
+Mise en œuvre ([`scripts/generer_sql.mjs`](../scripts/generer_sql.mjs)) : pour
+ces trois pages, le parcours vient, dans l'ordre, de la page précédente dans la
+session, puis d'un passage antérieur sur la même page dans la session (retour
+en arrière), puis de la dernière étape vue par la personne, dans cette session
+ou une précédente (60 jours au plus). Dans ce dernier cas, on prend l'étape de
+la page la plus proche en suivant les flèches (après `/offres`, `/mon-panier`
+du parcours compléments ; après `/signup`, l'offre directe), à défaut celle du
+même parcours. Le calcul lit donc 60 jours de données avant la période (environ
+6 Mo par jour, dans le quota gratuit).
+
+Sur la seule journée du 5 oct., l'effet est faible : `/mon-offre` non rattachées
+33 au lieu de 38, `/mon-panier` 21 au lieu de 24, `/bienvenue-chez-elsee` 5 sur
+5 (leurs visites précédentes datent d'avant l'export). Il grandira au fil des
+jours. Contrôle de cohérence toujours sans écart négatif.
 
 ## 2026-10-06 (4e session, suite) — Étape 1 validée, étape 2 commencée
 

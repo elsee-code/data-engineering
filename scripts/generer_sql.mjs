@@ -109,25 +109,65 @@ const casPagesMultiples = pagesMultiples
     return `      WHEN ${q(page)} THEN CASE precedente ${quand} END`;
   })
   .join("\n");
-const nbPasses = pagesMultiples.length + 1;
+// Pour chaque page multiple : étape selon la dernière étape vue par la personne
+// (dans cette session ou une précédente). On prend l'étape de cette page la plus
+// proche en suivant les flèches (ex. après /offres, /mon-panier du parcours
+// compléments) ; si aucune n'est atteignable, celle du même parcours.
+function distances(depart) {
+  const d = new Map([[depart, 0]]);
+  const file = [depart];
+  while (file.length) {
+    const n = file.shift();
+    for (const s of suivants.get(n)) if (!d.has(s)) { d.set(s, d.get(n) + 1); file.push(s); }
+  }
+  return d;
+}
+const distancesDepuis = new Map(etapes.map((e) => [e.id, distances(e.id)]));
+const casDerniereEtape = pagesMultiples
+  .map(([page, ids]) => {
+    const quand = etapes
+      .map((e) => {
+        const d = distancesDepuis.get(e.id);
+        const proches = ids.filter((i) => d.has(i)).sort((a, b) => d.get(a) - d.get(b));
+        const choix = proches[0] ?? ids.find((i) => parId.get(i).parcours === e.parcours);
+        return choix ? `WHEN ${q(e.id)} THEN ${q(choix)}` : null;
+      })
+      .filter(Boolean)
+      .join(" ");
+    return `      WHEN ${q(page)} THEN CASE derniere_etape_personne ${quand} END`;
+  })
+  .join("\n");
+const nbPasses = pagesMultiples.length + 2;
+const JOURS_RECUL = 60;
 
 function passe(n) {
   return `passe${n} AS (
-  -- Passe ${n} : étape d'après la page précédente, sinon la même étape que la
-  -- dernière fois que cette page a été vue dans la session (retour en arrière).
-  SELECT * EXCEPT (etape, precedente, derniere_meme_page),
+  -- Passe ${n}, pour les pages à plusieurs parcours, dans l'ordre :
+  --   1. d'après la page précédente dans la session ;
+  --   2. sinon, la même étape que la dernière fois que cette page a été vue dans
+  --      la session (retour en arrière) ;
+  --   3. sinon, d'après la dernière étape vue par la personne, dans cette session
+  --      ou une précédente (${JOURS_RECUL} jours au plus) : l'étape de cette page la
+  --      plus proche en suivant les flèches, à défaut celle du même parcours.
+  SELECT * EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_personne),
     COALESCE(
       id_unique,
       CASE cle
 ${casPagesMultiples}
       END,
-      derniere_meme_page) AS etape
+      derniere_meme_page,
+      CASE cle
+${casDerniereEtape}
+      END) AS etape
   FROM (
     SELECT *,
       LAG(etape) OVER (PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang) AS precedente,
       LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id, ga_session_id, cle ORDER BY rang
-        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_meme_page
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_meme_page,
+      LAST_VALUE(etape IGNORE NULLS) OVER (
+        PARTITION BY user_pseudo_id ORDER BY rang_personne
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_personne
     FROM passe${n - 1}
   )
 )`;
@@ -159,8 +199,9 @@ ${liste(atteignables.map(([a, b]) => `(${q(a)}, ${q(b)})`))}
   ])
 ),
 pages AS (
-  -- Pages vues, avec un jour de marge de chaque côté pour suivre les sessions
-  -- qui passent minuit.
+  -- Pages vues : ${JOURS_RECUL} jours avant la période, pour retrouver le parcours des
+  -- personnes qui reviennent (passe 3), et un jour après, pour les sessions qui
+  -- passent minuit.
   SELECT
     PARSE_DATE('%Y%m%d', event_date) AS jour,
     user_pseudo_id,
@@ -169,17 +210,20 @@ pages AS (
     event_timestamp, batch_ordering_id, batch_page_id, batch_event_index
   FROM ${SOURCE}
   WHERE REGEXP_CONTAINS(_TABLE_SUFFIX, r'^\\d{8}$')
-    AND _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(date_debut, INTERVAL 1 DAY))
+    AND _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(date_debut, INTERVAL ${JOURS_RECUL} DAY))
                           AND FORMAT_DATE('%Y%m%d', DATE_ADD(date_fin, INTERVAL 1 DAY))
     AND event_name = 'page_view'
     AND user_pseudo_id IS NOT NULL
 ),
 tunnel AS (
   -- Pages du graphe seulement (domaine + chemin sans paramètres, en minuscules,
-  -- sans « / » final), numérotées dans l'ordre de la session.
+  -- sans « / » final), numérotées dans l'ordre de la session (rang) et dans
+  -- l'ordre de toutes les sessions de la personne (rang_personne).
   SELECT p.jour, p.user_pseudo_id, p.ga_session_id, p.cle, c.id_unique,
     ROW_NUMBER() OVER (PARTITION BY p.user_pseudo_id, p.ga_session_id
-                       ORDER BY p.event_timestamp, p.batch_ordering_id, p.batch_page_id, p.batch_event_index) AS rang
+                       ORDER BY p.event_timestamp, p.batch_ordering_id, p.batch_page_id, p.batch_event_index) AS rang,
+    ROW_NUMBER() OVER (PARTITION BY p.user_pseudo_id
+                       ORDER BY p.event_timestamp, p.ga_session_id, p.batch_ordering_id, p.batch_page_id, p.batch_event_index) AS rang_personne
   FROM (
     SELECT *,
       CONCAT(LOWER(NET.HOST(url)),
