@@ -16,9 +16,16 @@
 
 ## 2. Le graphe (schéma du 6 oct. et réponses d'Eglantine)
 
-- 41 pages, 48 étapes : `/mon-offre`, `/mon-panier` et `/bienvenue-chez-elsee`
+- 42 pages, 52 étapes : `/mon-offre`, `/mon-panier` et `/bienvenue-chez-elsee`
   existent une fois par parcours (offre directe, long form, compléments, carte
-  cadeau), comme sur le schéma.
+  cadeau, mail), comme sur le schéma.
+- Chemin **MAIL** (ajouté le 8 oct., croquis d'Eglantine) : `/mon-bilan-elsee`
+  (www.elsee.care, lien des e-mails) → `/mon-offre` → `/mon-panier` →
+  `/bienvenue-chez-elsee`. La flèche `/mon-bilan-elsee → /mon-offre` passe de
+  www à app : non mesurable, en pointillés. Les pages vues sans parcours connu
+  y sont rattachées (règle 2.4) ; une flèche venant de la gauche montre, sur
+  chacune de ses trois dernières pages, les personnes arrivées directement
+  (genre `entrees_directes`).
 - Seuls les domaines app.elsee.care et www.elsee.care comptent.
 - Entrées : `/signup-corpo`, `/remboursement-complements-alimentaires`,
   `/offres-remboursement-elsee` et `/obtenir-mon-offre` mènent à `/signup` ;
@@ -59,9 +66,12 @@ une série jour par jour.
       sur 60 jours au plus : l'étape de la page la plus proche en suivant les
       flèches (après `/offres`, `/mon-panier` du parcours compléments ; après
       `/signup`, l'offre directe), à défaut celle du même parcours ;
-   4. sinon, la page n'est rattachée à aucun parcours et n'est pas affichée
-      (décision du 6 oct. sur les arrivées sans page précédente). Le calcul la
-      compte à part (genre `non_rattache`) pour contrôle.
+   4. sinon (aucun parcours connu), la page va dans l'étape de repli de sa
+      page, celle du chemin MAIL (décision du 8 oct., qui remplace celle du
+      6 oct. : ces pages étaient comptées à part, sans être affichées). Ce
+      rattachement se fait après toutes les autres règles : il ne change le
+      parcours d'aucune autre page. Une page sans étape de repli resterait
+      comptée à part (genre `non_rattache`) ; il n'y en a plus.
 3. **Rechargements** : la même étape vue plusieurs fois de suite compte une
    fois.
 4. **Carte cadeau** : une personne qui va de `/mon-offre` à
@@ -179,7 +189,8 @@ datasets.
 
 - Le texte d'une fonction BigQuery est limité à 32 Ko : le générateur décrit
   donc le graphe de façon compacte et refuse de produire une fonction trop
-  longue (22 Ko depuis l'ajout des leads le 8 oct., pour 48 étapes).
+  longue (23 Ko depuis l'ajout des leads et du chemin MAIL le 8 oct., pour 52
+  étapes).
 - Coût : la fonction lit les 60 jours qui précèdent la période (règle 2.3),
   soit environ 6 Mo par jour de données, au plus 370 Mo par appel. Le quota
   gratuit du bac à sable (1 To par mois) permet plus de 2 500 appels par mois ;

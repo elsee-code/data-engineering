@@ -16,6 +16,13 @@ puis régénérer les requêtes.
   - `position` : place dans le dessin (`colonne` : 0 = colonne principale,
     négatif = à gauche ; `ligne` : de haut en bas) ;
   - `libelle` (facultatif) : titre affiché au-dessus du chemin (ex. « SOCIAL ») ;
+  - `repli` (facultatif, `true`) : étape de repli de sa page. Une page vue sans
+    parcours connu (règle 2.4 de `docs/etape2_calcul.md`) y est rattachée. Une
+    seule par page (le chemin MAIL pour `/mon-offre`, `/mon-panier` et
+    `/bienvenue-chez-elsee`) ;
+  - `fleche_entree` (facultatif, `true`) : dessine une flèche venant de la
+    gauche, avec le nombre de personnes arrivées directement sur l'étape (début
+    de session) ;
   - `effacer_si_retour` (facultatif) : une visite suivie d'un retour à la page
     précédente, puis d'une flèche partant de cette page, compte comme si la
     personne n'avait pas vu l'étape (utilisé pour `/pricing/cartecadeau`).

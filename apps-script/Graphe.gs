@@ -3,7 +3,7 @@
 const GRAPHE = {
   "version": 1,
   "mis_a_jour_le": "2026-10-08",
-  "source": "docs/reference/schema-tunnel.pdf (schéma du 6 oct. 2026) et réponses d'Eglantine du 6 oct.",
+  "source": "docs/reference/schema-tunnel.pdf (schéma du 6 oct. 2026) et réponses d'Eglantine du 6 oct. ; chemin MAIL ajouté le 8 oct. (croquis d'Eglantine)",
   "domaines": [
     "app.elsee.care",
     "www.elsee.care"
@@ -43,6 +43,10 @@ const GRAPHE = {
     },
     "carte_cadeau": {
       "libelle": "Carte cadeau",
+      "couleur": "#1A1A1A"
+    },
+    "mail": {
+      "libelle": "Mail",
       "couleur": "#1A1A1A"
     }
   },
@@ -530,6 +534,53 @@ const GRAPHE = {
         "colonne": 1,
         "ligne": 31
       }
+    },
+    {
+      "id": "mon_bilan_elsee",
+      "chemin": "/mon-bilan-elsee",
+      "domaine": "www.elsee.care",
+      "parcours": "mail",
+      "position": {
+        "colonne": 3,
+        "ligne": 17
+      },
+      "libelle": "MAIL"
+    },
+    {
+      "id": "mon_offre_mail",
+      "chemin": "/mon-offre",
+      "domaine": "app.elsee.care",
+      "parcours": "mail",
+      "position": {
+        "colonne": 3,
+        "ligne": 18
+      },
+      "repli": true,
+      "fleche_entree": true
+    },
+    {
+      "id": "mon_panier_mail",
+      "chemin": "/mon-panier",
+      "domaine": "app.elsee.care",
+      "parcours": "mail",
+      "position": {
+        "colonne": 3,
+        "ligne": 19
+      },
+      "repli": true,
+      "fleche_entree": true
+    },
+    {
+      "id": "bienvenue_mail",
+      "chemin": "/bienvenue-chez-elsee",
+      "domaine": "www.elsee.care",
+      "parcours": "mail",
+      "position": {
+        "colonne": 3,
+        "ligne": 20
+      },
+      "repli": true,
+      "fleche_entree": true
     }
   ],
   "fleches": [
@@ -814,6 +865,23 @@ const GRAPHE = {
       "de": "mon_panier_carte_cadeau",
       "vers": "bienvenue_carte_cadeau",
       "type": "normale"
+    },
+    {
+      "de": "mon_bilan_elsee",
+      "vers": "mon_offre_mail",
+      "type": "normale",
+      "mesurable": false,
+      "raison": "Passage de www.elsee.care à app.elsee.care : GA4 perd l'identifiant (étape 1, section 6)."
+    },
+    {
+      "de": "mon_offre_mail",
+      "vers": "mon_panier_mail",
+      "type": "normale"
+    },
+    {
+      "de": "mon_panier_mail",
+      "vers": "bienvenue_mail",
+      "type": "normale"
     }
   ],
   "pages_vues": {
@@ -821,7 +889,8 @@ const GRAPHE = {
     "offre": [
       "mon_offre_directe",
       "mon_offre_long_form",
-      "offres"
+      "offres",
+      "mon_offre_mail"
     ],
     "position": {
       "colonne": 1.7,
@@ -886,5 +955,5 @@ const GRAPHE = {
       }
     ]
   },
-  "empreinte": "027f5962f4"
+  "empreinte": "440e67598a"
 };

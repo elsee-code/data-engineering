@@ -8,54 +8,58 @@ CREATE OR REPLACE TABLE FUNCTION `ga4-chemin-form.elsee_funnel.agregats`(date_de
 WITH
 etapes AS (
   SELECT * FROM UNNEST(ARRAY<STRUCT<id STRING, cle STRING, n INT64, atteint STRING, rattache ARRAY<INT64>>>[
-    ('signup_corpo', 'app.elsee.care/signup-corpo', 1, '000011110111111111111111111111111111111111111111', [6, 7, 8]),
-    ('remboursement_complements_alimentaires', 'www.elsee.care/remboursement-complements-alimentaires', 2, '000011110111111111111111111111111111111111111111', [6, 7, 8]),
-    ('offres_remboursement_elsee', 'www.elsee.care/offres-remboursement-elsee', 3, '000011110111111111111111111111111111111111111111', [6, 7, 8]),
-    ('obtenir_mon_offre', 'www.elsee.care/obtenir-mon-offre', 4, '000011110111111111111111111111111111111111111111', [6, 7, 8]),
-    ('signup', 'app.elsee.care/signup', 5, '000001110111111111111111111111111111111111111111', [6, 7, 8]),
-    ('mon_offre_directe', 'app.elsee.care/mon-offre', 6, '000000110000000000000000000000000000000000000000', [6, 7, 8]),
-    ('mon_panier_directe', 'app.elsee.care/mon-panier', 7, '000000010000000000000000000000000000000000000000', [6, 7, 8]),
-    ('bienvenue_directe', 'www.elsee.care/bienvenue-chez-elsee', 8, '000000000000000000000000000000000000000000000000', [6, 7, 8]),
-    ('social_signup', 'app.elsee.care/social_signup', 9, '000000000111111111111111111111111111111111111111', [43, 41, 42]),
-    ('depenses_complements', 'app.elsee.care/signup/depenses_complements', 10, '000000000011111111111111111111111111111111111111', [43, 41, 42]),
-    ('montant_complements', 'app.elsee.care/signup/montant_complements', 11, '000000000001111111111111111111111111111111111111', [43, 41, 42]),
-    ('network_complements', 'app.elsee.care/signup/network_complements', 12, '000000000000111111111111111111111111111111111111', [43, 41, 42]),
-    ('recap_marques', 'app.elsee.care/signup/recap_marques', 13, '000000000000011111111111111111111111111111111111', [43, 41, 42]),
-    ('depenses_complements_step', 'app.elsee.care/signup/depenses_complements_step', 14, '000000000000001111111111111111111111000000111111', [43, 44, 45]),
-    ('sante_mentale_seances', 'app.elsee.care/signup/sante_mentale_seances', 15, '000000000000000111111111111111111111000000111111', [43, 44, 45]),
-    ('montant_sante_mentale', 'app.elsee.care/signup/montant_sante_mentale', 16, '000000000000000011111111111111111110000000111111', [43, 44, 45]),
-    ('md_seances', 'app.elsee.care/signup/md_seances', 17, '000000000000000001111111111111111110000000111111', [43, 44, 45]),
-    ('montant_medecine_douce', 'app.elsee.care/signup/montant_medecine_douce', 18, '000000000000000000111111111111111110000000111111', [43, 44, 45]),
-    ('soins_seances', 'app.elsee.care/signup/soins_seances', 19, '000000000000000000011111111111111110000000111111', [43, 44, 45]),
-    ('montant_soins', 'app.elsee.care/signup/montant_soins', 20, '000000000000000000001111111111111110000000111111', [43, 44, 45]),
-    ('network_info', 'app.elsee.care/signup/network_info', 21, '000000000000000000000111111111111110000000111111', [43, 44, 45]),
-    ('prete_a_changer', 'app.elsee.care/signup/prete_a-changer', 22, '000000000000000000000011111111111110000000111111', [43, 44, 45]),
-    ('medecine_douce_step', 'app.elsee.care/signup/medecine_douce_step', 23, '000000000000000000000001111111111110000000111111', [43, 44, 45]),
-    ('en_savoir_plus_sur_vous', 'app.elsee.care/signup/en_savoir_plus_sur_vous', 24, '000000000000000000000000111111111110000000111111', [43, 44, 45]),
-    ('depenses_sports', 'app.elsee.care/signup/depenses_sports', 25, '000000000000000000000000011111111110000000111111', [43, 44, 45]),
-    ('network_sport', 'app.elsee.care/signup/network_sport', 26, '000000000000000000000000001111111110000000111111', [43, 44, 45]),
-    ('out_of_network_sport', 'app.elsee.care/signup/out_of_network_sport', 27, '000000000000000000000000000111111110000000111111', [43, 44, 45]),
-    ('sport_step', 'app.elsee.care/signup/sport_step', 28, '000000000000000000000000000011111110000000111111', [43, 44, 45]),
-    ('depenses_produit', 'app.elsee.care/signup/depenses_produit', 29, '000000000000000000000000000001111110000000111111', [43, 44, 45]),
-    ('network_produit', 'app.elsee.care/signup/network_produit', 30, '000000000000000000000000000000111110000000111111', [43, 44, 45]),
-    ('out_of_network_produit', 'app.elsee.care/signup/out_of_network_produit', 31, '000000000000000000000000000000011110000000111111', [43, 44, 45]),
-    ('depenses_app', 'app.elsee.care/signup/depenses_app', 32, '000000000000000000000000000000001110000000111111', [43, 44, 45]),
-    ('out_of_network_app', 'app.elsee.care/signup/out_of_network_app', 33, '000000000000000000000000000000000110000000111111', [43, 44, 45]),
-    ('final_step', 'app.elsee.care/signup/final_step', 34, '000000000000000000000000000000000010000000111111', [43, 44, 45]),
-    ('offre_en_preparation', 'app.elsee.care/signup/offre_en_preparation', 35, '000000000000000000000000000000000000000000111111', [43, 44, 45]),
-    ('sante_mentale_step', 'app.elsee.care/signup/sante_mentale_step', 36, '000000000000000011111111111111111110000000111111', [43, 44, 45]),
-    ('recap_remboursements', 'app.elsee.care/signup/recap_remboursements', 37, '000000000000000000000000000000000000011111000000', [0, 41, 42]),
-    ('bonus_abonnement', 'app.elsee.care/signup/bonus-abonnement', 38, '000000000000000000000000000000000000001111000000', [0, 41, 42]),
-    ('bilan', 'app.elsee.care/signup/bilan', 39, '000000000000000000000000000000000000000111000000', [0, 41, 42]),
-    ('offres', 'app.elsee.care/offres', 40, '000000000000000000000000000000000000000011000000', [0, 41, 42]),
-    ('mon_panier_complements', 'app.elsee.care/mon-panier', 41, '000000000000000000000000000000000000000001000000', [0, 41, 42]),
-    ('bienvenue_complements', 'www.elsee.care/bienvenue-chez-elsee', 42, '000000000000000000000000000000000000000000000000', [0, 41, 42]),
-    ('mon_offre_long_form', 'app.elsee.care/mon-offre', 43, '000000000000000000000000000000000000000000011111', [43, 44, 45]),
-    ('mon_panier_long_form', 'app.elsee.care/mon-panier', 44, '000000000000000000000000000000000000000000001000', [43, 44, 45]),
-    ('bienvenue_long_form', 'www.elsee.care/bienvenue-chez-elsee', 45, '000000000000000000000000000000000000000000000000', [43, 44, 45]),
-    ('cartecadeau', 'app.elsee.care/pricing/cartecadeau', 46, '000000000000000000000000000000000000000000000011', [0, 47, 48]),
-    ('mon_panier_carte_cadeau', 'app.elsee.care/mon-panier', 47, '000000000000000000000000000000000000000000000001', [0, 47, 48]),
-    ('bienvenue_carte_cadeau', 'www.elsee.care/bienvenue-chez-elsee', 48, '000000000000000000000000000000000000000000000000', [0, 47, 48])
+    ('signup_corpo', 'app.elsee.care/signup-corpo', 1, '0000111101111111111111111111111111111111111111110000', [6, 7, 8]),
+    ('remboursement_complements_alimentaires', 'www.elsee.care/remboursement-complements-alimentaires', 2, '0000111101111111111111111111111111111111111111110000', [6, 7, 8]),
+    ('offres_remboursement_elsee', 'www.elsee.care/offres-remboursement-elsee', 3, '0000111101111111111111111111111111111111111111110000', [6, 7, 8]),
+    ('obtenir_mon_offre', 'www.elsee.care/obtenir-mon-offre', 4, '0000111101111111111111111111111111111111111111110000', [6, 7, 8]),
+    ('signup', 'app.elsee.care/signup', 5, '0000011101111111111111111111111111111111111111110000', [6, 7, 8]),
+    ('mon_offre_directe', 'app.elsee.care/mon-offre', 6, '0000001100000000000000000000000000000000000000000000', [6, 7, 8]),
+    ('mon_panier_directe', 'app.elsee.care/mon-panier', 7, '0000000100000000000000000000000000000000000000000000', [6, 7, 8]),
+    ('bienvenue_directe', 'www.elsee.care/bienvenue-chez-elsee', 8, '0000000000000000000000000000000000000000000000000000', [6, 7, 8]),
+    ('social_signup', 'app.elsee.care/social_signup', 9, '0000000001111111111111111111111111111111111111110000', [43, 41, 42]),
+    ('depenses_complements', 'app.elsee.care/signup/depenses_complements', 10, '0000000000111111111111111111111111111111111111110000', [43, 41, 42]),
+    ('montant_complements', 'app.elsee.care/signup/montant_complements', 11, '0000000000011111111111111111111111111111111111110000', [43, 41, 42]),
+    ('network_complements', 'app.elsee.care/signup/network_complements', 12, '0000000000001111111111111111111111111111111111110000', [43, 41, 42]),
+    ('recap_marques', 'app.elsee.care/signup/recap_marques', 13, '0000000000000111111111111111111111111111111111110000', [43, 41, 42]),
+    ('depenses_complements_step', 'app.elsee.care/signup/depenses_complements_step', 14, '0000000000000011111111111111111111110000001111110000', [43, 44, 45]),
+    ('sante_mentale_seances', 'app.elsee.care/signup/sante_mentale_seances', 15, '0000000000000001111111111111111111110000001111110000', [43, 44, 45]),
+    ('montant_sante_mentale', 'app.elsee.care/signup/montant_sante_mentale', 16, '0000000000000000111111111111111111100000001111110000', [43, 44, 45]),
+    ('md_seances', 'app.elsee.care/signup/md_seances', 17, '0000000000000000011111111111111111100000001111110000', [43, 44, 45]),
+    ('montant_medecine_douce', 'app.elsee.care/signup/montant_medecine_douce', 18, '0000000000000000001111111111111111100000001111110000', [43, 44, 45]),
+    ('soins_seances', 'app.elsee.care/signup/soins_seances', 19, '0000000000000000000111111111111111100000001111110000', [43, 44, 45]),
+    ('montant_soins', 'app.elsee.care/signup/montant_soins', 20, '0000000000000000000011111111111111100000001111110000', [43, 44, 45]),
+    ('network_info', 'app.elsee.care/signup/network_info', 21, '0000000000000000000001111111111111100000001111110000', [43, 44, 45]),
+    ('prete_a_changer', 'app.elsee.care/signup/prete_a-changer', 22, '0000000000000000000000111111111111100000001111110000', [43, 44, 45]),
+    ('medecine_douce_step', 'app.elsee.care/signup/medecine_douce_step', 23, '0000000000000000000000011111111111100000001111110000', [43, 44, 45]),
+    ('en_savoir_plus_sur_vous', 'app.elsee.care/signup/en_savoir_plus_sur_vous', 24, '0000000000000000000000001111111111100000001111110000', [43, 44, 45]),
+    ('depenses_sports', 'app.elsee.care/signup/depenses_sports', 25, '0000000000000000000000000111111111100000001111110000', [43, 44, 45]),
+    ('network_sport', 'app.elsee.care/signup/network_sport', 26, '0000000000000000000000000011111111100000001111110000', [43, 44, 45]),
+    ('out_of_network_sport', 'app.elsee.care/signup/out_of_network_sport', 27, '0000000000000000000000000001111111100000001111110000', [43, 44, 45]),
+    ('sport_step', 'app.elsee.care/signup/sport_step', 28, '0000000000000000000000000000111111100000001111110000', [43, 44, 45]),
+    ('depenses_produit', 'app.elsee.care/signup/depenses_produit', 29, '0000000000000000000000000000011111100000001111110000', [43, 44, 45]),
+    ('network_produit', 'app.elsee.care/signup/network_produit', 30, '0000000000000000000000000000001111100000001111110000', [43, 44, 45]),
+    ('out_of_network_produit', 'app.elsee.care/signup/out_of_network_produit', 31, '0000000000000000000000000000000111100000001111110000', [43, 44, 45]),
+    ('depenses_app', 'app.elsee.care/signup/depenses_app', 32, '0000000000000000000000000000000011100000001111110000', [43, 44, 45]),
+    ('out_of_network_app', 'app.elsee.care/signup/out_of_network_app', 33, '0000000000000000000000000000000001100000001111110000', [43, 44, 45]),
+    ('final_step', 'app.elsee.care/signup/final_step', 34, '0000000000000000000000000000000000100000001111110000', [43, 44, 45]),
+    ('offre_en_preparation', 'app.elsee.care/signup/offre_en_preparation', 35, '0000000000000000000000000000000000000000001111110000', [43, 44, 45]),
+    ('sante_mentale_step', 'app.elsee.care/signup/sante_mentale_step', 36, '0000000000000000111111111111111111100000001111110000', [43, 44, 45]),
+    ('recap_remboursements', 'app.elsee.care/signup/recap_remboursements', 37, '0000000000000000000000000000000000000111110000000000', [0, 41, 42]),
+    ('bonus_abonnement', 'app.elsee.care/signup/bonus-abonnement', 38, '0000000000000000000000000000000000000011110000000000', [0, 41, 42]),
+    ('bilan', 'app.elsee.care/signup/bilan', 39, '0000000000000000000000000000000000000001110000000000', [0, 41, 42]),
+    ('offres', 'app.elsee.care/offres', 40, '0000000000000000000000000000000000000000110000000000', [0, 41, 42]),
+    ('mon_panier_complements', 'app.elsee.care/mon-panier', 41, '0000000000000000000000000000000000000000010000000000', [0, 41, 42]),
+    ('bienvenue_complements', 'www.elsee.care/bienvenue-chez-elsee', 42, '0000000000000000000000000000000000000000000000000000', [0, 41, 42]),
+    ('mon_offre_long_form', 'app.elsee.care/mon-offre', 43, '0000000000000000000000000000000000000000000111110000', [43, 44, 45]),
+    ('mon_panier_long_form', 'app.elsee.care/mon-panier', 44, '0000000000000000000000000000000000000000000010000000', [43, 44, 45]),
+    ('bienvenue_long_form', 'www.elsee.care/bienvenue-chez-elsee', 45, '0000000000000000000000000000000000000000000000000000', [43, 44, 45]),
+    ('cartecadeau', 'app.elsee.care/pricing/cartecadeau', 46, '0000000000000000000000000000000000000000000000110000', [0, 47, 48]),
+    ('mon_panier_carte_cadeau', 'app.elsee.care/mon-panier', 47, '0000000000000000000000000000000000000000000000010000', [0, 47, 48]),
+    ('bienvenue_carte_cadeau', 'www.elsee.care/bienvenue-chez-elsee', 48, '0000000000000000000000000000000000000000000000000000', [0, 47, 48]),
+    ('mon_bilan_elsee', 'www.elsee.care/mon-bilan-elsee', 49, '0000000000000000000000000000000000000000000000000111', [50, 51, 52]),
+    ('mon_offre_mail', 'app.elsee.care/mon-offre', 50, '0000000000000000000000000000000000000000000000000011', [50, 51, 52]),
+    ('mon_panier_mail', 'app.elsee.care/mon-panier', 51, '0000000000000000000000000000000000000000000000000001', [50, 51, 52]),
+    ('bienvenue_mail', 'www.elsee.care/bienvenue-chez-elsee', 52, '0000000000000000000000000000000000000000000000000000', [50, 51, 52])
   ])
 ),
 chemins AS (
@@ -119,7 +123,10 @@ fleches AS (
     ('mon_panier_long_form', 'bienvenue_long_form'),
     ('mon_offre_long_form', 'cartecadeau'),
     ('cartecadeau', 'mon_panier_carte_cadeau'),
-    ('mon_panier_carte_cadeau', 'bienvenue_carte_cadeau')
+    ('mon_panier_carte_cadeau', 'bienvenue_carte_cadeau'),
+    ('mon_bilan_elsee', 'mon_offre_mail'),
+    ('mon_offre_mail', 'mon_panier_mail'),
+    ('mon_panier_mail', 'bienvenue_mail')
   ])
 ),
 pages_multiples AS (
@@ -141,6 +148,13 @@ par_derniere AS (
   CROSS JOIN UNNEST(e.rattache) AS r WITH OFFSET AS k
   JOIN pages_multiples AS pm ON pm.k = k
   JOIN etapes AS c ON c.n = r
+),
+replis AS (
+  SELECT * FROM UNNEST(ARRAY<STRUCT<cle STRING, etape STRING>>[
+    ('app.elsee.care/mon-offre', 'mon_offre_mail'),
+    ('app.elsee.care/mon-panier', 'mon_panier_mail'),
+    ('www.elsee.care/bienvenue-chez-elsee', 'bienvenue_mail')
+  ])
 ),
 pages AS (
   SELECT
@@ -262,8 +276,9 @@ passe5 AS (
   LEFT JOIN par_derniere AS pd ON pd.cle = x.cle AND pd.derniere = x.derniere_etape_personne
 ),
 resolues AS (
-  SELECT jour, user_pseudo_id, ga_session_id, rang, IFNULL(etape, CONCAT('?', cle)) AS e
-  FROM passe5
+  SELECT x.jour, x.user_pseudo_id, x.ga_session_id, x.rang, COALESCE(x.etape, rp.etape, CONCAT('?', x.cle)) AS e
+  FROM passe5 AS x
+  LEFT JOIN replis AS rp ON rp.cle = x.cle
 ),
 sans_rechargements AS (
   SELECT * EXCEPT (precedente)
@@ -405,8 +420,8 @@ leads AS (
 ),
 resultat AS (
   SELECT genre, de, vers, jour,
-    IF((genre = 'fleche' AND CONCAT(de, '>', vers) IN UNNEST(['obtenir_mon_offre>signup', 'offres_remboursement_elsee>signup', 'remboursement_complements_alimentaires>signup']))
-       OR (genre = 'continuent' AND de IN UNNEST(['remboursement_complements_alimentaires', 'offres_remboursement_elsee', 'obtenir_mon_offre'])),
+    IF((genre = 'fleche' AND CONCAT(de, '>', vers) IN UNNEST(['obtenir_mon_offre>signup', 'offres_remboursement_elsee>signup', 'remboursement_complements_alimentaires>signup', 'mon_bilan_elsee>mon_offre_mail']))
+       OR (genre = 'continuent' AND de IN UNNEST(['remboursement_complements_alimentaires', 'offres_remboursement_elsee', 'obtenir_mon_offre', 'mon_bilan_elsee'])),
        NULL, utilisateurs) AS utilisateurs
   FROM agregats
   UNION ALL

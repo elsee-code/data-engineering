@@ -107,6 +107,17 @@ else {
   }
 }
 
+// Étape de repli : une page sans parcours déductible y est rattachée (une au
+// plus par page).
+const replis = etapes.filter((e) => e.repli);
+for (const e of etapes) {
+  if (e.repli !== undefined && typeof e.repli !== "boolean") erreurs.push(`repli : vrai ou faux attendu pour ${e.id}`);
+  if (e.fleche_entree !== undefined && typeof e.fleche_entree !== "boolean") erreurs.push(`fleche_entree : vrai ou faux attendu pour ${e.id}`);
+}
+for (const [page, ids] of parPage) {
+  if (ids.filter((id) => parId.get(id).repli).length > 1) erreurs.push(`${page} : plusieurs étapes de repli`);
+}
+
 // Fermeture transitive : (a, b) si b est plus loin que a en suivant les flèches.
 const suivants = new Map(etapes.map((e) => [e.id, fleches.filter((f) => f.de === e.id).map((f) => f.vers)]));
 const atteignables = [];
@@ -255,6 +266,10 @@ par_derniere AS (
   JOIN pages_multiples AS pm ON pm.k = k
   JOIN etapes AS c ON c.n = r
 ),
+replis AS (
+  -- Page sans parcours déductible : étape de repli (chemin ${replis.length ? [...new Set(replis.map((e) => e.parcours))].join(", ") : "aucun"}).
+  SELECT * FROM UNNEST(ARRAY<STRUCT<cle STRING, etape STRING>>[${replis.length ? "\n" + liste(replis.map((e) => `(${q(cle(e))}, ${q(e.id)})`)) + "\n  " : ""}])
+),
 pages AS (
   -- Pages vues : ${JOURS_RECUL} jours avant la période, pour retrouver le parcours des
   -- personnes qui reviennent (passe 3), et un jour après, pour les sessions qui
@@ -298,10 +313,13 @@ passe0 AS (
 ),
 ${Array.from({ length: nbPasses }, (_, i) => passe(i + 1)).join(",\n")},
 resolues AS (
-  -- Une page qu'on ne peut rattacher à aucun parcours garde son chemin,
-  -- précédé de « ? » : elle coupe la suite des passages.
-  SELECT jour, user_pseudo_id, ga_session_id, rang, IFNULL(etape, CONCAT('?', cle)) AS e
-  FROM passe${nbPasses}
+  -- Une page qu'on ne peut rattacher à aucun parcours va, en dernier recours,
+  -- dans l'étape de repli de sa page (après toutes les passes : le repli ne
+  -- change le parcours d'aucune autre page) ; sans étape de repli, elle garde
+  -- son chemin précédé de « ? » et coupe la suite des passages.
+  SELECT x.jour, x.user_pseudo_id, x.ga_session_id, x.rang, COALESCE(x.etape, rp.etape, CONCAT('?', x.cle)) AS e
+  FROM passe${nbPasses} AS x
+  LEFT JOIN replis AS rp ON rp.cle = x.cle
 ),
 sans_rechargements AS (
   SELECT * EXCEPT (precedente)
@@ -516,8 +534,10 @@ const fichiers = {
       "  fleche            : utilisateurs passés de « de » à « vers » par une flèche du graphe",
       "  saut              : passage vers l'avant hors flèche (pages intermédiaires non vues)",
       "  retour, autre     : retours en arrière et autres passages hors graphe",
-      "  entrees_directes  : utilisateurs dont la session commence sur l'étape (contrôle)",
-      "  non_rattache      : pages à plusieurs parcours sans parcours déductible (contrôle)",
+      "  entrees_directes  : utilisateurs dont la session commence sur l'étape (flèche",
+      "                      d'entrée des étapes qui en ont une, contrôle ailleurs)",
+      "  non_rattache      : pages à plusieurs parcours sans parcours déductible ni",
+      "                      étape de repli (contrôle)",
       "  pages_vues        : personnes arrivées sur le formulaire ayant vu « de » pages",
       "                      différentes du graphe sur la période (entrées comprises)",
       "  pages_vues_offre  : parmi elles, celles qui ont vu leur offre",

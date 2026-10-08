@@ -87,8 +87,11 @@ Fin du long form
 - /mon-offre → /mon-panier → /bienvenue-chez-elsee
 - /mon-offre → /pricing/cartecadeau → /mon-panier → /bienvenue-chez-elsee (une personne qui revient de /pricing/cartecadeau vers /mon-offre puis va sur /mon-panier compte comme passée directement de /mon-offre à /mon-panier, sans avoir vu /pricing/cartecadeau)
 
+Chemin MAIL (ajouté le 8 oct.)
+- /mon-bilan-elsee (www.elsee.care) → /mon-offre → /mon-panier → /bienvenue-chez-elsee, avec une flèche d'entrée (arrivées directes, sans parcours connu) sur les trois dernières pages
+
 Points d'attention
-- /mon-offre, /mon-panier et /bienvenue-chez-elsee apparaissent dans plusieurs parcours (offre directe, long form, compléments, carte cadeau). Rattacher chaque passage au bon parcours d'après les pages précédentes de la session, sans jamais le compter deux fois.
+- /mon-offre, /mon-panier et /bienvenue-chez-elsee apparaissent dans plusieurs parcours (offre directe, long form, compléments, carte cadeau, mail). Rattacher chaque passage au bon parcours d'après les pages précédentes de la session, sans jamais le compter deux fois.
 - Le chemin de l'entrée « social » est /social_signup (confirmé par Eglantine le 6 oct. ; l'ancien export qui écrivait /social-signup était faux). Le vérifier quand même dans les données, comme les deux nouvelles entrées.
 - Le schéma peut contenir des erreurs : toute transition observée dans les données mais absente du graphe doit être remontée, jamais ignorée.
 

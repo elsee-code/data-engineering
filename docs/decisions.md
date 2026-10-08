@@ -20,6 +20,10 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 [`deploiement_apps_script.md`](deploiement_apps_script.md), d'abord en
 déploiement de test, et fait ses retours avant la publication.
 
+**Chemin MAIL** (8 oct.) : en attente de l'accord d'Eglantine pour remplacer
+la fonction BigQuery `elsee_funnel.agregats`. Ensuite, Eglantine remplace
+`Page.html` et `Graphe.gs` dans Apps Script et publie une nouvelle version.
+
 Autres questions :
 
 - **Réglages GA4** (utiles pour expliquer les écarts à la recette) : mode de
@@ -33,6 +37,54 @@ Autres questions :
   l'export BigQuery. Il faudra le même export des quatre explorations sur une
   période d'au moins 7 jours couverte par l'export (au plus tôt du 5 au 11 oct.,
   disponible le 12 oct.).
+
+## 2026-10-08 — Chemin MAIL (Eglantine)
+
+Demande : un chemin « MAIL » sur le schéma, avec les mêmes chiffres que les
+autres : `/mon-bilan-elsee` → `/mon-offre` → `/mon-panier` →
+`/bienvenue-chez-elsee`. Puis, plutôt que la liste des pages vues sans
+parcours connu sous le schéma (`/mon-offre` 57, `/mon-panier` 26,
+`/bienvenue-chez-elsee` 5 les 5 et 6 oct.), une flèche d'entrée venant de la
+gauche sur chacune de ces trois pages du chemin MAIL (croquis d'Eglantine).
+
+Constat (5 et 6 oct.) : `/mon-bilan-elsee` est sur www.elsee.care, vue par 10
+personnes, presque toutes sans provenance (lien d'un e-mail) ; 2 seulement
+gardent leur identifiant GA4 jusqu'à `/mon-offre` (app.elsee.care). Les
+sessions qui commencent sur `/mon-offre` viennent surtout de nulle part (42),
+de www.elsee.care (8) ou de Gmail (5).
+
+Réalisé :
+
+1. Parcours `mail` et quatre étapes dans [`config/graphe.json`](../config/graphe.json),
+   dessinées en colonne à droite, sous le tableau « Pages vues par personne »,
+   avec « MAIL » au-dessus de `/mon-bilan-elsee`.
+2. Flèche `/mon-bilan-elsee → /mon-offre` **non mesurable** (www → app), en
+   pointillés, sans chiffre ni taux d'abandon sur `/mon-bilan-elsee`, comme
+   les autres flèches www → app (proposé, Eglantine a répondu « ok »).
+3. **Pages sans parcours connu → chemin MAIL** : règle 2.4 de
+   [`etape2_calcul.md`](etape2_calcul.md). Ce rattachement passe en dernier,
+   après toutes les autres règles : seules les pages auparavant sans parcours
+   changent. (Un premier essai l'appliquait plus tôt : des personnes revenues
+   ensuite dans le long form ou l'offre directe y étaient happées, par la règle
+   du retour en arrière ; corrigé.) La liste « pages vues sans parcours connu »
+   disparaît des détails sous le schéma (elle ne s'affiche que s'il en reste).
+4. **Flèches d'entrée** sur `/mon-offre`, `/mon-panier` et
+   `/bienvenue-chez-elsee` du chemin MAIL : personnes dont la session commence
+   sur la page, avec une bulle d'aide.
+
+Chiffres (5 et 6 oct.) : `/mon-bilan-elsee` 10 ; `/mon-offre` 58 (55 arrivées
+directes), abandon 78 % ; `/mon-panier` 27 (13 venues de `/mon-offre`, 15
+directes), abandon 89 % ; `/bienvenue-chez-elsee` 5 (3 venues de
+`/mon-panier`, 2 directes).
+
+Effets sur le reste, vérifiés ligne par ligne contre la fonction en place :
+une personne passée par `/obtenir-mon-offre`, puis `/mon-bilan-elsee`, puis
+`/mon-offre` passe de l'offre directe au chemin MAIL (`/mon-offre` de l'offre
+directe : 24 → 23 ; `/mon-panier` : 5 → 4), puisque `/mon-bilan-elsee` est
+désormais une page du schéma ; pour la même raison, le tableau « Pages vues par
+personne » compte cette page (personnes vues seulement sur www.elsee.care :
+155 → 161). Rien d'autre ne change ; les leads sont identiques. Contrôle de
+cohérence sans écart négatif. Page testée dans Chromium, aucune erreur.
 
 ## 2026-10-08 — Un lead par personne (Eglantine)
 

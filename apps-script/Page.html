@@ -117,6 +117,7 @@
     <span><b>En gras</b> dans chaque étape : personnes arrivées sur l’étape</span>
     <span><span class="r">En rouge</span> dans chaque étape : taux d’abandon de l’étape</span>
     <span><span class="g">En gris</span> sur chaque flèche : personnes passées d’une étape à l’autre, et en % la répartition entre les sorties d’une étape qui en a plusieurs</span>
+    <span>Flèches venant de la gauche (chemin MAIL) : personnes arrivées directement sur la page, sans parcours connu</span>
     <span>À droite, le tableau « Pages vues par personne » : jusqu’où les personnes vont dans le formulaire</span>
     <span>En haut, « Nombre leads » : personnes qui ont donné leurs coordonnées sur la période</span>
     <span>Survolez une étape, une flèche, une ligne du tableau ou le nombre de leads pour le détail</span>
@@ -479,7 +480,7 @@ function dessiner() {
     .pv-ligne:hover .pv-fond { fill: #f3f3f1; }
   </style>
   <rect x="0" y="0" width="${largeur}" height="${hauteur}" fill="#ffffff"/>
-  <defs>${couleurs.map((c) => `<marker id="${idCouleur(c)}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`).join('')}</defs>`;
+  <defs>${[...couleurs.map((c) => [idCouleur(c), c]), ['pointeEntree', COULEUR_DEFAUT]].map(([id, c]) => `<marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`).join('')}</defs>`;
 
   // Titres des parcours
   for (const [cle, p] of Object.entries(g.parcours)) {
@@ -512,6 +513,19 @@ function dessiner() {
     }
     svg += '</g>';
     bulles.set(id, () => bulleFleche(f, sortiesA));
+  }
+
+  // Flèches d'entrée : personnes arrivées directement sur l'étape (début de
+  // session), sans étape connue avant.
+  for (const { e, x, y } of Object.values(noeuds)) {
+    if (!e.fleche_entree) continue;
+    const id = 'd:' + e.id;
+    const x2 = x - NOEUD_L / 2 - 2, x1 = x2 - 64;
+    svg += `<g class="fleche" data-bulle="${echapper(id)}">` +
+      `<path class="trait" d="M${x1},${y} H${x2}" stroke="${COULEUR_DEFAUT}" marker-end="url(#pointeEntree)"/>` +
+      `<path class="zonef" d="M${x1},${y} H${x2}"/>` +
+      `<text class="nb" x="${(x1 + x2) / 2}" y="${y - 6}" text-anchor="middle">${nombre(etat.index.entrees[e.id] || 0)}</text></g>`;
+    bulles.set(id, () => bulleEntree(e));
   }
 
   // Étapes
@@ -773,6 +787,15 @@ function bulleFleche(f, sortiesA) {
   return h;
 }
 
+function bulleEntree(e) {
+  const p = etat.graphe.parcours[e.parcours];
+  return `<h3>→ ${echapper(nomEtape(e.id))}</h3>` +
+    `<div class="petit">Personnes dont la session commence sur cette page : lien dans un e-mail, retour après une pause… ` +
+    `Une page vue sans parcours connu est rattachée au chemin ${echapper(p.libelle.toUpperCase())}.</div>` +
+    `<table><tr><td>Personnes arrivées directement</td><td class="n"><b>${nombre(etat.index.entrees[e.id] || 0)}</b></td></tr>` +
+    `<tr><td>Personnes arrivées sur la page, tous chemins confondus</td><td class="n">${nombre(arrivees(e.id))}</td></tr></table>`;
+}
+
 // Nombre leads : personnes qui ont donné leurs coordonnées, par moment de recueil.
 function bulleLeads() {
   const l = etat.index.leads;
@@ -857,12 +880,13 @@ function remplirDetails() {
       lignes.map((l) => `<tr><td>${echapper(nomEtape(l.de))}</td><td>${echapper(nomEtape(l.vers))}</td><td>${libelles[l.genre]}</td><td class="n">${nombre(l.n)}</td></tr>`).join('') +
       '</table>'
     : '<p>Aucun.</p>';
-  h += '<p>Pages vues sans parcours connu (personne revenue directement sur la page, sans étape antérieure ' +
-    'connue sur 60 jours) : non comptées dans le schéma.</p>';
-  h += i.nonRattache.length
-    ? '<table><tr><th>Page</th><th class="n">Personnes</th></tr>' +
-      i.nonRattache.map((l) => `<tr><td>${echapper(l.chemin)}</td><td class="n">${nombre(l.n)}</td></tr>`).join('') + '</table>'
-    : '<p>Aucune.</p>';
+  // Pages sans parcours connu ni étape de repli (aucune depuis l'ajout du chemin MAIL).
+  if (i.nonRattache.length) {
+    h += '<p>Pages vues sans parcours connu (personne revenue directement sur la page, sans étape antérieure ' +
+      'connue sur 60 jours) : non comptées dans le schéma.</p>' +
+      '<table><tr><th>Page</th><th class="n">Personnes</th></tr>' +
+      i.nonRattache.map((l) => `<tr><td>${echapper(l.chemin)}</td><td class="n">${nombre(l.n)}</td></tr>`).join('') + '</table>';
+  }
   h += `<p>Calculé le ${new Date(etat.donnees.calculeLe).toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })} ` +
     '(résultats gardés quelques heures). Unité : personnes distinctes (identifiant GA4) sur la période.</p>';
   document.getElementById('details-contenu').innerHTML = h;
