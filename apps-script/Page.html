@@ -594,8 +594,7 @@ function bulleFleche(f, sortiesA) {
   if (f.type === 'non') h += '<div class="petit">Raccourci NON : la personne a répondu non et saute des pages.</div>';
   if (f.type === 'oui') h += '<div class="petit">Réponse OUI.</div>';
   if (n === null) return h + `<div>Non mesurable. ${echapper(f.raison || '')}</div>`;
-  h += `<table><tr><td>Personnes passées</td><td class="n"><b>${nombre(n)}</b></td></tr>` +
-    `<tr><td>Sur 100 personnes arrivées sur ${echapper(nomEtape(f.de))}, combien prennent cette flèche</td><td class="n">${pourcent(arrivees(f.de) ? n / arrivees(f.de) : null)}</td></tr>`;
+  h += `<table><tr><td>Personnes passées</td><td class="n"><b>${nombre(n)}</b></td></tr>`;
   if (sortiesA.length > 1) h += `<tr><td>Sur 100 personnes qui continuent après ${echapper(nomEtape(f.de))}, combien prennent cette flèche (le % affiché sur la flèche)</td><td class="n">${partEnTexte(f)}</td></tr>`;
   h += '</table>';
   if (f.note) h += `<div class="petit">${echapper(f.note)}</div>`;
