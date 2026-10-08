@@ -20,11 +20,10 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 [`deploiement_apps_script.md`](deploiement_apps_script.md), d'abord en
 déploiement de test, et fait ses retours avant la publication.
 
-**« Paiement ok », retours dans le chemin MAIL, carte cadeau** (8 oct.) :
-calcul prêt et testé, en attente de l'accord d'Eglantine pour remplacer la
-fonction BigQuery. Ensuite, Eglantine remplace `Page.html` et `Graphe.gs` dans
-Apps Script et publie une nouvelle version. À vérifier dès l'arrivée du 7 oct. :
-« paiement ok » contre les 3 ventes réelles. Ensuite, Eglantine remplace `Page.html` et `Graphe.gs` dans
+**« Paiement ok », retours dans le chemin MAIL, carte cadeau** (8 oct.) : la
+fonction BigQuery est à jour. Eglantine remplace `Page.html` et `Graphe.gs`
+dans Apps Script et publie une nouvelle version (d'ici là, la page en ligne
+affiche 0 sur les cases renommées : « paiement ok », carte cadeau). Ensuite, Eglantine remplace `Page.html` et `Graphe.gs` dans
 Apps Script et publie une nouvelle version (cela met aussi en ligne le chemin
 MAIL et le nouveau tableau des pages vues, déjà dans la fonction).
 
@@ -41,6 +40,28 @@ Autres questions :
   l'export BigQuery. Il faudra le même export des quatre explorations sur une
   période d'au moins 7 jours couverte par l'export (au plus tôt du 5 au 11 oct.,
   disponible le 12 oct.).
+
+## 2026-10-08 — Fonction BigQuery remplacée ; pas d'entrée www.elsee.care/carte-cadeau (Eglantine)
+
+Questions d'Eglantine sur la carte cadeau :
+
+- Les 4 arrivées directes sur `/pricing/cartecadeau` du chemin MAIL (5 et 6
+  oct.) n'avaient vu ni page du formulaire ni `/mon-offre` avant : 1 venait
+  juste de www.elsee.care/carte-cadeau, 1 de www.elsee.care sans page connue,
+  1 de app.elsee.care sans page vue avant, 1 sans provenance. Proposition d'une
+  entrée www.elsee.care/carte-cadeau : **refusée** (pas besoin).
+- La règle du détour (`/mon-offre` → carte cadeau → `/mon-offre` →
+  `/mon-panier` compte comme `/mon-offre` → `/mon-panier`) est gardée sur les
+  trois branches : 1 détour effacé les 5 et 6 oct. ; 12 personnes revenues sur
+  `/mon-offre` sans aller sur `/mon-panier` gardent leur visite.
+
+Fonction BigQuery `elsee_funnel.agregats` remplacée le 8 oct., sur accord
+d'Eglantine (« paiement ok », retours dans le chemin MAIL, carte cadeau). Elle
+renvoie exactement les mêmes lignes que `agregats.sql` sur les 5 et 6 oct.
+(943 lignes) ; appel en 43 s. La journée du 7 oct. est arrivée entre-temps :
+« paiement ok » donne 7, 3 et 4 les 5, 6 et 7 oct. pour 6, 4 et 3 ventes
+réelles (14 pour 13). Leads : 485 sur les trois jours (162 le 7). Contrôle de
+cohérence sur les 5 – 7 oct. sans écart négatif.
 
 ## 2026-10-08 — Carte cadeau après chaque `/mon-offre` (Eglantine)
 
