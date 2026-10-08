@@ -210,11 +210,9 @@ les 5 – 7 octobre). À comparer aux ventes réelles (section 11).
   - Une période sans données masque le schéma.
 - **Cache** : les résultats sont gardés 6 heures. Le cache est vidé à
   l'arrivée d'une nouvelle journée ou au changement de configuration. Un
-  calcul prend environ 40 secondes.
+  calcul prend environ 4 secondes.
 - **Export PNG** : le schéma et le tableau, avec la période, le nombre de
   leads et de clients.
-- **Fonction BigQuery plus ancienne que la page** : le tableau et les leads
-  affichent « indisponible », pas des zéros.
 
 ## 10. Alertes
 
@@ -249,3 +247,7 @@ seul jour de retard de GA4 ne déclenche rien.
 - **Taille du calcul** : BigQuery limite le texte de la fonction à 32 Ko et
   elle en fait 29,5. Quelques étapes de plus passent ; un gros ajout demandera
   de réorganiser le calcul.
+- **Rapidité du calcul** : BigQuery recalcule un bloc intermédiaire (`WITH`) à
+  chaque fois qu'il est lu. Chaque bloc ne doit donc être lu qu'une fois : lue
+  dix fois, la chaîne des rattachements faisait passer le calcul de 4 à 20 – 40
+  secondes.

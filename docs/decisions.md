@@ -46,6 +46,18 @@ Le plus récent en haut.
 
 ### 8 octobre 2026
 
+- **Calcul accéléré** (demande d'Eglantine : plus rapide, sans perte de
+  qualité ni approximation) : de 20 – 40 s à environ 4 s. Aucune règle ne
+  change : les blocs intermédiaires du calcul ne sont plus lus qu'une fois
+  (BigQuery les recalculait à chaque lecture : 1 518 étapes d'exécution, 121
+  maintenant). Résultats identiques, ligne à ligne, à ceux de la fonction en
+  place sur cinq périodes (5 – 7 oct., 5 oct., 6 oct., 7 – 12 oct., une période
+  sans données) ; contrôle de cohérence sans écart négatif. Fonction BigQuery
+  à remplacer avec l'accord d'Eglantine.
+- **Textes de la page allégés** (même demande) : bulles des 4 pages de
+  `/obtenir-mon-offre` réduites à « page N sur 4 » ; texte des pages sans
+  parcours connu remis à jour ; messages « indisponible » prévus pour une
+  ancienne fonction BigQuery retirés. `Page.html` à remplacer dans Apps Script.
 - **Les 4 pages de `/obtenir-mon-offre`** (demande d'Eglantine, développée sur
   la branche `etapes-obtenir-mon-offre`, fusionnée dans `main` puis supprimée) :
   - le formulaire, à adresse unique, est suivi par l'événement GA4

@@ -481,31 +481,25 @@ SELECT * FROM UNNEST(ARRAY<STRUCT<seuil INT64, vu BOOL, genre STRING, de STRING,
 ])
 ),
 faits AS (
-SELECT jour, user_pseudo_id, 'arrivees' AS genre, de, CAST(NULL AS STRING) AS vers
-FROM periode WHERE genre != 'non_rattache'
-UNION ALL
-SELECT jour, user_pseudo_id, 'continuent', de, NULL
-FROM periode WHERE genre IN ('fleche', 'saut')
-UNION ALL
-SELECT jour, user_pseudo_id, 'entrees_directes', de, NULL
-FROM periode WHERE premiere_de_la_session AND genre != 'non_rattache'
-UNION ALL
-SELECT jour, user_pseudo_id, genre, de, vers
-FROM periode WHERE genre IN ('fleche', 'saut', 'retour', 'autre')
-UNION ALL
-SELECT jour, user_pseudo_id, 'non_rattache', SUBSTR(de, 2), NULL
-FROM periode WHERE genre = 'non_rattache'
+SELECT p.jour, p.user_pseudo_id, f.genre, f.de, f.vers
+FROM periode AS p
+CROSS JOIN UNNEST([
+STRUCT(p.genre != 'non_rattache' AS oui, 'arrivees' AS genre, p.de AS de, CAST(NULL AS STRING) AS vers),
+(p.genre IN ('fleche', 'saut'), 'continuent', p.de, NULL),
+(p.premiere_de_la_session AND p.genre != 'non_rattache', 'entrees_directes', p.de, NULL),
+(p.genre IN ('fleche', 'saut', 'retour', 'autre'), p.genre, p.de, p.vers),
+(p.genre = 'non_rattache', 'non_rattache', SUBSTR(p.de, 2), NULL)
+]) AS f
+WHERE f.oui
 UNION ALL
 SELECT s.jour, s.user_pseudo_id, f.genre, f.de, f.vers
 FROM sous_etapes AS s
 JOIN sous_faits AS f ON s.m >= f.seuil AND (f.vu IS NULL OR f.vu = s.vu)
 ),
 agregats AS (
-SELECT genre, de, vers, CAST(NULL AS DATE) AS jour, COUNT(DISTINCT user_pseudo_id) AS utilisateurs
-FROM faits GROUP BY genre, de, vers
-UNION ALL
-SELECT genre, de, vers, jour, COUNT(DISTINCT user_pseudo_id)
-FROM faits GROUP BY genre, de, vers, jour
+SELECT genre, de, vers, jour, COUNT(DISTINCT user_pseudo_id) AS utilisateurs
+FROM faits
+GROUP BY GROUPING SETS ((genre, de, vers), (genre, de, vers, jour))
 ),
 pages_personne AS (
 SELECT user_pseudo_id,
@@ -518,18 +512,20 @@ WHERE jour BETWEEN date_debut AND date_fin
 GROUP BY user_pseudo_id
 ),
 repartition AS (
-SELECT 'pages_vues' AS genre, CAST(pages AS STRING) AS de, CAST(NULL AS STRING) AS vers,
-CAST(NULL AS DATE) AS jour, COUNT(*) AS utilisateurs
-FROM pages_personne WHERE debut GROUP BY pages
+SELECT r.genre, r.de, CAST(NULL AS STRING) AS vers, CAST(NULL AS DATE) AS jour, SUM(r.n) AS utilisateurs
+FROM (
+SELECT r.* FROM pages_personne AS p
+CROSS JOIN UNNEST([
+STRUCT(IF(p.debut, 'pages_vues', NULL) AS genre, CAST(p.pages AS STRING) AS de, 1 AS n),
+(IF(p.debut, 'pages_vues_offre', NULL), CAST(p.pages AS STRING), IF(p.offre, 1, 0)),
+('en_cours_de_route', NULL, IF(p.formulaire AND NOT p.debut, 1, 0)),
+('hors_formulaire', NULL, IF(NOT p.formulaire, 1, 0))
+]) AS r
 UNION ALL
-SELECT 'pages_vues_offre', CAST(pages AS STRING), NULL, NULL, COUNTIF(offre)
-FROM pages_personne WHERE debut GROUP BY pages
-UNION ALL
-SELECT 'en_cours_de_route', NULL, NULL, NULL, COUNTIF(formulaire AND NOT debut)
-FROM pages_personne
-UNION ALL
-SELECT 'hors_formulaire', NULL, NULL, NULL, COUNTIF(NOT formulaire)
-FROM pages_personne
+SELECT * FROM UNNEST([STRUCT('en_cours_de_route' AS genre, CAST(NULL AS STRING) AS de, 0 AS n), ('hors_formulaire', NULL, 0)])
+) AS r
+WHERE r.genre IS NOT NULL
+GROUP BY r.genre, r.de
 ),
 leads_pages AS (
 SELECT *,
@@ -569,15 +565,18 @@ GROUP BY user_pseudo_id
 WHERE premier.jour BETWEEN date_debut AND date_fin
 ),
 leads AS (
-SELECT 'leads' AS genre, CAST(NULL AS STRING) AS de, CAST(NULL AS STRING) AS vers,
-CAST(NULL AS DATE) AS jour, COUNT(*) AS utilisateurs
-FROM leads_periode
+SELECT 'leads' AS genre, l.de, CAST(NULL AS STRING) AS vers, l.jour, SUM(l.n) AS utilisateurs
+FROM (
+SELECT x.* FROM leads_periode AS p
+CROSS JOIN UNNEST([
+STRUCT(CAST(NULL AS STRING) AS de, CAST(NULL AS DATE) AS jour, 1 AS n),
+(p.moment, NULL, 1),
+(NULL, p.jour, 1)
+]) AS x
 UNION ALL
-SELECT 'leads', moment, NULL, NULL, COUNT(*)
-FROM leads_periode GROUP BY moment
-UNION ALL
-SELECT 'leads', NULL, NULL, jour, COUNT(*)
-FROM leads_periode GROUP BY jour
+SELECT NULL, NULL, 0
+) AS l
+GROUP BY l.de, l.jour
 ),
 resultat AS (
 SELECT genre, de, vers, jour,

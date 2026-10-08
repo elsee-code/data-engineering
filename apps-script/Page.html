@@ -316,8 +316,7 @@ function afficher(donnees) {
   document.getElementById('zone').hidden = false;
   document.getElementById('details').hidden = false;
   document.getElementById('export').disabled = false;
-  const total = etat.index.leads.total;
-  document.getElementById('leads-n').textContent = total === null ? 'indisponible' : nombre(total);
+  document.getElementById('leads-n').textContent = nombre(etat.index.leads.total);
   document.getElementById('clients-n').textContent = nombre(clients().total);
   dessiner();
   remplirDetails();
@@ -347,7 +346,7 @@ function effacerMessages(seulementErreurs) {
 // ---------------------------------------------------------------------------
 function indexer(d) {
   const i = { arrivees: {}, continuent: {}, entrees: {}, fleche: {}, horsSchema: [], nonRattache: [], serie: {}, sauts: {},
-    pagesVues: {}, horsFormulaire: null, enCoursDeRoute: null, leads: { total: null, moments: {}, serie: {} } };
+    pagesVues: {}, horsFormulaire: 0, enCoursDeRoute: 0, leads: { total: 0, moments: {}, serie: {} } };
   for (const [genre, de, vers, n] of d.totaux) {
     if (genre === 'arrivees') i.arrivees[de] = n;
     else if (genre === 'leads') { if (de) i.leads.moments[de] = n; else i.leads.total = n; }
@@ -634,16 +633,8 @@ function tableauPagesVues(geo) {
   const texte = (t) => { s += `<text class="pv-sous" x="${x0}" y="${y}">${echapper(t)}</text>`; y += 14; };
   const fin = () => ({ svg: s, droite: x0 + PV_LARGEUR, bas: y });
 
-  if (hors === null) {
-    // Résultat calculé par une ancienne version de la fonction BigQuery.
-    texte('Tableau indisponible : la fonction de calcul dans BigQuery n’est pas à jour.');
-    return fin();
-  }
-  const qui = enCours === null
-    ? `Personnes arrivées sur le formulaire (${cfg.formulaire})`
-    : `Personnes qui ont commencé le formulaire au début (${cheminsDebut.join(', ')})`;
   for (const l of envelopper('Nombre de pages différentes du schéma vues par chaque personne sur la période, ' +
-    `pages d’entrée comprises. ${qui} : ${nombre(total)}.`, 92)) texte(l);
+    `pages d’entrée comprises. Personnes qui ont commencé le formulaire au début (${cheminsDebut.join(', ')}) : ${nombre(total)}.`, 92)) texte(l);
   if (!total) {
     y += 6;
     texte('Personne n’a commencé le formulaire pendant la période.');
@@ -700,9 +691,9 @@ function tableauPagesVues(geo) {
   // Notes
   y += 6;
   for (const t of [
-    ...(enCours === null ? [] : [`Non comptées : ${nombre(enCours)} personnes arrivées en cours de route, sans passer par le début ` +
-      'du formulaire (retour direct sur leur offre, reprise au milieu du questionnaire…).']),
-    `${enCours === null ? 'Non comptées' : 'Non comptées non plus'} : ${nombre(hors)} personnes vues seulement sur ${autres.join(', ')}.`,
+    `Non comptées : ${nombre(enCours)} personnes arrivées en cours de route, sans passer par le début ` +
+      'du formulaire (retour direct sur leur offre, reprise au milieu du questionnaire…).',
+    `Non comptées non plus : ${nombre(hors)} personnes vues seulement sur ${autres.join(', ')}.`,
     `Pour les personnes venues d’une page d’entrée de ${autres.join(', ')}, cette page manque presque toujours ` +
       '(une page de moins) : GA4 les perd en passant sur le formulaire.',
   ]) for (const l of envelopper(t, 92)) texte(l);
@@ -792,9 +783,7 @@ function bulleEtape(e, sortiesE) {
     ? 'Fin du paiement : ' + etat.graphe.paiement.pages.map((x) => x.page.slice(x.page.indexOf('/'))).join(' ou ') +
       ' (« bienvenue » puis « success » compte une fois)'
     : rang >= 0
-      ? `${se.page}, page ${rang + 1} sur ${se.etapes.length} du formulaire (même adresse) : ` +
-        (rang === 0 ? 'arrivées d’après les pages vues et ' : 'arrivées d’après ') +
-        `l’événement GA4 ${se.evenement} (atteindre une page, c’est avoir vu celles d’avant)`
+      ? `${se.page}, page ${rang + 1} sur ${se.etapes.length}`
       : e.domaine;
   let h = `<h3>${echapper(nomEtape(e.id))}</h3><div class="petit">${echapper(sousTitre)}</div><table>` +
     `<tr><td>Personnes arrivées</td><td class="n"><b>${nombre(a)}</b></td></tr>`;
@@ -874,7 +863,6 @@ function bulleClients() {
 function bulleLeads() {
   const l = etat.index.leads;
   let h = '<h3>Nombre leads</h3>';
-  if (l.total === null) return h + '<div>Indisponible : la fonction de calcul dans BigQuery n’est pas à jour.</div>';
   h += '<div class="petit">Personnes qui ont donné leurs coordonnées (e-mail) sur la période. GA4 ne voit pas la saisie : ' +
     'chaque lead est compté à l’arrivée sur la page qui la suit.</div><table>' +
     `<tr><td>Personnes</td><td class="n"><b>${nombre(l.total)}</b></td></tr>`;
@@ -956,8 +944,7 @@ function remplirDetails() {
     : '<p>Aucun.</p>';
   // Pages sans parcours connu ni étape de repli (aucune depuis l'ajout du chemin MAIL).
   if (i.nonRattache.length) {
-    h += '<p>Pages vues sans parcours connu (personne revenue directement sur la page, sans étape antérieure ' +
-      'connue sur 60 jours) : non comptées dans le schéma.</p>' +
+    h += '<p>Pages vues sans parcours connu ni étape de repli : non comptées dans le schéma.</p>' +
       '<table><tr><th>Page</th><th class="n">Personnes</th></tr>' +
       i.nonRattache.map((l) => `<tr><td>${echapper(l.chemin)}</td><td class="n">${nombre(l.n)}</td></tr>`).join('') + '</table>';
   }
@@ -994,13 +981,8 @@ function exporterPng() {
     ctx.fillStyle = '#5f5f5f';
     ctx.fillText(`Du ${dateLisible(p.debut)} au ${dateLisible(p.fin)} · personnes distinctes · source GA4 (BigQuery)`, MARGE, 44);
     // Nombre leads et clients, en haut à droite.
-    const leads = etat.index.leads.total;
-    const haut = [`Clients : ${nombre(clients().total)}`];
-    const bas = ['clients : personnes arrivées sur « paiement ok »'];
-    if (leads !== null) {
-      haut.unshift(`Nombre leads : ${nombre(leads)}`);
-      bas.unshift('leads : personnes qui ont donné leurs coordonnées');
-    }
+    const haut = [`Nombre leads : ${nombre(etat.index.leads.total)}`, `Clients : ${nombre(clients().total)}`];
+    const bas = ['leads : personnes qui ont donné leurs coordonnées', 'clients : personnes arrivées sur « paiement ok »'];
     ctx.textAlign = 'right';
     ctx.fillStyle = '#1a1a1a';
     ctx.font = '700 16px -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif';
