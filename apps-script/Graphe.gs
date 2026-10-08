@@ -18,7 +18,7 @@ const GRAPHE = {
       "couleur": "#3BB0F0",
       "titre": {
         "colonne": 0,
-        "ligne": -0.8
+        "ligne": -3.8
       }
     },
     "offre_directe": {
@@ -97,9 +97,43 @@ const GRAPHE = {
       "parcours": "short_form",
       "position": {
         "colonne": 0,
+        "ligne": -3
+      },
+      "libelle": "SITE",
+      "nom": "obtenir-mon-offre · page 1"
+    },
+    {
+      "id": "obtenir_mon_offre_2",
+      "chemin": "/obtenir-mon-offre",
+      "domaine": "www.elsee.care",
+      "parcours": "short_form",
+      "position": {
+        "colonne": 0,
+        "ligne": -2
+      },
+      "nom": "obtenir-mon-offre · page 2"
+    },
+    {
+      "id": "obtenir_mon_offre_3",
+      "chemin": "/obtenir-mon-offre",
+      "domaine": "www.elsee.care",
+      "parcours": "short_form",
+      "position": {
+        "colonne": 0,
+        "ligne": -1
+      },
+      "nom": "obtenir-mon-offre · page 3"
+    },
+    {
+      "id": "obtenir_mon_offre_4",
+      "chemin": "/obtenir-mon-offre",
+      "domaine": "www.elsee.care",
+      "parcours": "short_form",
+      "position": {
+        "colonne": 0,
         "ligne": 0
       },
-      "libelle": "SITE"
+      "nom": "obtenir-mon-offre · page 4"
     },
     {
       "id": "signup",
@@ -658,6 +692,21 @@ const GRAPHE = {
   "fleches": [
     {
       "de": "obtenir_mon_offre",
+      "vers": "obtenir_mon_offre_2",
+      "type": "normale"
+    },
+    {
+      "de": "obtenir_mon_offre_2",
+      "vers": "obtenir_mon_offre_3",
+      "type": "normale"
+    },
+    {
+      "de": "obtenir_mon_offre_3",
+      "vers": "obtenir_mon_offre_4",
+      "type": "normale"
+    },
+    {
+      "de": "obtenir_mon_offre_4",
       "vers": "signup",
       "type": "normale",
       "mesurable": false,
@@ -1090,5 +1139,28 @@ const GRAPHE = {
       "checkout.stripe.com"
     ]
   },
-  "empreinte": "ee7473bbf6"
+  "sous_etapes": {
+    "page": "www.elsee.care/obtenir-mon-offre",
+    "evenement": "step_form",
+    "parametre": "form_derniere_page",
+    "etapes": [
+      {
+        "etape": "obtenir_mon_offre",
+        "valeur": "/obtenir-mon-offre-1"
+      },
+      {
+        "etape": "obtenir_mon_offre_2",
+        "valeur": "/obtenir-mon-offre-2"
+      },
+      {
+        "etape": "obtenir_mon_offre_3",
+        "valeur": "/obtenir-mon-offre-3"
+      },
+      {
+        "etape": "obtenir_mon_offre_4",
+        "valeur": "/obtenir-mon-offre-4"
+      }
+    ]
+  },
+  "empreinte": "a0ec1fc979"
 };

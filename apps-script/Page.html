@@ -376,7 +376,8 @@ const arrivees = (id) => etat.index.arrivees[id] || 0;
 // arrivée, ou dont les sorties ne sont pas mesurables.
 function tauxAbandon(id) {
   const a = arrivees(id);
-  if (!a || !etat.graphe.fleches.some((f) => f.de === id)) return null;
+  const sortiesId = etat.graphe.fleches.filter((f) => f.de === id);
+  if (!a || !sortiesId.length || sortiesId.every((f) => f.mesurable === false)) return null;
   const c = etat.index.continuent[id];
   if (c === null) return null;
   return 1 - (c || 0) / a;
@@ -411,8 +412,13 @@ function partEnTexte(f) {
 // Étape de fin de paiement : plusieurs pages regroupées sous un seul nom.
 const paiement = (e) => etat.graphe.paiement && e.domaine + e.chemin === etat.graphe.paiement.page;
 
+// Rang (0, 1, …) d'une étape parmi les pages d'un formulaire à adresse unique
+// (bloc sous_etapes : /obtenir-mon-offre), -1 sinon.
+const rangSousEtape = (e) => (etat.graphe.sous_etapes ? etat.graphe.sous_etapes.etapes.findIndex((x) => x.etape === e.id) : -1);
+
 function nomAffiche(e) {
   if (paiement(e)) return etat.graphe.paiement.libelle;
+  if (e.nom) return e.nom;
   return e.chemin.startsWith('/signup/') ? e.chemin.slice(8) : e.chemin;
 }
 
@@ -770,6 +776,7 @@ function trace(a, b, f, occupe) {
 function nomEtape(id) {
   const e = etat.graphe.etapes.find((x) => x.id === id);
   if (!e) return id.startsWith('?') ? id.slice(1) : id;
+  if (e.nom) return e.nom;
   const p = etat.graphe.parcours[e.parcours];
   const multiples = etat.graphe.etapes.filter((x) => x.chemin === e.chemin).length > 1;
   return (paiement(e) ? etat.graphe.paiement.libelle : e.chemin) + (multiples ? ` (${p.libelle.toLowerCase()})` : '');
@@ -779,22 +786,38 @@ function bulleEtape(e, sortiesE) {
   const a = arrivees(e.id);
   const ab = tauxAbandon(e.id);
   const c = etat.index.continuent[e.id];
+  const se = etat.graphe.sous_etapes;
+  const rang = rangSousEtape(e);
   const sousTitre = paiement(e)
     ? 'Fin du paiement : ' + etat.graphe.paiement.pages.map((x) => x.page.slice(x.page.indexOf('/'))).join(' ou ') +
       ' (« bienvenue » puis « success » compte une fois)'
-    : e.domaine;
+    : rang >= 0
+      ? `${se.page}, page ${rang + 1} sur ${se.etapes.length} du formulaire (même adresse) : ` +
+        (rang === 0 ? 'arrivées d’après les pages vues, passage aux pages suivantes' : 'arrivées') +
+        ` d’après l’événement GA4 ${se.evenement}`
+      : e.domaine;
   let h = `<h3>${echapper(nomEtape(e.id))}</h3><div class="petit">${echapper(sousTitre)}</div><table>` +
     `<tr><td>Personnes arrivées</td><td class="n"><b>${nombre(a)}</b></td></tr>`;
   if (ab !== null) h += `<tr><td>Taux d’abandon</td><td class="n" style="color:#c8372d"><b>${pourcent(ab)}</b> (${nombre(a - (c || 0))} pers.)</td></tr>`;
-  else if (sortiesE.length) h += `<tr><td colspan="2" class="petit">Abandon non mesurable : GA4 perd la personne entre www.elsee.care et app.elsee.care.</td></tr>`;
+  else if (sortiesE.length) {
+    h += `<tr><td colspan="2" class="petit">Abandon non mesurable : GA4 perd la personne entre www.elsee.care et app.elsee.care.` +
+      (rang >= 0 && rang === se.etapes.length - 1
+        ? ' Une partie des personnes arrivées sur cette dernière page est passée sur /signup : leur nombre ne dit pas combien ont abandonné.'
+        : '') + '</td></tr>';
+  }
   for (const f of sortiesE) {
     const n = passages(f);
     h += `<tr><td>→ ${echapper(nomEtape(f.vers))}${f.type === 'non' ? ' (NON)' : f.type === 'oui' ? ' (OUI)' : ''}</td><td class="n">${n === null ? 'non mesurable' : nombre(n)}</td></tr>`;
   }
   const saut = etat.index.sauts[e.id];
-  if (saut) h += `<tr><td>→ plus loin, en sautant une étape (page non enregistrée par GA4 ; pas un abandon)</td><td class="n">${nombre(saut)}</td></tr>`;
+  if (saut) {
+    h += `<tr><td>→ plus loin, ${rang === 0 ? 'sans les pages suivantes du formulaire vues par GA4 (surtout vers /signup' : 'en sautant une étape (page non enregistrée par GA4'} ; pas un abandon)</td><td class="n">${nombre(saut)}</td></tr>`;
+  }
   const directes = etat.index.entrees[e.id];
-  if (directes) h += `<tr><td class="petit">Dont arrivées directement sur cette page, sans l’étape d’avant (lien, e-mail, retour après une pause)</td><td class="n petit">${nombre(directes)}</td></tr>`;
+  const texteDirectes = rang === 1
+    ? 'Dont arrivées sans que GA4 ait vu la page 1 (cookies acceptés en cours de formulaire, par exemple)'
+    : 'Dont arrivées directement sur cette page, sans l’étape d’avant (lien, e-mail, retour après une pause)';
+  if (directes) h += `<tr><td class="petit">${texteDirectes}</td><td class="n petit">${nombre(directes)}</td></tr>`;
   h += '</table>' + courbe(e.id);
   return h;
 }

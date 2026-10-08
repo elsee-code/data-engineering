@@ -46,6 +46,22 @@ Le plus récent en haut.
 
 ### 8 octobre 2026
 
+- **Les 4 pages de `/obtenir-mon-offre`** (demande d'Eglantine, développée sur
+  la branche `etapes-obtenir-mon-offre`) :
+  - le formulaire, à adresse unique, est suivi par l'événement GA4
+    `step_form` (balise GTM d'Eglantine : envoyé à chaque nouvelle page
+    affichée, avec `form_derniere_page`) ;
+  - il est dessiné en 4 étapes au-dessus de `/signup` : page 1 (arrivées
+    d'après les pages vues), pages 2 à 4 (d'après l'événement) ;
+  - page 4 → `/signup` non mesurable, sans taux d'abandon sur la page 4 : une
+    partie des personnes de la page 4 est passée sur `/signup` (remarque
+    d'Eglantine).
+
+  Les 5 – 7 oct. : page 1 122 (abandon 52 %), page 2 67 (dont 12 sans page 1
+  vue par GA4, sans doute des cookies acceptés en cours de formulaire), page 3
+  62, page 4 62. Le reste du calcul est identique ; contrôle de cohérence sans
+  écart négatif sur les 61 étapes. Fonction BigQuery à remplacer avec l'accord
+  d'Eglantine, puis `Page.html` et `Graphe.gs` à remplacer dans Apps Script.
 - **Encadré « Clients »** à côté du nombre de leads : personnes arrivées sur
   « paiement ok » sur la période, tous chemins (somme des cases de fin ;
   identique au nombre de personnes distinctes sur les 5 – 7 oct. : 7, 3 et 4).

@@ -14,7 +14,8 @@ dates et raisons des décisions sont dans [`decisions.md`](decisions.md).
   Chaque journée arrive dans le courant du lendemain, parfois l'après-midi.
   Le projet est en bac à sable : les tables expirent au bout de 60 jours, donc
   l'historique est glissant sur 60 jours.
-- **Pages vues** (`page_view`) seulement : une étape = une page. Une page =
+- **Pages vues** (`page_view`) : une étape = une page, sauf les pages 2 à 4
+  de `/obtenir-mon-offre`, suivies par l'événement `step_form` (section 4). Une page =
   domaine + chemin, sans paramètres, en minuscules, sans « / » final. Seuls
   app.elsee.care et www.elsee.care comptent ; les pages hors schéma sont
   ignorées (espace membre, `/homefirstvisit`, www.elsee.care/carte-cadeau…).
@@ -27,11 +28,12 @@ dates et raisons des décisions sont dans [`decisions.md`](decisions.md).
 
 ## 2. Le schéma
 
-58 étapes et 64 flèches, décrites dans `config/graphe.json`.
+61 étapes et 67 flèches, décrites dans `config/graphe.json`.
 
 | Chemin | Étapes |
 |---|---|
-| Entrées | `/obtenir-mon-offre` (SITE), `/offres-remboursement-elsee`, `/remboursement-complements-alimentaires` (www.elsee.care) et `/signup-corpo` (CORPO) mènent à `/signup` ; `/social_signup` (SOCIAL) mène à `depenses_complements` |
+| Short form (bleu) | `/obtenir-mon-offre` (SITE, www.elsee.care) : un formulaire de 4 pages à la même adresse, page 1 → page 2 → page 3 → page 4 → `/signup` |
+| Entrées | `/offres-remboursement-elsee`, `/remboursement-complements-alimentaires` (www.elsee.care) et `/signup-corpo` (CORPO) mènent à `/signup` ; `/social_signup` (SOCIAL) mène à `depenses_complements` |
 | Offre directe (jaune) | `/signup` → `/mon-offre` → `/mon-panier` → paiement ok |
 | Long form | `/signup` → `depenses_complements` → … → `final_step` → `offre_en_preparation` → `/mon-offre` → `/mon-panier` → paiement ok |
 | Compléments alimentaires (vert) | `recap_marques` → `recap_remboursements` → `bonus-abonnement` → `bilan` → `/offres` → `/mon-panier` → paiement ok |
@@ -43,7 +45,7 @@ dates et raisons des décisions sont dans [`decisions.md`](decisions.md).
   Prendre un raccourci NON est une poursuite, jamais un abandon.
 - `medecine_douce_step` mène à `en_savoir_plus_sur_vous` (coordonnées pas
   encore données) ou directement à `depenses_sports`.
-- **Flèches non mesurables** : `/obtenir-mon-offre`,
+- **Flèches non mesurables** : page 4 de `/obtenir-mon-offre`,
   `/offres-remboursement-elsee`, `/remboursement-complements-alimentaires` →
   `/signup` et `/mon-bilan-elsee` → `/mon-offre` passent de www.elsee.care à
   app.elsee.care, où GA4 perd la personne. Elles sont dessinées en pointillés,
@@ -86,6 +88,25 @@ personne (son `/mon-panier`), sur 60 jours au plus.
   passe oublié, début de visite sans provenance), elles sont ignorées. C'est la
   règle la plus proche des ventes réelles : 7, 3 et 4 « paiement ok » les 5, 6
   et 7 octobre, pour 6, 4 et 3 ventes.
+- **Les 4 pages de `/obtenir-mon-offre`** (même adresse) : la balise GTM
+  envoie l'événement `step_form` à chaque nouvelle page affichée, avec
+  `form_derniere_page` = `/obtenir-mon-offre-1` à `-4`. Un retour en arrière
+  ne renvoie rien.
+  - **Page atteinte** : pour chaque personne et chaque jour, la page la plus
+    loin atteinte.
+  - **Page 1** : arrivées d'après les pages vues de `/obtenir-mon-offre`, comme
+    toute page.
+  - **Pages 2 à 4** : arrivées d'après l'événement.
+  - **Passages** : le passage page 1 → page 2 n'est compté que si GA4 a vu la
+    page 1. Sinon (cookies acceptés en cours de formulaire, par exemple), c'est
+    une arrivée directe sur la page 2.
+  - **Page 4 → `/signup`** : flèche non mesurable, donc pas de taux d'abandon
+    sur la page 4. Une partie des personnes restées sur la page 4 est passée
+    sur `/signup` (sous un autre identifiant GA4).
+  - **Saut vers `/signup`** : une personne que GA4 suit jusqu'à `/signup` sans
+    voir les pages 2 à 4 a continué. Ce « saut » compte comme une sortie de la
+    page 1.
+  - Les événements envoyés depuis une autre page sont ignorés.
 - **Rechargements** : une page vue plusieurs fois de suite compte une fois.
 - **Détour par la carte cadeau** : `/mon-offre` → `/pricing/cartecadeau` →
   `/mon-offre` → `/mon-panier` compte comme `/mon-offre` → `/mon-panier`, sans
@@ -226,5 +247,5 @@ seul jour de retard de GA4 ne déclenche rien.
   schéma n'utilise pas cet événement.
 - **Historique** : 60 jours au plus, et rien avant le 5 octobre 2026.
 - **Taille du calcul** : BigQuery limite le texte de la fonction à 32 Ko et
-  elle en fait 29. Quelques étapes de plus passent ; un gros ajout demandera
+  elle en fait 29,5. Quelques étapes de plus passent ; un gros ajout demandera
   de réorganiser le calcul.

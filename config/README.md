@@ -17,6 +17,8 @@ décrites dans [`docs/regles.md`](../docs/regles.md).
   - `position` : place dans le dessin (`colonne` : 0 = colonne principale,
     négatif = à gauche ; `ligne` : de haut en bas) ;
   - `libelle` (facultatif) : titre affiché au-dessus du chemin (ex. « SOCIAL ») ;
+  - `nom` (facultatif) : nom affiché à la place du chemin (ex. « obtenir-mon-offre
+    · page 2 ») ;
   - `repli` (facultatif, `true`) : étape de repli de sa page. Une page vue sans
     parcours connu dans la visite (section 3 de `docs/regles.md`) y est
     rattachée. Une seule par page (le chemin MAIL pour `/mon-offre`,
@@ -44,6 +46,15 @@ décrites dans [`docs/regles.md`](../docs/regles.md).
     « dont ont vu leur offre ») ;
   - `position` : coin supérieur gauche du tableau dans le dessin (`colonne`,
     `ligne`), dans un espace laissé libre par les étapes.
+- `sous_etapes` : pages d'un formulaire à adresse unique (`/obtenir-mon-offre`),
+  suivies par un événement GA4 (section 4 de `docs/regles.md`).
+  - `page` : la page (domaine + chemin) ;
+  - `evenement`, `parametre` : l'événement (`step_form`) et le paramètre qui
+    donne la page affichée (`form_derniere_page`) ;
+  - `etapes` : dans l'ordre, `etape` (`id`) et `valeur` du paramètre. La
+    première est la vraie page (arrivées d'après les pages vues) ; les
+    suivantes n'existent que par l'événement, et chacune n'est atteinte que
+    depuis la précédente (une flèche de l'une à l'autre).
 - `paiement` : case de fin « paiement ok ».
   - `libelle` : nom affiché ;
   - `page` : page (domaine + chemin) qui porte les étapes de fin ;

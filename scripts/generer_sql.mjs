@@ -69,7 +69,11 @@ for (const e of etapes) {
 // Pages (domaine + chemin) portées par plusieurs étapes, une par parcours :
 // l'étape se déduit de la page précédente. Une même page précédente ne doit
 // donc mener qu'à une seule de ces étapes.
-const cle = (e) => `${e.domaine}${e.chemin}`;
+// Les étapes suivies par un événement (bloc sous_etapes, sauf la première, qui
+// est une vraie page) ont une pseudo-page : elles ne viennent jamais des pages vues.
+const sousEtapes = graphe.sous_etapes;
+const valeurEvenement = new Map((sousEtapes?.etapes ?? []).slice(1).map((x) => [x.etape, x.valeur]));
+const cle = (e) => (valeurEvenement.has(e.id) ? `${sousEtapes.evenement}:${valeurEvenement.get(e.id)}` : `${e.domaine}${e.chemin}`);
 const parPage = new Map();
 for (const e of etapes) parPage.set(cle(e), [...(parPage.get(cle(e)) ?? []), e.id]);
 const pagesMultiples = [...parPage].filter(([, ids]) => ids.length > 1);
@@ -79,6 +83,23 @@ for (const [page, ids] of pagesMultiples) {
     if (vues.has(f.de) && vues.get(f.de) !== f.vers) erreurs.push(`${page} : ${f.de} mène à deux étapes (${vues.get(f.de)}, ${f.vers})`);
     vues.set(f.de, f.vers);
   }
+}
+
+// Sous-étapes d'une page (pages d'un formulaire à adresse unique), suivies par un
+// événement GA4 dont un paramètre donne la page affichée.
+if (sousEtapes) {
+  const se = sousEtapes;
+  if (!/^[a-z0-9.-]+\/[a-z0-9_\-./]*$/.test(se.page ?? "") || !graphe.domaines.includes(se.page.split("/")[0])) erreurs.push(`sous_etapes.page invalide : ${se.page}`);
+  if (!/^[a-z0-9_]+$/.test(se.evenement ?? "") || !/^[a-z0-9_]+$/.test(se.parametre ?? "")) erreurs.push("sous_etapes : evenement et parametre attendus (minuscules, chiffres, _)");
+  const liste = se.etapes ?? [];
+  if (liste.length < 2) erreurs.push("sous_etapes.etapes : deux étapes au moins");
+  if (new Set(liste.map((x) => x.valeur)).size !== liste.length || liste.some((x) => !/^[^'\\]+$/.test(x.valeur ?? ""))) erreurs.push("sous_etapes.etapes : valeurs manquantes, en double ou invalides");
+  liste.forEach((x, k) => {
+    if (!parId.has(x.etape)) { erreurs.push(`sous_etapes.etapes : étape inconnue : ${x.etape}`); return; }
+    if (k === 0 && cle(parId.get(x.etape)) !== se.page) erreurs.push(`sous_etapes : la première étape doit être la page ${se.page}`);
+    if (k > 0 && !fleches.some((f) => f.de === liste[k - 1].etape && f.vers === x.etape)) erreurs.push(`sous_etapes : flèche ${liste[k - 1].etape} → ${x.etape} attendue`);
+    if (k > 0 && fleches.some((f) => f.vers === x.etape && f.de !== liste[k - 1].etape)) erreurs.push(`sous_etapes : ${x.etape} ne peut être atteinte que depuis ${liste[k - 1].etape}`);
+  });
 }
 
 // Paiement : plusieurs pages de fin (ex. /bienvenue-chez-elsee, /success) ne
@@ -196,12 +217,17 @@ const pagesDebut = [...new Set(pagesVues.debut.map((id) => cle(parId.get(id))))]
 const numero = new Map(etapes.map((e, i) => [e.id, i + 1]));
 // atteint : chaîne de 0 et de 1 ; le n-ième caractère vaut 1 si l'étape
 // numéro n est plus loin en suivant les flèches.
+// Écrite en hexadécimal (4 étapes par chiffre) pour tenir dans les 32 Ko.
+const enHexa = (bits) => (bits + "000").slice(0, Math.ceil(bits.length / 4) * 4).match(/..../g).map((b) => parseInt(b, 2).toString(16)).join("");
 const atteint = new Map(
   etapes.map((e) => {
     const plusLoin = new Set(atteignables.filter(([a]) => a === e.id).map(([, b]) => b));
-    return [e.id, etapes.map((x) => (plusLoin.has(x.id) ? "1" : "0")).join("")];
+    return [e.id, enHexa(etapes.map((x) => (plusLoin.has(x.id) ? "1" : "0")).join(""))];
   })
 );
+// Expression SQL : l'étape numéro n est-elle plus loin que celle dont « atteint » est donné ?
+const plusLoinSql = (atteintSql, nSql) =>
+  `CAST(CONCAT('0x', SUBSTR(${atteintSql}, DIV(${nSql} + 3, 4), 1)) AS INT64) & (8 >> MOD(${nSql} - 1, 4)) > 0`;
 // rattache : pour chaque page à plusieurs parcours (dans l'ordre de
 // pagesMultiples), numéro de l'étape à retenir quand cette étape-ci est la
 // dernière vue par la personne (0 : aucune). On prend l'étape de la page la plus
@@ -299,8 +325,8 @@ const nbRepasses = pagesMultiples.length - 1;
 // Corps commun : des pages vues jusqu'aux passages classés, une ligne par page
 // du graphe vue (après rechargements et détours effacés), avec la page suivante.
 const corps = `etapes AS (
-  -- n : numéro de l'étape ; atteint : n-ième caractère à 1 si l'étape n est plus
-  -- loin en suivant les flèches ; rattache : voir par_derniere.
+  -- n : numéro de l'étape ; atteint : en hexadécimal, le n-ième bit à 1 si
+  -- l'étape n est plus loin en suivant les flèches ; rattache : voir par_derniere.
   SELECT * FROM UNNEST(ARRAY<STRUCT<id STRING, cle STRING, n INT64, atteint STRING, rattache ARRAY<INT64>>>[
 ${liste(etapes.map((e) => `(${q(e.id)}, ${q(cle(e))}, ${numero.get(e.id)}, ${q(atteint.get(e.id))}, [${rattache.get(e.id).join(", ")}])`))}
   ])
@@ -460,8 +486,8 @@ classees AS (
       WHEN s.vers IS NULL THEN 'fin'
       WHEN STARTS_WITH(s.vers, '?') THEN 'autre'
       WHEN f.de IS NOT NULL THEN 'fleche'
-      WHEN SUBSTR(ed.atteint, ev.n, 1) = '1' THEN 'saut'
-      WHEN SUBSTR(ev.atteint, ed.n, 1) = '1' THEN 'retour'
+      WHEN ${plusLoinSql("ed.atteint", "ev.n")} THEN 'saut'
+      WHEN ${plusLoinSql("ev.atteint", "ed.n")} THEN 'retour'
       ELSE 'autre'
     END AS genre
   FROM suites AS s
@@ -472,7 +498,7 @@ classees AS (
 periode AS (
   SELECT * FROM classees WHERE jour BETWEEN date_debut AND date_fin
 ),
-faits AS (
+${sousEtapes ? sousEtapesSql() : ""}faits AS (
   -- Faits par personne (ne sortent jamais de BigQuery).
   SELECT jour, user_pseudo_id, 'arrivees' AS genre, de, CAST(NULL AS STRING) AS vers
   FROM periode WHERE genre != 'non_rattache'
@@ -487,7 +513,11 @@ faits AS (
   FROM periode WHERE genre IN ('fleche', 'saut', 'retour', 'autre')
   UNION ALL
   SELECT jour, user_pseudo_id, 'non_rattache', SUBSTR(de, 2), NULL
-  FROM periode WHERE genre = 'non_rattache'
+  FROM periode WHERE genre = 'non_rattache'${sousEtapes ? `
+  UNION ALL
+  SELECT s.jour, s.user_pseudo_id, f.genre, f.de, f.vers
+  FROM sous_etapes AS s
+  JOIN sous_faits AS f ON s.m >= f.seuil AND (f.vu IS NULL OR f.vu = s.vu)` : ""}
 ),
 agregats AS (
   -- Utilisateurs distincts sur toute la période (jour vide), puis jour par jour.
@@ -597,6 +627,56 @@ resultat AS (
   UNION ALL
   SELECT * FROM leads
 )`;
+
+// Sous-étapes : par personne et par jour, rang de la page la plus loin atteinte
+// d'après l'événement, et première page vue par GA4 (page_view). Faits produits :
+// arrivées sur les pages 2 et suivantes, passages et sorties entre pages ; un
+// passage page 1 → page 2 n'est compté que si GA4 a vu la page 1, sinon c'est
+// une arrivée directe sur la page 2 (cookies acceptés en cours de formulaire).
+function sousEtapesSql() {
+  const se = sousEtapes;
+  const ids = se.etapes.map((x) => x.etape);
+  const faits = [];
+  ids.forEach((id, k) => {
+    const rang = k + 1;
+    if (k > 0) faits.push(`(${rang}, NULL, 'arrivees', ${q(id)}, NULL)`);
+    if (k + 1 < ids.length) {
+      const vu = k === 0 ? "TRUE" : "NULL";
+      faits.push(`(${rang + 1}, ${vu}, 'continuent', ${q(id)}, NULL)`, `(${rang + 1}, ${vu}, 'fleche', ${q(id)}, ${q(ids[k + 1])})`);
+    }
+  });
+  faits.push(`(2, FALSE, 'entrees_directes', ${q(ids[1])}, NULL)`);
+  return `sous_etapes AS (
+  -- Pages de ${se.page} suivies par l'événement ${se.evenement} (paramètre
+  -- ${se.parametre}) : m = rang de la page la plus loin atteinte ce jour-là,
+  -- vu = la première page a été vue par GA4 (page_view) ce jour-là.
+  SELECT s.jour, s.user_pseudo_id, MAX(s.rang) AS m, LOGICAL_OR(t.vu IS NOT NULL) AS vu
+  FROM (
+    SELECT PARSE_DATE('%Y%m%d', event_date) AS jour, user_pseudo_id,
+      (SELECT o + 1 FROM UNNEST(${sqlTableau(se.etapes.map((x) => x.valeur))}) AS v WITH OFFSET o
+       WHERE v = (SELECT value.string_value FROM UNNEST(event_params) WHERE key = ${q(se.parametre)})) AS rang,
+      (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'page_location') AS url
+    FROM ${SOURCE}
+    WHERE REGEXP_CONTAINS(_TABLE_SUFFIX, r'^\\d{8}$')
+      AND _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', date_debut) AND FORMAT_DATE('%Y%m%d', date_fin)
+      AND event_name = ${q(se.evenement)}
+      AND user_pseudo_id IS NOT NULL
+  ) AS s
+  LEFT JOIN (SELECT DISTINCT jour, user_pseudo_id, TRUE AS vu FROM tunnel WHERE id_unique = ${q(ids[0])}) AS t
+    ON t.jour = s.jour AND t.user_pseudo_id = s.user_pseudo_id
+  WHERE s.rang IS NOT NULL
+    AND CONCAT(LOWER(NET.HOST(s.url)),
+               IFNULL(NULLIF(REGEXP_REPLACE(LOWER(REGEXP_EXTRACT(s.url, r'^[a-zA-Z]+://[^/?#]+([^?#]*)')), r'/+$', ''), ''), '/')) = ${q(se.page)}
+  GROUP BY s.jour, s.user_pseudo_id
+),
+sous_faits AS (
+  -- (rang atteint au moins, page 1 vue ou non (vide : peu importe), genre, de, vers)
+  SELECT * FROM UNNEST(ARRAY<STRUCT<seuil INT64, vu BOOL, genre STRING, de STRING, vers STRING>>[
+${liste(faits)}
+  ])
+),
+`;
+}
 
 function sqlTableau(valeurs) {
   return valeurs.length ? `[${valeurs.map(q).join(", ")}]` : "ARRAY<STRING>[]";
