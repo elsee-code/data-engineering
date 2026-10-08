@@ -354,6 +354,7 @@ pages_personne AS (
   SELECT user_pseudo_id,
     COUNT(DISTINCT cle) AS pages,
     LOGICAL_OR(STARTS_WITH(cle, 'app.elsee.care/')) AS formulaire,
+    LOGICAL_OR(cle IN UNNEST(['app.elsee.care/signup-corpo', 'app.elsee.care/signup', 'app.elsee.care/social_signup'])) AS debut,
     LOGICAL_OR(cle IN UNNEST(['app.elsee.care/mon-offre', 'app.elsee.care/offres'])) AS offre
   FROM tunnel
   WHERE jour BETWEEN date_debut AND date_fin
@@ -362,10 +363,13 @@ pages_personne AS (
 repartition AS (
   SELECT 'pages_vues' AS genre, CAST(pages AS STRING) AS de, CAST(NULL AS STRING) AS vers,
     CAST(NULL AS DATE) AS jour, COUNT(*) AS utilisateurs
-  FROM pages_personne WHERE formulaire GROUP BY pages
+  FROM pages_personne WHERE debut GROUP BY pages
   UNION ALL
   SELECT 'pages_vues_offre', CAST(pages AS STRING), NULL, NULL, COUNTIF(offre)
-  FROM pages_personne WHERE formulaire GROUP BY pages
+  FROM pages_personne WHERE debut GROUP BY pages
+  UNION ALL
+  SELECT 'en_cours_de_route', NULL, NULL, NULL, COUNTIF(formulaire AND NOT debut)
+  FROM pages_personne
   UNION ALL
   SELECT 'hors_formulaire', NULL, NULL, NULL, COUNTIF(NOT formulaire)
   FROM pages_personne

@@ -20,9 +20,9 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 [`deploiement_apps_script.md`](deploiement_apps_script.md), d'abord en
 déploiement de test, et fait ses retours avant la publication.
 
-**Chemin MAIL** (8 oct.) : en attente de l'accord d'Eglantine pour remplacer
-la fonction BigQuery `elsee_funnel.agregats`. Ensuite, Eglantine remplace
-`Page.html` et `Graphe.gs` dans Apps Script et publie une nouvelle version.
+**Chemin MAIL et tableau des pages vues** (8 oct.) : la fonction BigQuery est
+à jour. Eglantine remplace `Page.html` et `Graphe.gs` dans Apps Script et
+publie une nouvelle version.
 
 Autres questions :
 
@@ -37,6 +37,37 @@ Autres questions :
   l'export BigQuery. Il faudra le même export des quatre explorations sur une
   période d'au moins 7 jours couverte par l'export (au plus tôt du 5 au 11 oct.,
   disponible le 12 oct.).
+
+## 2026-10-08 — Tableau des pages vues : personnes qui commencent le formulaire (Eglantine)
+
+Réponses d'Eglantine sur le chemin MAIL : le lien `/obtenir-mon-offre` →
+`/mon-bilan-elsee` n'existe pas (1 personne en deux jours : pas de flèche) ;
+accord pour remplacer la fonction BigQuery.
+
+Demande sur le tableau « Pages vues par personne » : « plus pertinent si les
+stats sont sur les personnes qui font le form depuis le début, pas sur celles
+en cours de route, car mon objectif est de comprendre au bout de combien de
+temps les gens en ont marre de faire le form ».
+
+Mise en œuvre ([`etape2_calcul.md`](etape2_calcul.md), règle 9) : seules les
+personnes qui ont vu `/signup`, `/social_signup` ou `/signup-corpo` sur la
+période sont comptées (bloc `pages_vues.debut` de la configuration). Les
+personnes arrivées sur app.elsee.care sans passer par ces pages (retour direct
+sur leur offre, reprise au milieu du questionnaire) sont données à part, sous le
+tableau, comme celles vues seulement sur www.elsee.care.
+
+Effet (5 et 6 oct.) : 431 personnes au lieu de 532 ; 101 arrivées en cours de
+route mises à part. La ligne « 1 page » passe de 115 à 42 personnes (les retours
+directs sur `/mon-offre` en sortent : plus aucune n'y a vu son offre) ; « 4
+pages » : 64 personnes, dont 63 arrêtées sans voir leur offre ; à partir de 6
+pages, presque rien ne change. Le reste du calcul est identique.
+
+Fonction BigQuery `elsee_funnel.agregats` remplacée le 8 oct., sur accord
+d'Eglantine, avec le chemin MAIL (entrée suivante) : elle renvoie exactement
+les mêmes lignes que `agregats.sql` sur les 5 et 6 oct. (917 lignes) ; contrôle
+de cohérence sans écart négatif. Page testée dans Chromium, aucune erreur.
+Reste à faire par Eglantine : remplacer `Page.html` et `Graphe.gs` dans Apps
+Script, puis publier une nouvelle version.
 
 ## 2026-10-08 — Chemin MAIL (Eglantine)
 

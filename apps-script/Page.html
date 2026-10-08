@@ -118,7 +118,7 @@
     <span><span class="r">En rouge</span> dans chaque étape : taux d’abandon de l’étape</span>
     <span><span class="g">En gris</span> sur chaque flèche : personnes passées d’une étape à l’autre, et en % la répartition entre les sorties d’une étape qui en a plusieurs</span>
     <span>Flèches venant de la gauche (chemin MAIL) : personnes arrivées directement sur la page, sans parcours connu</span>
-    <span>À droite, le tableau « Pages vues par personne » : jusqu’où les personnes vont dans le formulaire</span>
+    <span>À droite, le tableau « Pages vues par personne » : jusqu’où vont les personnes qui commencent le formulaire</span>
     <span>En haut, « Nombre leads » : personnes qui ont donné leurs coordonnées sur la période</span>
     <span>Survolez une étape, une flèche, une ligne du tableau ou le nombre de leads pour le détail</span>
   </div>
@@ -342,13 +342,14 @@ function effacerMessages(seulementErreurs) {
 // ---------------------------------------------------------------------------
 function indexer(d) {
   const i = { arrivees: {}, continuent: {}, entrees: {}, fleche: {}, horsSchema: [], nonRattache: [], serie: {}, sauts: {},
-    pagesVues: {}, horsFormulaire: null, leads: { total: null, moments: {}, serie: {} } };
+    pagesVues: {}, horsFormulaire: null, enCoursDeRoute: null, leads: { total: null, moments: {}, serie: {} } };
   for (const [genre, de, vers, n] of d.totaux) {
     if (genre === 'arrivees') i.arrivees[de] = n;
     else if (genre === 'leads') { if (de) i.leads.moments[de] = n; else i.leads.total = n; }
     else if (genre === 'pages_vues') (i.pagesVues[de] = i.pagesVues[de] || {}).personnes = n;
     else if (genre === 'pages_vues_offre') (i.pagesVues[de] = i.pagesVues[de] || {}).offre = n;
     else if (genre === 'hors_formulaire') i.horsFormulaire = n;
+    else if (genre === 'en_cours_de_route') i.enCoursDeRoute = n;
     else if (genre === 'continuent') i.continuent[de] = n;
     else if (genre === 'entrees_directes') i.entrees[de] = n;
     else if (genre === 'fleche') i.fleche[de + '>' + vers] = n;
@@ -604,6 +605,8 @@ function tableauPagesVues(geo) {
   const cfg = g.pages_vues;
   const x0 = geo.x(cfg.position.colonne), y0 = geo.y(cfg.position.ligne);
   const cheminsOffre = [...new Set(cfg.offre.map((id) => g.etapes.find((e) => e.id === id).chemin))];
+  const cheminsDebut = [...new Set((cfg.debut || []).map((id) => g.etapes.find((e) => e.id === id).chemin))];
+  const enCours = etat.index.enCoursDeRoute;
   const autres = g.domaines.filter((d) => d !== cfg.formulaire);
   const { lignes, total } = lignesPagesVues();
   const hors = etat.index.horsFormulaire;
@@ -617,11 +620,14 @@ function tableauPagesVues(geo) {
     texte('Tableau indisponible : la fonction de calcul dans BigQuery n’est pas à jour.');
     return fin();
   }
+  const qui = enCours === null
+    ? `Personnes arrivées sur le formulaire (${cfg.formulaire})`
+    : `Personnes qui ont commencé le formulaire au début (${cheminsDebut.join(', ')})`;
   for (const l of envelopper('Nombre de pages différentes du schéma vues par chaque personne sur la période, ' +
-    `pages d’entrée comprises. Personnes arrivées sur le formulaire (${cfg.formulaire}) : ${nombre(total)}.`, 92)) texte(l);
+    `pages d’entrée comprises. ${qui} : ${nombre(total)}.`, 92)) texte(l);
   if (!total) {
     y += 6;
-    texte('Personne n’est arrivé sur le formulaire pendant la période.');
+    texte('Personne n’a commencé le formulaire pendant la période.');
     return fin();
   }
 
@@ -675,7 +681,9 @@ function tableauPagesVues(geo) {
   // Notes
   y += 6;
   for (const t of [
-    `Non comptées : ${nombre(hors)} personnes vues seulement sur ${autres.join(', ')}.`,
+    ...(enCours === null ? [] : [`Non comptées : ${nombre(enCours)} personnes arrivées en cours de route, sans passer par le début ` +
+      'du formulaire (retour direct sur leur offre, reprise au milieu du questionnaire…).']),
+    `${enCours === null ? 'Non comptées' : 'Non comptées non plus'} : ${nombre(hors)} personnes vues seulement sur ${autres.join(', ')}.`,
     `Pour les personnes venues d’une page d’entrée de ${autres.join(', ')}, cette page manque presque toujours ` +
       '(une page de moins) : GA4 les perd en passant sur le formulaire.',
   ]) for (const l of envelopper(t, 92)) texte(l);
@@ -685,7 +693,7 @@ function tableauPagesVues(geo) {
 function bulleLignePages(l, total) {
   const pages = l.n > 1 ? `${l.n} pages différentes` : '1 seule page';
   return `<h3>${pages}</h3>` +
-    `<div class="petit">Personnes arrivées sur le formulaire qui ont vu ${pages} du schéma sur la période.</div><table>` +
+    `<div class="petit">Personnes qui ont commencé le formulaire au début et ont vu ${pages} du schéma sur la période.</div><table>` +
     `<tr><td>Personnes</td><td class="n"><b>${nombre(l.personnes)}</b> (${part(l.personnes / total)})</td></tr>` +
     `<tr><td>dont ont vu leur offre</td><td class="n">${nombre(l.offre)}</td></tr>` +
     `<tr><td>dont se sont arrêtées sans voir leur offre</td><td class="n" style="color:#c8372d"><b>${nombre(l.personnes - l.offre)}</b></td></tr>` +

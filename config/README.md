@@ -34,8 +34,11 @@ puis régénérer les requêtes.
     vide par le calcul, avec la `raison` ;
   - `note` (facultatif) : explication affichée avec la flèche.
 - `pages_vues` : tableau « Pages vues par personne », à côté du schéma.
-  - `formulaire` : domaine du formulaire. Seules les personnes qui y ont vu au
-    moins une page sont comptées (les autres sont données à part) ;
+  - `formulaire` : domaine du formulaire. Les personnes qui n'y ont vu aucune
+    page sont données à part ;
+  - `debut` : `id` des étapes par lesquelles on commence le formulaire. Seules
+    les personnes qui en ont vu une sur la période sont comptées ; les autres
+    personnes du formulaire sont données à part (arrivées en cours de route) ;
   - `offre` : `id` des étapes qui montrent son offre à la personne (colonne
     « dont ont vu leur offre ») ;
   - `position` : coin supérieur gauche du tableau dans le dessin (`colonne`,

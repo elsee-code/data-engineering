@@ -13,9 +13,11 @@
 --                       d'entrée des étapes qui en ont une, contrôle ailleurs)
 --   non_rattache      : pages à plusieurs parcours sans parcours déductible ni
 --                       étape de repli (contrôle)
---   pages_vues        : personnes arrivées sur le formulaire ayant vu « de » pages
+--   pages_vues        : personnes ayant commencé le formulaire au début et vu « de » pages
 --                       différentes du graphe sur la période (entrées comprises)
 --   pages_vues_offre  : parmi elles, celles qui ont vu leur offre
+--   en_cours_de_route : personnes arrivées sur le formulaire sans passer par son
+--                       début (non comptées dans pages_vues)
 --   hors_formulaire   : personnes vues seulement hors du formulaire (non comptées
 --                       dans pages_vues)
 --   leads             : personnes dont le premier lead (coordonnées données) tombe
@@ -436,25 +438,32 @@ agregats AS (
 pages_personne AS (
   -- Par personne, sur la période : pages différentes du graphe vues (une page
   -- vue plusieurs fois compte une fois, entrées comprises), au moins une page
-  -- du formulaire (app.elsee.care) vue, offre vue (app.elsee.care/mon-offre, app.elsee.care/offres).
+  -- du formulaire (app.elsee.care) vue, formulaire commencé au début
+  -- (app.elsee.care/signup-corpo, app.elsee.care/signup, app.elsee.care/social_signup), offre vue (app.elsee.care/mon-offre, app.elsee.care/offres).
   SELECT user_pseudo_id,
     COUNT(DISTINCT cle) AS pages,
     LOGICAL_OR(STARTS_WITH(cle, 'app.elsee.care/')) AS formulaire,
+    LOGICAL_OR(cle IN UNNEST(['app.elsee.care/signup-corpo', 'app.elsee.care/signup', 'app.elsee.care/social_signup'])) AS debut,
     LOGICAL_OR(cle IN UNNEST(['app.elsee.care/mon-offre', 'app.elsee.care/offres'])) AS offre
   FROM tunnel
   WHERE jour BETWEEN date_debut AND date_fin
   GROUP BY user_pseudo_id
 ),
 repartition AS (
-  -- Personnes arrivées sur le formulaire, selon le nombre de pages vues (de) ;
+  -- Personnes qui ont commencé le formulaire au début, selon le nombre de pages
+  -- vues (de) ; en_cours_de_route : personnes arrivées sur le formulaire sans
+  -- passer par son début (retour sur l'offre, reprise au milieu) ;
   -- hors_formulaire : personnes vues seulement sur les autres domaines (GA4 les
   -- perd en passant sur le formulaire).
   SELECT 'pages_vues' AS genre, CAST(pages AS STRING) AS de, CAST(NULL AS STRING) AS vers,
     CAST(NULL AS DATE) AS jour, COUNT(*) AS utilisateurs
-  FROM pages_personne WHERE formulaire GROUP BY pages
+  FROM pages_personne WHERE debut GROUP BY pages
   UNION ALL
   SELECT 'pages_vues_offre', CAST(pages AS STRING), NULL, NULL, COUNTIF(offre)
-  FROM pages_personne WHERE formulaire GROUP BY pages
+  FROM pages_personne WHERE debut GROUP BY pages
+  UNION ALL
+  SELECT 'en_cours_de_route', NULL, NULL, NULL, COUNTIF(formulaire AND NOT debut)
+  FROM pages_personne
   UNION ALL
   SELECT 'hors_formulaire', NULL, NULL, NULL, COUNTIF(NOT formulaire)
   FROM pages_personne

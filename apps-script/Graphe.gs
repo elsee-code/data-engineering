@@ -886,6 +886,11 @@ const GRAPHE = {
   ],
   "pages_vues": {
     "formulaire": "app.elsee.care",
+    "debut": [
+      "signup_corpo",
+      "signup",
+      "social_signup"
+    ],
     "offre": [
       "mon_offre_directe",
       "mon_offre_long_form",
@@ -955,5 +960,5 @@ const GRAPHE = {
       }
     ]
   },
-  "empreinte": "440e67598a"
+  "empreinte": "5e72aad0cd"
 };

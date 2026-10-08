@@ -48,6 +48,11 @@ const pagesVues = graphe.pages_vues;
 if (!pagesVues) erreurs.push("bloc pages_vues absent");
 else {
   if (!graphe.domaines.includes(pagesVues.formulaire)) erreurs.push(`pages_vues.formulaire : domaine non retenu : ${pagesVues.formulaire}`);
+  if (!Array.isArray(pagesVues.debut) || !pagesVues.debut.length) erreurs.push("pages_vues.debut : liste d'étapes attendue");
+  else for (const id of pagesVues.debut) {
+    if (!parId.has(id)) erreurs.push(`pages_vues.debut : étape inconnue : ${id}`);
+    else if (parId.get(id).domaine !== pagesVues.formulaire) erreurs.push(`pages_vues.debut : ${id} n'est pas sur ${pagesVues.formulaire}`);
+  }
   if (!Array.isArray(pagesVues.offre) || !pagesVues.offre.length) erreurs.push("pages_vues.offre : liste d'étapes attendue");
   else for (const id of pagesVues.offre) if (!parId.has(id)) erreurs.push(`pages_vues.offre : étape inconnue : ${id}`);
   if (!pagesVues.position || !Number.isFinite(pagesVues.position.colonne) || !Number.isFinite(pagesVues.position.ligne)) {
@@ -155,6 +160,8 @@ const sansSortieMesurable = etapes
   .map((e) => e.id);
 // Pages (domaine + chemin) qui montrent son offre à la personne.
 const pagesOffre = [...new Set(pagesVues.offre.map((id) => cle(parId.get(id))))];
+// Pages par lesquelles on commence le formulaire (tableau des pages vues).
+const pagesDebut = [...new Set(pagesVues.debut.map((id) => cle(parId.get(id))))];
 
 // Encodages compacts : le texte d'une fonction BigQuery est limité à 32 Ko.
 // Chaque étape a un numéro (1, 2, …) dans l'ordre de la configuration.
@@ -403,25 +410,32 @@ agregats AS (
 pages_personne AS (
   -- Par personne, sur la période : pages différentes du graphe vues (une page
   -- vue plusieurs fois compte une fois, entrées comprises), au moins une page
-  -- du formulaire (${pagesVues.formulaire}) vue, offre vue (${pagesOffre.join(", ")}).
+  -- du formulaire (${pagesVues.formulaire}) vue, formulaire commencé au début
+  -- (${pagesDebut.join(", ")}), offre vue (${pagesOffre.join(", ")}).
   SELECT user_pseudo_id,
     COUNT(DISTINCT cle) AS pages,
     LOGICAL_OR(STARTS_WITH(cle, ${q(pagesVues.formulaire + "/")})) AS formulaire,
+    LOGICAL_OR(cle IN UNNEST(${sqlTableau(pagesDebut)})) AS debut,
     LOGICAL_OR(cle IN UNNEST(${sqlTableau(pagesOffre)})) AS offre
   FROM tunnel
   WHERE jour BETWEEN date_debut AND date_fin
   GROUP BY user_pseudo_id
 ),
 repartition AS (
-  -- Personnes arrivées sur le formulaire, selon le nombre de pages vues (de) ;
+  -- Personnes qui ont commencé le formulaire au début, selon le nombre de pages
+  -- vues (de) ; en_cours_de_route : personnes arrivées sur le formulaire sans
+  -- passer par son début (retour sur l'offre, reprise au milieu) ;
   -- hors_formulaire : personnes vues seulement sur les autres domaines (GA4 les
   -- perd en passant sur le formulaire).
   SELECT 'pages_vues' AS genre, CAST(pages AS STRING) AS de, CAST(NULL AS STRING) AS vers,
     CAST(NULL AS DATE) AS jour, COUNT(*) AS utilisateurs
-  FROM pages_personne WHERE formulaire GROUP BY pages
+  FROM pages_personne WHERE debut GROUP BY pages
   UNION ALL
   SELECT 'pages_vues_offre', CAST(pages AS STRING), NULL, NULL, COUNTIF(offre)
-  FROM pages_personne WHERE formulaire GROUP BY pages
+  FROM pages_personne WHERE debut GROUP BY pages
+  UNION ALL
+  SELECT 'en_cours_de_route', NULL, NULL, NULL, COUNTIF(formulaire AND NOT debut)
+  FROM pages_personne
   UNION ALL
   SELECT 'hors_formulaire', NULL, NULL, NULL, COUNTIF(NOT formulaire)
   FROM pages_personne
@@ -538,9 +552,11 @@ const fichiers = {
       "                      d'entrée des étapes qui en ont une, contrôle ailleurs)",
       "  non_rattache      : pages à plusieurs parcours sans parcours déductible ni",
       "                      étape de repli (contrôle)",
-      "  pages_vues        : personnes arrivées sur le formulaire ayant vu « de » pages",
+      "  pages_vues        : personnes ayant commencé le formulaire au début et vu « de » pages",
       "                      différentes du graphe sur la période (entrées comprises)",
       "  pages_vues_offre  : parmi elles, celles qui ont vu leur offre",
+      "  en_cours_de_route : personnes arrivées sur le formulaire sans passer par son",
+      "                      début (non comptées dans pages_vues)",
       "  hors_formulaire   : personnes vues seulement hors du formulaire (non comptées",
       "                      dans pages_vues)",
       "  leads             : personnes dont le premier lead (coordonnées données) tombe",

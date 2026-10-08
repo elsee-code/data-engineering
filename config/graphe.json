@@ -884,6 +884,11 @@
   ],
   "pages_vues": {
     "formulaire": "app.elsee.care",
+    "debut": [
+      "signup_corpo",
+      "signup",
+      "social_signup"
+    ],
     "offre": [
       "mon_offre_directe",
       "mon_offre_long_form",

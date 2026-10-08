@@ -100,13 +100,19 @@ une série jour par jour.
    période, pages d'entrée comprises. Une page vue plusieurs fois (retour en
    arrière, rechargement, autre jour) compte une fois ; `/mon-offre`,
    `/mon-panier` et `/bienvenue-chez-elsee` comptent chacune pour une page,
-   quel que soit le parcours. Seules les personnes ayant vu au moins une page
-   de app.elsee.care sont comptées (genre `pages_vues`, nombre de pages dans
-   `de`) ; parmi elles, celles qui ont vu `/mon-offre` ou `/offres` (genre
-   `pages_vues_offre`). Les personnes vues seulement sur www.elsee.care sont
-   comptées à part (genre `hors_formulaire`) : GA4 les perd en passant sur le
-   formulaire, et pour la même raison la page d'entrée www manque presque
-   toujours aux personnes qui en viennent. Les pages vues sont comptées telles
+   quel que soit le parcours. Seules les personnes qui ont **commencé le
+   formulaire au début** sur la période, c'est-à-dire vu `/signup`,
+   `/social_signup` ou `/signup-corpo`, sont comptées (genre `pages_vues`,
+   nombre de pages dans `de`) : le tableau sert à voir au bout de combien de
+   pages les gens se lassent du formulaire (Eglantine, 8 oct. ; avant, toute
+   personne ayant vu une page de app.elsee.care comptait). Parmi elles,
+   celles qui ont vu `/mon-offre` ou `/offres` (genre `pages_vues_offre`).
+   Comptées à part : les personnes arrivées sur app.elsee.care en cours de
+   route, sans passer par ces pages (retour direct sur leur offre, reprise au
+   milieu du questionnaire ; genre `en_cours_de_route`), et les personnes vues
+   seulement sur www.elsee.care (genre `hors_formulaire`) : GA4 les perd en
+   passant sur le formulaire, et pour la même raison la page d'entrée www
+   manque presque toujours aux personnes qui en viennent. Les pages vues sont comptées telles
    quelles, sans les règles 2 à 4 (une visite de `/pricing/cartecadeau` suivie
    d'un retour compte comme une page vue).
 10. **Nombre leads** (encadré à côté de la période, ajouté le 8 oct.) :
