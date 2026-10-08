@@ -87,7 +87,7 @@ Sport, produits, apps
 Fin du long form
 - /signup/final_step → /signup/offre_en_preparation → /mon-offre
 - /mon-offre → /mon-panier → /bienvenue-chez-elsee
-- /mon-offre → /pricing/cartecadeau → /mon-panier → /bienvenue-chez-elsee (une personne qui revient de /pricing/cartecadeau vers /mon-offre puis va sur /mon-panier compte comme passée directement de /mon-offre à /mon-panier, sans avoir vu /pricing/cartecadeau)
+- /mon-offre → /pricing/cartecadeau → /mon-panier → /bienvenue-chez-elsee (depuis le 8 oct. : une branche après chaque /mon-offre — offre directe, long form, mail ; une personne qui revient de /pricing/cartecadeau vers /mon-offre puis va sur /mon-panier compte comme passée directement de /mon-offre à /mon-panier, sans avoir vu /pricing/cartecadeau)
 
 Chemin MAIL (ajouté le 8 oct.)
 - /mon-bilan-elsee (www.elsee.care) → /mon-offre → /mon-panier → /bienvenue-chez-elsee, avec une flèche d'entrée (arrivées directes, sans parcours connu) sur les trois dernières pages

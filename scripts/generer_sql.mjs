@@ -145,7 +145,7 @@ else {
 const replis = etapes.filter((e) => e.repli);
 for (const e of etapes) {
   if (e.repli !== undefined && typeof e.repli !== "boolean") erreurs.push(`repli : vrai ou faux attendu pour ${e.id}`);
-  if (e.fleche_entree !== undefined && typeof e.fleche_entree !== "boolean") erreurs.push(`fleche_entree : vrai ou faux attendu pour ${e.id}`);
+  if (e.fleche_entree !== undefined && ![true, false, "droite"].includes(e.fleche_entree)) erreurs.push(`fleche_entree : vrai, faux ou "droite" attendu pour ${e.id}`);
 }
 for (const [page, ids] of parPage) {
   if (ids.filter((id) => parId.get(id).repli).length > 1) erreurs.push(`${page} : plusieurs étapes de repli`);
@@ -229,7 +229,7 @@ const rattache = new Map(
     ];
   })
 );
-const nbPasses = pagesMultiples.length + 2;
+const nbPasses = pagesMultiples.length + 1;
 const JOURS_RECUL = 60;
 
 function passe(n) {
@@ -268,6 +268,33 @@ function passe(n) {
                          x.derniere_etape_personne, x.derniere_etape_session)
 )`;
 }
+
+function repasse(n) {
+  return `repli${n} AS (
+  -- Pages rattachées par repli (aucun parcours connu), passe ${n} : elles suivent
+  -- la flèche venant de la page d'avant (ex. /pricing/cartecadeau du chemin MAIL,
+  -- puis son /mon-panier), à défaut la même étape que la dernière fois que la page
+  -- a été vue dans la session, à défaut (paiement en venant de Stripe) la
+  -- dernière étape vue par la personne. Les autres pages ne changent pas.
+  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_personne),
+    IF(x.par_repli, COALESCE(pp.etape, x.derniere_meme_page, pd.etape, x.etape), x.etape) AS etape
+  FROM (
+    SELECT *,
+      LAG(etape) OVER (PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang) AS precedente,
+      LAST_VALUE(etape IGNORE NULLS) OVER (
+        PARTITION BY user_pseudo_id, ga_session_id, cle ORDER BY rang
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_meme_page,
+      LAST_VALUE(etape IGNORE NULLS) OVER (
+        PARTITION BY user_pseudo_id ORDER BY rang_personne
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_personne
+    FROM repli${n - 1}
+  ) AS x
+  LEFT JOIN par_precedente AS pp ON pp.cle = x.cle AND pp.precedente = x.precedente
+  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle AND pd.derniere = x.derniere_etape_personne
+    AND x.cle = ${q(paiement.page)} AND x.provenance IN UNNEST(${sqlTableau(paiement.reprise_si_provenance ?? [])})
+)`;
+}
+const nbRepasses = pagesMultiples.length - 1;
 
 // Corps commun : des pages vues jusqu'aux passages classés, une ligne par page
 // du graphe vue (après rechargements et détours effacés), avec la page suivante.
@@ -369,17 +396,27 @@ ${paiement.pages.map((p) => `        WHEN cle_vue = ${q(p.page)} THEN IF(${condi
   JOIN chemins AS c USING (cle)
 ),
 passe0 AS (
-  SELECT *, id_unique AS etape FROM tunnel
+  -- Rechargements (même page vue plusieurs fois de suite) retirés dès ici : ils
+  -- comptent une fois (règle 3), et les passes en sont plus courtes.
+  SELECT * EXCEPT (cle_avant), id_unique AS etape
+  FROM (SELECT *, LAG(cle) OVER (PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang) AS cle_avant FROM tunnel)
+  WHERE cle_avant IS NULL OR cle_avant != cle
 ),
 ${Array.from({ length: nbPasses }, (_, i) => passe(i + 1)).join(",\n")},
-resolues AS (
+repli0 AS (
   -- Une page qu'on ne peut rattacher à aucun parcours va, en dernier recours,
   -- dans l'étape de repli de sa page (après toutes les passes : le repli ne
-  -- change le parcours d'aucune autre page) ; sans étape de repli, elle garde
-  -- son chemin précédé de « ? » et coupe la suite des passages.
-  SELECT x.jour, x.user_pseudo_id, x.ga_session_id, x.rang, COALESCE(x.etape, rp.etape, CONCAT('?', x.cle)) AS e
+  -- change le parcours d'aucune autre page).
+  SELECT x.* EXCEPT (etape), x.etape IS NULL AS par_repli, COALESCE(x.etape, rp.etape) AS etape
   FROM passe${nbPasses} AS x
   LEFT JOIN replis AS rp ON rp.cle = x.cle
+),
+${Array.from({ length: nbRepasses }, (_, i) => repasse(i + 1)).join(",\n")},
+resolues AS (
+  -- Sans étape de repli, une page garde son chemin précédé de « ? » et coupe la
+  -- suite des passages.
+  SELECT jour, user_pseudo_id, ga_session_id, rang, IFNULL(etape, CONCAT('?', cle)) AS e
+  FROM repli${nbRepasses}
 ),
 sans_rechargements AS (
   SELECT * EXCEPT (precedente)
@@ -578,10 +615,12 @@ const declarations = `DECLARE date_debut DATE DEFAULT DATE '2026-10-05';
 DECLARE date_fin   DATE DEFAULT DATE_SUB(CURRENT_DATE('Europe/Paris'), INTERVAL 1 DAY);
 `;
 
-// Texte de la fonction, sans les commentaires : BigQuery le limite à 32 Ko.
+// Texte de la fonction, sans les commentaires ni l'indentation : BigQuery le
+// limite à 32 Ko.
 const corpsFonction = `WITH\n${corps}\nSELECT * FROM resultat`
   .split("\n")
   .filter((l) => !/^\s*--/.test(l))
+  .map((l) => l.trim())
   .join("\n");
 const tailleFonction = Buffer.byteLength(corpsFonction, "utf8");
 const TAILLE_MAX = 32768;

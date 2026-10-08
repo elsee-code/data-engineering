@@ -21,6 +21,14 @@
   cadeau, mail), comme sur le schéma.
 - Fin de chaque chemin : **paiement ok** (8 oct.) au lieu de
   `/bienvenue-chez-elsee` (règle 1).
+- **Carte cadeau** (8 oct.) : chaque `/mon-offre` (offre directe, long form,
+  MAIL) a sa branche `/pricing/cartecadeau` → `/mon-panier` → « paiement ok »,
+  pour garder les chiffres séparés de bout en bout. Une visite de
+  `/pricing/cartecadeau` sans parcours connu va dans la branche du chemin MAIL.
+- Une page rattachée au chemin MAIL faute de parcours connu suit ensuite les
+  flèches (son `/mon-panier` après `/pricing/cartecadeau` est celui de la
+  branche carte cadeau) ; un « paiement ok » en venant de Stripe reprend la
+  dernière étape vue par la personne (règle 2.3).
 - Chemin **MAIL** (ajouté le 8 oct., croquis d'Eglantine) : `/mon-bilan-elsee`
   (www.elsee.care, lien des e-mails) → `/mon-offre` → `/mon-panier` →
   `/bienvenue-chez-elsee`. La flèche `/mon-bilan-elsee → /mon-offre` passe de
@@ -90,7 +98,9 @@ une série jour par jour.
       comptée à part (genre `non_rattache`) ; il n'y en a plus.
 3. **Rechargements** : la même étape vue plusieurs fois de suite compte une
    fois.
-4. **Carte cadeau** : une personne qui va de `/mon-offre` à
+4. **Carte cadeau** (une branche `/pricing/cartecadeau` → `/mon-panier` →
+   « paiement ok » après chaque `/mon-offre` : offre directe, long form, MAIL ;
+   Eglantine, 8 oct.) : une personne qui va de `/mon-offre` à
    `/pricing/cartecadeau`, revient sur `/mon-offre`, puis va sur `/mon-panier`,
    compte comme passée directement de `/mon-offre` à `/mon-panier`, sans avoir
    vu `/pricing/cartecadeau`. Si elle revient sur `/mon-offre` puis s'arrête, la

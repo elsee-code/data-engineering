@@ -41,12 +41,20 @@ const GRAPHE = {
         "ligne": 8.5
       }
     },
-    "carte_cadeau": {
-      "libelle": "Carte cadeau",
-      "couleur": "#1A1A1A"
-    },
     "mail": {
       "libelle": "Mail",
+      "couleur": "#1A1A1A"
+    },
+    "carte_cadeau_long_form": {
+      "libelle": "Carte cadeau – long form",
+      "couleur": "#1A1A1A"
+    },
+    "carte_cadeau_directe": {
+      "libelle": "Carte cadeau – offre directe",
+      "couleur": "#1A1A1A"
+    },
+    "carte_cadeau_mail": {
+      "libelle": "Carte cadeau – mail",
       "couleur": "#1A1A1A"
     }
   },
@@ -505,10 +513,10 @@ const GRAPHE = {
       }
     },
     {
-      "id": "cartecadeau",
+      "id": "cartecadeau_long_form",
       "chemin": "/pricing/cartecadeau",
       "domaine": "app.elsee.care",
-      "parcours": "carte_cadeau",
+      "parcours": "carte_cadeau_long_form",
       "position": {
         "colonne": 1,
         "ligne": 29
@@ -516,20 +524,20 @@ const GRAPHE = {
       "effacer_si_retour": true
     },
     {
-      "id": "mon_panier_carte_cadeau",
+      "id": "mon_panier_cc_long_form",
       "chemin": "/mon-panier",
       "domaine": "app.elsee.care",
-      "parcours": "carte_cadeau",
+      "parcours": "carte_cadeau_long_form",
       "position": {
         "colonne": 1,
         "ligne": 30
       }
     },
     {
-      "id": "paiement_ok_carte_cadeau",
+      "id": "paiement_ok_cc_long_form",
       "chemin": "/bienvenue-chez-elsee",
       "domaine": "www.elsee.care",
-      "parcours": "carte_cadeau",
+      "parcours": "carte_cadeau_long_form",
       "position": {
         "colonne": 1,
         "ligne": 31
@@ -542,7 +550,7 @@ const GRAPHE = {
       "parcours": "mail",
       "position": {
         "colonne": 3,
-        "ligne": 17
+        "ligne": 18
       },
       "libelle": "MAIL"
     },
@@ -553,7 +561,7 @@ const GRAPHE = {
       "parcours": "mail",
       "position": {
         "colonne": 3,
-        "ligne": 18
+        "ligne": 19
       },
       "repli": true,
       "fleche_entree": true
@@ -565,7 +573,7 @@ const GRAPHE = {
       "parcours": "mail",
       "position": {
         "colonne": 3,
-        "ligne": 19
+        "ligne": 20
       },
       "repli": true,
       "fleche_entree": true
@@ -577,10 +585,74 @@ const GRAPHE = {
       "parcours": "mail",
       "position": {
         "colonne": 3,
-        "ligne": 20
+        "ligne": 21
       },
       "repli": true,
       "fleche_entree": true
+    },
+    {
+      "id": "cartecadeau_directe",
+      "chemin": "/pricing/cartecadeau",
+      "domaine": "app.elsee.care",
+      "parcours": "carte_cadeau_directe",
+      "position": {
+        "colonne": 1.3,
+        "ligne": 2
+      },
+      "effacer_si_retour": true
+    },
+    {
+      "id": "mon_panier_cc_directe",
+      "chemin": "/mon-panier",
+      "domaine": "app.elsee.care",
+      "parcours": "carte_cadeau_directe",
+      "position": {
+        "colonne": 2.6,
+        "ligne": 2
+      }
+    },
+    {
+      "id": "paiement_ok_cc_directe",
+      "chemin": "/bienvenue-chez-elsee",
+      "domaine": "www.elsee.care",
+      "parcours": "carte_cadeau_directe",
+      "position": {
+        "colonne": 3.9,
+        "ligne": 2
+      }
+    },
+    {
+      "id": "cartecadeau_mail",
+      "chemin": "/pricing/cartecadeau",
+      "domaine": "app.elsee.care",
+      "parcours": "carte_cadeau_mail",
+      "position": {
+        "colonne": 4.3,
+        "ligne": 20
+      },
+      "effacer_si_retour": true,
+      "repli": true,
+      "fleche_entree": "droite"
+    },
+    {
+      "id": "mon_panier_cc_mail",
+      "chemin": "/mon-panier",
+      "domaine": "app.elsee.care",
+      "parcours": "carte_cadeau_mail",
+      "position": {
+        "colonne": 4.3,
+        "ligne": 21
+      }
+    },
+    {
+      "id": "paiement_ok_cc_mail",
+      "chemin": "/bienvenue-chez-elsee",
+      "domaine": "www.elsee.care",
+      "parcours": "carte_cadeau_mail",
+      "position": {
+        "colonne": 4.3,
+        "ligne": 22
+      }
     }
   ],
   "fleches": [
@@ -853,17 +925,17 @@ const GRAPHE = {
     },
     {
       "de": "mon_offre_long_form",
-      "vers": "cartecadeau",
+      "vers": "cartecadeau_long_form",
       "type": "normale"
     },
     {
-      "de": "cartecadeau",
-      "vers": "mon_panier_carte_cadeau",
+      "de": "cartecadeau_long_form",
+      "vers": "mon_panier_cc_long_form",
       "type": "normale"
     },
     {
-      "de": "mon_panier_carte_cadeau",
-      "vers": "paiement_ok_carte_cadeau",
+      "de": "mon_panier_cc_long_form",
+      "vers": "paiement_ok_cc_long_form",
       "type": "normale"
     },
     {
@@ -882,6 +954,36 @@ const GRAPHE = {
       "de": "mon_panier_mail",
       "vers": "paiement_ok_mail",
       "type": "normale"
+    },
+    {
+      "de": "mon_offre_directe",
+      "vers": "cartecadeau_directe",
+      "type": "normale"
+    },
+    {
+      "de": "cartecadeau_directe",
+      "vers": "mon_panier_cc_directe",
+      "type": "normale"
+    },
+    {
+      "de": "mon_panier_cc_directe",
+      "vers": "paiement_ok_cc_directe",
+      "type": "normale"
+    },
+    {
+      "de": "mon_offre_mail",
+      "vers": "cartecadeau_mail",
+      "type": "normale"
+    },
+    {
+      "de": "cartecadeau_mail",
+      "vers": "mon_panier_cc_mail",
+      "type": "normale"
+    },
+    {
+      "de": "mon_panier_cc_mail",
+      "vers": "paiement_ok_cc_mail",
+      "type": "normale"
     }
   ],
   "pages_vues": {
@@ -899,7 +1001,7 @@ const GRAPHE = {
     ],
     "position": {
       "colonne": 1.7,
-      "ligne": 2.6
+      "ligne": 3.3
     }
   },
   "leads": {
@@ -988,5 +1090,5 @@ const GRAPHE = {
       "checkout.stripe.com"
     ]
   },
-  "empreinte": "26f4c583db"
+  "empreinte": "ee7473bbf6"
 };

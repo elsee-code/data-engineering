@@ -20,9 +20,9 @@ puis régénérer les requêtes.
     parcours connu (règle 2.4 de `docs/etape2_calcul.md`) y est rattachée. Une
     seule par page (le chemin MAIL pour `/mon-offre`, `/mon-panier` et
     `/bienvenue-chez-elsee`) ;
-  - `fleche_entree` (facultatif, `true`) : dessine une flèche venant de la
-    gauche, avec le nombre de personnes arrivées directement sur l'étape (début
-    de session) ;
+  - `fleche_entree` (facultatif, `true` ou `"droite"`) : dessine une flèche
+    venant de la gauche (ou de la droite), avec le nombre de personnes arrivées
+    directement sur l'étape (début de session) ;
   - `effacer_si_retour` (facultatif) : une visite suivie d'un retour à la page
     précédente, puis d'une flèche partant de cette page, compte comme si la
     personne n'avait pas vu l'étape (utilisé pour `/pricing/cartecadeau`).

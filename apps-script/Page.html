@@ -525,7 +525,10 @@ function dessiner() {
   for (const { e, x, y } of Object.values(noeuds)) {
     if (!e.fleche_entree) continue;
     const id = 'd:' + e.id;
-    const x2 = x - NOEUD_L / 2 - 2, x1 = x2 - 64;
+    // Par la gauche, ou par la droite (fleche_entree « droite ») quand une autre
+    // étape occupe la gauche.
+    const sens = e.fleche_entree === 'droite' ? -1 : 1;
+    const x2 = x - sens * (NOEUD_L / 2 + 2), x1 = x2 - sens * 64;
     svg += `<g class="fleche" data-bulle="${echapper(id)}">` +
       `<path class="trait" d="M${x1},${y} H${x2}" stroke="${COULEUR_DEFAUT}" marker-end="url(#pointeEntree)"/>` +
       `<path class="zonef" d="M${x1},${y} H${x2}"/>` +

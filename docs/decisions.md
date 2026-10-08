@@ -20,10 +20,11 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 [`deploiement_apps_script.md`](deploiement_apps_script.md), d'abord en
 déploiement de test, et fait ses retours avant la publication.
 
-**Carte cadeau sur tous les `/mon-offre`** (8 oct.) : question posée à
-Eglantine (une branche carte cadeau par chemin, ou une seule commune). Puis son
-accord pour remplacer la fonction BigQuery (« paiement ok », retours dans le
-chemin MAIL, carte cadeau). Ensuite, Eglantine remplace `Page.html` et `Graphe.gs` dans
+**« Paiement ok », retours dans le chemin MAIL, carte cadeau** (8 oct.) :
+calcul prêt et testé, en attente de l'accord d'Eglantine pour remplacer la
+fonction BigQuery. Ensuite, Eglantine remplace `Page.html` et `Graphe.gs` dans
+Apps Script et publie une nouvelle version. À vérifier dès l'arrivée du 7 oct. :
+« paiement ok » contre les 3 ventes réelles. Ensuite, Eglantine remplace `Page.html` et `Graphe.gs` dans
 Apps Script et publie une nouvelle version (cela met aussi en ligne le chemin
 MAIL et le nouveau tableau des pages vues, déjà dans la fonction).
 
@@ -40,6 +41,42 @@ Autres questions :
   l'export BigQuery. Il faudra le même export des quatre explorations sur une
   période d'au moins 7 jours couverte par l'export (au plus tôt du 5 au 11 oct.,
   disponible le 12 oct.).
+
+## 2026-10-08 — Carte cadeau après chaque `/mon-offre` (Eglantine)
+
+Demande : le chemin carte cadeau sur tous les `/mon-offre`, « car c'est une
+autre possibilité que l'utilisateur peut prendre ». Choix d'Eglantine entre une
+branche par chemin et une branche commune : **une branche par `/mon-offre`**.
+
+Réalisé ([`config/graphe.json`](../config/graphe.json)) : branches
+`/pricing/cartecadeau` → `/mon-panier` → « paiement ok » après le `/mon-offre`
+de l'offre directe (sous lui), du long form (inchangée, étapes renommées
+`cartecadeau_long_form`, `mon_panier_cc_long_form`, `paiement_ok_cc_long_form`)
+et du chemin MAIL (à sa droite). Une visite de `/pricing/cartecadeau` sans
+parcours connu va dans la branche du chemin MAIL, avec une flèche d'entrée par
+la droite. Le tableau des pages vues descend un peu pour laisser la place à la
+branche de l'offre directe, et le chemin MAIL d'une ligne.
+
+Corrections faites en chemin :
+
+- une page rattachée au chemin MAIL faute de parcours connu suit ensuite les
+  flèches : après `/pricing/cartecadeau` du chemin MAIL, `/mon-panier` est
+  celui de sa branche carte cadeau (et non le `/mon-panier` principal) ;
+- un « paiement ok » en venant de Stripe reprend aussi le parcours de ces
+  personnes : sans cela, une même vente comptait deux fois (dans la branche
+  carte cadeau et dans le chemin MAIL) ;
+- le texte de la fonction approchait la limite de BigQuery (31 Ko sur 32) et
+  le calcul ralentissait (50 s) : l'indentation n'est plus envoyée à BigQuery,
+  les rechargements sont retirés avant les passes de rattachement, et il y a
+  une passe de moins. 29 Ko, 32 s. Résultat identique, sauf une visite très
+  atypique (formulaire refait sept fois, sans doute un test) dont un passage
+  sur la carte cadeau change de branche.
+
+Chiffres (5 et 6 oct.) : `/pricing/cartecadeau` 1 (offre directe), 19 (long
+form), 4 (MAIL, toutes arrivées directement) ; « paiement ok » 10 personnes
+(long form 2, compléments 1, MAIL 6, carte cadeau MAIL 1). Contrôle de
+cohérence sans écart négatif sur les 58 étapes ; leads et tableau des pages
+vues inchangés. Page testée dans Chromium, aucune erreur.
 
 ## 2026-10-08 — Retours dans le chemin MAIL, règle de « paiement ok » (Eglantine)
 
