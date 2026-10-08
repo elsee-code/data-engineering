@@ -20,10 +20,10 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 [`deploiement_apps_script.md`](deploiement_apps_script.md), d'abord en
 déploiement de test, et fait ses retours avant la publication.
 
-**Tableau « Pages vues par personne »** (8 oct.) : remplacer la fonction
-BigQuery `elsee_funnel.agregats` par la nouvelle version (sur accord
-d'Eglantine), puis Eglantine remplace `Page.html` et `Graphe.gs` dans Apps
-Script et publie une nouvelle version.
+**Tableau « Pages vues par personne »** (8 oct.) : la fonction BigQuery est à
+jour ; Eglantine remplace `Page.html` et `Graphe.gs` dans Apps Script et publie
+une nouvelle version ([`deploiement_apps_script.md`](deploiement_apps_script.md),
+« Mettre à jour la page plus tard »).
 
 Autres questions :
 
@@ -88,9 +88,11 @@ personnes arrivées sur le formulaire, 155 vues seulement sur www.elsee.care.
 - 23 à 28 pages : 131 personnes, presque toutes allées jusqu'à leur offre (long
   form).
 
-Reste à faire : remplacer la fonction BigQuery (`sql/calcul/creer_fonction.sql`)
-sur accord d'Eglantine, puis mettre à jour `Page.html` et `Graphe.gs` dans Apps
-Script.
+Fonction BigQuery `elsee_funnel.agregats` remplacée le 8 oct., sur accord
+d'Eglantine : elle renvoie exactement les mêmes lignes que `agregats.sql` sur
+les 5 et 6 oct. (866 lignes). La page déjà en ligne continue de fonctionner
+(elle ignore les nouvelles lignes). Reste à faire par Eglantine : remplacer
+`Page.html` et `Graphe.gs` dans Apps Script, puis publier une nouvelle version.
 
 ## 2026-10-08 — Premier essai de la page par Eglantine
 
