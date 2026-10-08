@@ -46,6 +46,13 @@ Le plus récent en haut.
 
 ### 8 octobre 2026
 
+- **Encadré « Clients »** à côté du nombre de leads : personnes arrivées sur
+  « paiement ok » sur la période, tous chemins (somme des cases de fin ;
+  identique au nombre de personnes distinctes sur les 5 – 7 oct. : 7, 3 et 4).
+  Calculé dans la page : la fonction BigQuery ne change pas. Bulle d'aide par
+  chemin, courbe par jour, repris dans l'export PNG. Reste à faire par
+  Eglantine : remplacer `Page.html` dans Apps Script et publier une nouvelle
+  version.
 - **Tri du dépôt** (demande d'Eglantine) :
   - règles regroupées dans [`regles.md`](regles.md) ;
   - README complet ;

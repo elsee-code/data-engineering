@@ -43,13 +43,13 @@
   .libre.visible { display: flex; }
   .libre input { font: inherit; font-size: 13px; padding: 4px 6px; border: 1px solid var(--trait); border-radius: 6px; }
   .infos { margin-top: 8px; font-size: 12.5px; color: var(--doux); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
-  .leads {
+  .encadre {
     display: inline-flex; align-items: baseline; gap: 6px; cursor: help;
     border: 1px solid var(--trait); border-radius: 8px; padding: 2px 10px;
     background: var(--fond-2); color: var(--texte); font-size: 13px;
   }
-  .leads b { font-size: 15px; font-variant-numeric: tabular-nums; }
-  .leads[hidden] { display: none; }
+  .encadre b { font-size: 15px; font-variant-numeric: tabular-nums; }
+  .encadre[hidden] { display: none; }
   .messages { padding: 0 16px; }
   .message {
     margin-top: 10px; padding: 8px 12px; border-radius: 8px; font-size: 13px;
@@ -107,7 +107,8 @@
   </div>
   <div class="infos">
     <span id="info-periode">Chargement…</span>
-    <span class="leads" id="leads" data-bulle="leads" hidden>Nombre leads <b id="leads-n">…</b></span>
+    <span class="encadre" id="leads" data-bulle="leads" hidden>Nombre leads <b id="leads-n">…</b></span>
+    <span class="encadre" id="clients" data-bulle="clients" hidden>Clients <b id="clients-n">…</b></span>
     <span id="info-donnees"></span>
   </div>
 </header>
@@ -119,8 +120,8 @@
     <span><span class="g">En gris</span> sur chaque flèche : personnes passées d’une étape à l’autre, et en % la répartition entre les sorties d’une étape qui en a plusieurs</span>
     <span>Flèches venant de la gauche (chemin MAIL) : personnes arrivées directement sur la page, sans parcours connu</span>
     <span>À droite, le tableau « Pages vues par personne » : jusqu’où vont les personnes qui commencent le formulaire</span>
-    <span>En haut, « Nombre leads » : personnes qui ont donné leurs coordonnées sur la période</span>
-    <span>Survolez une étape, une flèche, une ligne du tableau ou le nombre de leads pour le détail</span>
+    <span>En haut, « Nombre leads » : personnes qui ont donné leurs coordonnées sur la période ; « Clients » : personnes arrivées sur « paiement ok »</span>
+    <span>Survolez une étape, une flèche, une ligne du tableau, le nombre de leads ou de clients pour le détail</span>
   </div>
   <div class="zone" id="zone">
     <div id="attente">Calcul en cours…</div>
@@ -267,6 +268,7 @@ function vider(texte) {
   document.getElementById('zone').hidden = true;
   document.getElementById('details').hidden = true;
   document.getElementById('leads').hidden = true;
+  document.getElementById('clients').hidden = true;
   document.getElementById('export').disabled = true;
   document.getElementById('bulle').style.display = 'none';
 }
@@ -295,9 +297,11 @@ function charger(debutDemande, finDemandee, libelle) {
     (tronquee ? ` · période ramenée aux jours disponibles (demandée : ${periodeEnTexte(debutDemande, finDemandee)})` : '');
   document.getElementById('zone').classList.add('chargement');
   document.getElementById('export').disabled = true;
-  document.getElementById('leads').hidden = false;
-  document.getElementById('leads-n').textContent = '…';
-  bulles.delete('leads');
+  for (const id of ['leads', 'clients']) {
+    document.getElementById(id).hidden = false;
+    document.getElementById(id + '-n').textContent = '…';
+    bulles.delete(id);
+  }
   const numero = ++etat.demande;
   google.script.run
     .withSuccessHandler((donnees) => { if (numero === etat.demande) afficher(donnees); })
@@ -314,6 +318,7 @@ function afficher(donnees) {
   document.getElementById('export').disabled = false;
   const total = etat.index.leads.total;
   document.getElementById('leads-n').textContent = total === null ? 'indisponible' : nombre(total);
+  document.getElementById('clients-n').textContent = nombre(clients().total);
   dessiner();
   remplirDetails();
 }
@@ -447,6 +452,7 @@ function dessiner() {
   for (const f of g.fleches) (sorties[f.de] = sorties[f.de] || []).push(f);
   bulles.clear();
   bulles.set('leads', bulleLeads);
+  bulles.set('clients', bulleClients);
   const tableau = tableauPagesVues(geo);
   const largeur = Math.max(geo.largeur, tableau.droite + MARGE);
   const hauteur = Math.max(geo.hauteur, tableau.bas + MARGE);
@@ -815,6 +821,35 @@ function bulleEntree(e) {
     `<tr><td>Personnes arrivées sur la page, tous chemins confondus</td><td class="n">${nombre(arrivees(e.id))}</td></tr></table>`;
 }
 
+// Clients : personnes arrivées sur « paiement ok », tous chemins (somme des cases
+// de fin ; une même personne n'arrive sur deux cases que si elle paie dans deux
+// chemins, ce qui n'arrive pas dans les données).
+function clients() {
+  const etapes = etat.graphe.etapes.filter(paiement);
+  const serie = {};
+  for (const e of etapes) {
+    for (const [jour, n] of Object.entries(etat.index.serie[e.id] || {})) serie[jour] = (serie[jour] || 0) + n;
+  }
+  return { total: etapes.reduce((s, e) => s + arrivees(e.id), 0), etapes, serie };
+}
+
+function bulleClients() {
+  const c = clients();
+  const pages = (etat.graphe.paiement.pages || []).map((x) => x.page.slice(x.page.indexOf('/'))).join(' ou ');
+  let h = '<h3>Clients</h3><div class="petit">Personnes arrivées sur « paiement ok » sur la période, tous chemins confondus : ' +
+    `${echapper(pages)}, juste après /mon-panier ou en revenant du paiement.</div><table>` +
+    `<tr><td>Personnes</td><td class="n"><b>${nombre(c.total)}</b></td></tr>`;
+  const lignes = c.etapes.map((e) => ({ libelle: etat.graphe.parcours[e.parcours].libelle, n: arrivees(e.id) }))
+    .filter((l) => l.n).sort((a, b) => b.n - a.n);
+  const parts = repartir(lignes.map((l) => l.n));
+  lignes.forEach((l, k) => {
+    h += `<tr><td>${echapper(l.libelle)}</td><td class="n">${nombre(l.n)} (${parts[k]}\u202f%)</td></tr>`;
+  });
+  h += '</table><div class="petit" style="margin-top:6px">GA4 ne voit que les personnes qui acceptent les cookies, et un ' +
+    'acheteur vu sous deux identifiants GA4 peut compter deux fois : à comparer aux ventes réelles.</div>';
+  return h + courbeSerie(c.serie, 'Clients par jour');
+}
+
 // Nombre leads : personnes qui ont donné leurs coordonnées, par moment de recueil.
 function bulleLeads() {
   const l = etat.index.leads;
@@ -869,7 +904,7 @@ function montrerBulle(cible, x, y) {
   bulle.style.top = top + 'px';
 }
 const schema = document.getElementById('schema');
-for (const zoneBulles of [schema, document.getElementById('leads')]) {
+for (const zoneBulles of [schema, document.getElementById('leads'), document.getElementById('clients')]) {
   zoneBulles.addEventListener('mousemove', (ev) => {
     if (bulleFixe) return;
     const cible = ev.target.closest('[data-bulle]');
@@ -938,18 +973,22 @@ function exporterPng() {
     ctx.font = '13px -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif';
     ctx.fillStyle = '#5f5f5f';
     ctx.fillText(`Du ${dateLisible(p.debut)} au ${dateLisible(p.fin)} · personnes distinctes · source GA4 (BigQuery)`, MARGE, 44);
+    // Nombre leads et clients, en haut à droite.
     const leads = etat.index.leads.total;
+    const haut = [`Clients : ${nombre(clients().total)}`];
+    const bas = ['clients : personnes arrivées sur « paiement ok »'];
     if (leads !== null) {
-      // Nombre leads, en haut à droite.
-      ctx.textAlign = 'right';
-      ctx.fillStyle = '#1a1a1a';
-      ctx.font = '700 16px -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif';
-      ctx.fillText(`Nombre leads : ${nombre(leads)}`, largeur - MARGE, 26);
-      ctx.font = '13px -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif';
-      ctx.fillStyle = '#5f5f5f';
-      ctx.fillText('personnes qui ont donné leurs coordonnées', largeur - MARGE, 44);
-      ctx.textAlign = 'left';
+      haut.unshift(`Nombre leads : ${nombre(leads)}`);
+      bas.unshift('leads : personnes qui ont donné leurs coordonnées');
     }
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#1a1a1a';
+    ctx.font = '700 16px -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif';
+    ctx.fillText(haut.join('   ·   '), largeur - MARGE, 26);
+    ctx.font = '13px -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#5f5f5f';
+    ctx.fillText(bas.join(' · '), largeur - MARGE, 44);
+    ctx.textAlign = 'left';
     ctx.drawImage(image, 0, entete, largeur, hauteur);
     const url = canvas.toDataURL('image/png');
     document.getElementById('apercu-image').src = url;

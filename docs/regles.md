@@ -168,7 +168,16 @@ page qui la suit, à l'un de trois moments.
   la période si ce premier moment y tombe. Les leads par jour s'additionnent ;
   la bulle d'aide les répartit entre les trois moments.
 
-## 8. La page
+## 8. Clients
+
+Encadré à côté du nombre de leads : personnes arrivées sur « paiement ok »
+(section 4) sur la période, tous chemins confondus. C'est la somme des cases
+« paiement ok » du schéma ; la bulle d'aide les répartit par chemin et donne
+la courbe par jour. Une même personne ne compterait deux fois que si elle
+payait dans deux chemins, ce qui n'arrive pas dans les données (vérifié sur
+les 5 – 7 octobre). À comparer aux ventes réelles (section 11).
+
+## 9. La page
 
 - **Accès** : comptes @elsee.care seulement. La page interroge BigQuery avec le
   compte hello@elsee.care, propriétaire du script.
@@ -181,12 +190,12 @@ page qui la suit, à l'un de trois moments.
 - **Cache** : les résultats sont gardés 6 heures. Le cache est vidé à
   l'arrivée d'une nouvelle journée ou au changement de configuration. Un
   calcul prend environ 40 secondes.
-- **Export PNG** : le schéma et le tableau, avec la période et le nombre de
-  leads.
+- **Export PNG** : le schéma et le tableau, avec la période, le nombre de
+  leads et de clients.
 - **Fonction BigQuery plus ancienne que la page** : le tableau et les leads
   affichent « indisponible », pas des zéros.
 
-## 9. Alertes
+## 10. Alertes
 
 Un e-mail est envoyé à hello@elsee.care, **seulement en cas de gros
 problème** :
@@ -199,7 +208,7 @@ La vérification tourne chaque jour entre 15 h et 16 h (déclencheur Apps Script
 `verifierChaqueJour`). Un même problème n'est rappelé que tous les 3 jours. Un
 seul jour de retard de GA4 ne déclenche rien.
 
-## 10. Limites connues
+## 11. Limites connues
 
 - **www.elsee.care → app.elsee.care** : GA4 perd presque toujours la personne
   (le 5 octobre, 7 sessions sur 281 gardaient leur identifiant). D'où les

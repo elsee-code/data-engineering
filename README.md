@@ -4,7 +4,7 @@ Page web privée (comptes @elsee.care) qui redessine le tunnel d'inscription
 d'Elsee sous forme de diagramme de flux. Pour la période choisie, elle montre :
 - les arrivées sur chaque étape, les passages sur chaque flèche et le taux
   d'abandon de chaque étape ;
-- le nombre de leads ;
+- le nombre de leads et le nombre de clients (« paiement ok ») ;
 - un tableau « Pages vues par personne ».
 
 Les chiffres sont recalculés à partir de l'export quotidien de GA4 dans
