@@ -574,16 +574,16 @@ function bulleEtape(e, sortiesE) {
   const c = etat.index.continuent[e.id];
   let h = `<h3>${echapper(nomEtape(e.id))}</h3><div class="petit">${echapper(e.domaine)}</div><table>` +
     `<tr><td>Personnes arrivées</td><td class="n"><b>${nombre(a)}</b></td></tr>`;
-  if (ab !== null) h += `<tr><td>Taux d’abandon</td><td class="n" style="color:#c8372d"><b>${pourcent(ab)}</b> (${nombre(a - (c || 0))})</td></tr>`;
+  if (ab !== null) h += `<tr><td>Taux d’abandon</td><td class="n" style="color:#c8372d"><b>${pourcent(ab)}</b> (${nombre(a - (c || 0))} pers.)</td></tr>`;
   else if (sortiesE.length) h += `<tr><td colspan="2" class="petit">Abandon non mesurable : GA4 perd la personne entre www.elsee.care et app.elsee.care.</td></tr>`;
   for (const f of sortiesE) {
     const n = passages(f);
     h += `<tr><td>→ ${echapper(nomEtape(f.vers))}${f.type === 'non' ? ' (NON)' : f.type === 'oui' ? ' (OUI)' : ''}</td><td class="n">${n === null ? 'non mesurable' : nombre(n)}</td></tr>`;
   }
   const saut = etat.index.sauts[e.id];
-  if (saut) h += `<tr><td>→ plus loin, hors flèches du schéma</td><td class="n">${nombre(saut)}</td></tr>`;
+  if (saut) h += `<tr><td>→ plus loin, en sautant une étape (page non enregistrée par GA4 ; pas un abandon)</td><td class="n">${nombre(saut)}</td></tr>`;
   const directes = etat.index.entrees[e.id];
-  if (directes) h += `<tr><td class="petit">Dont arrivées en début de session</td><td class="n petit">${nombre(directes)}</td></tr>`;
+  if (directes) h += `<tr><td class="petit">Dont arrivées directement sur cette page, sans l’étape d’avant (lien, e-mail, retour après une pause)</td><td class="n petit">${nombre(directes)}</td></tr>`;
   h += '</table>' + courbe(e.id);
   return h;
 }
@@ -595,8 +595,8 @@ function bulleFleche(f, sortiesA) {
   if (f.type === 'oui') h += '<div class="petit">Réponse OUI.</div>';
   if (n === null) return h + `<div>Non mesurable. ${echapper(f.raison || '')}</div>`;
   h += `<table><tr><td>Personnes passées</td><td class="n"><b>${nombre(n)}</b></td></tr>` +
-    `<tr><td>Part des personnes arrivées sur l’étape de départ</td><td class="n">${pourcent(arrivees(f.de) ? n / arrivees(f.de) : null)}</td></tr>`;
-  if (sortiesA.length > 1) h += `<tr><td>Part des sorties de l’étape de départ</td><td class="n">${partEnTexte(f)}</td></tr>`;
+    `<tr><td>Sur 100 personnes arrivées sur ${echapper(nomEtape(f.de))}, combien prennent cette flèche</td><td class="n">${pourcent(arrivees(f.de) ? n / arrivees(f.de) : null)}</td></tr>`;
+  if (sortiesA.length > 1) h += `<tr><td>Sur 100 personnes qui continuent après ${echapper(nomEtape(f.de))}, combien prennent cette flèche (le % affiché sur la flèche)</td><td class="n">${partEnTexte(f)}</td></tr>`;
   h += '</table>';
   if (f.note) h += `<div class="petit">${echapper(f.note)}</div>`;
   return h;
@@ -652,7 +652,7 @@ schema.addEventListener('click', (ev) => {
 // ---------------------------------------------------------------------------
 function remplirDetails() {
   const i = etat.index;
-  const libelles = { saut: 'Saut vers l’avant (pages intermédiaires non vues)', retour: 'Retour en arrière', autre: 'Autre' };
+  const libelles = { saut: 'Plus loin, en sautant une étape (page non enregistrée par GA4)', retour: 'Retour en arrière', autre: 'Autre' };
   const lignes = i.horsSchema.slice().sort((a, b) => b.n - a.n);
   let h = '<p>Passages observés qui ne suivent pas une flèche du schéma, par nombre de personnes. ' +
     'Les sauts vers l’avant comptent comme une poursuite (pas un abandon) mais ne sont pas dessinés.</p>';
