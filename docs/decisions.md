@@ -20,10 +20,9 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 [`deploiement_apps_script.md`](deploiement_apps_script.md), d'abord en
 déploiement de test, et fait ses retours avant la publication.
 
-**Nombre leads** (8 oct.) : en attente de l'accord d'Eglantine pour remplacer
-à nouveau la fonction BigQuery `elsee_funnel.agregats` (un lead par personne,
-voir ci-dessous). Ensuite, Eglantine remplace `Page.html`, `Graphe.gs` et
-`Code.gs` dans Apps Script et publie une nouvelle version
+**Nombre leads** (8 oct.) : la fonction BigQuery est à jour (un lead par
+personne). Eglantine remplace `Page.html`, `Graphe.gs` et `Code.gs` dans Apps
+Script et publie une nouvelle version
 ([`deploiement_apps_script.md`](deploiement_apps_script.md), « Mettre à jour la
 page plus tard »). Cela met aussi en ligne le tableau « Pages vues par
 personne » s'il ne l'est pas encore.
@@ -66,7 +65,13 @@ Testé en lecture seule : mêmes chiffres sur les 5 et 6 oct. (323 ; 145 le 6
 seul), car personne n'a été lead les deux jours ; règle vérifiée sur un jeu
 d'essai fictif (une personne lead le 5 puis le 7 ne compte pas sur le 7 ; une
 personne passée par deux moments compte une fois, au premier). Lignes hors
-leads inchangées. Fonction BigQuery à remplacer, sur accord d'Eglantine.
+leads inchangées.
+
+Fonction BigQuery `elsee_funnel.agregats` remplacée le 8 oct., sur accord
+d'Eglantine : elle renvoie exactement les mêmes lignes que `agregats.sql` sur
+les 5 et 6 oct. (871 lignes) et sur le 6 oct. seul (514 lignes). Reste à faire
+par Eglantine : remplacer `Page.html`, `Graphe.gs` et `Code.gs` dans Apps
+Script, puis publier une nouvelle version.
 
 ## 2026-10-08 — Nombre leads (Eglantine)
 
