@@ -53,7 +53,8 @@ Le plus récent en haut.
   maintenant). Résultats identiques, ligne à ligne, à ceux de la fonction en
   place sur cinq périodes (5 – 7 oct., 5 oct., 6 oct., 7 – 12 oct., une période
   sans données) ; contrôle de cohérence sans écart négatif. Fonction BigQuery
-  à remplacer avec l'accord d'Eglantine.
+  remplacée avec l'accord d'Eglantine (3 s sur les 5 – 7 oct., mêmes
+  résultats).
 - **Textes de la page allégés** (même demande) : bulles des 4 pages de
   `/obtenir-mon-offre` réduites à « page N sur 4 » ; texte des pages sans
   parcours connu remis à jour ; messages « indisponible » prévus pour une
