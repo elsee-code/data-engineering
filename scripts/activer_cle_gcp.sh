@@ -73,7 +73,7 @@ if erreur=$(env -u CLOUDSDK_AUTH_ACCESS_TOKEN bq query --project_id=ga4-chemin-f
      2>&1); then
   echo "Lecture de analytics_383563328 : autorisée."
 elif grep -q "Access Denied" <<<"$erreur"; then
-  echo "Lecture de analytics_383563328 : refusée. Donner au compte de service le rôle « Lecteur de données BigQuery » sur ce dataset (voir docs/decisions.md)." >&2
+  echo "Lecture de analytics_383563328 : refusée. Donner au compte de service le rôle « Lecteur de données BigQuery » sur ce dataset (voir README.md, « Lancer une requête dans une session cloud »)." >&2
   exit 2
 else
   echo "Test de lecture de analytics_383563328 en échec :" >&2

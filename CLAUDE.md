@@ -1,7 +1,8 @@
 # Schéma du tunnel d'inscription Elsee (GA4 → BigQuery → Apps Script)
 
-Avant toute action, lire [`docs/decisions.md`](docs/decisions.md) (état du
-projet, décisions, questions ouvertes), puis [`docs/brief.md`](docs/brief.md).
+Avant toute action, lire [`README.md`](README.md) (fonctionnement, fichiers),
+[`docs/decisions.md`](docs/decisions.md) (état du projet, questions ouvertes,
+historique) et [`docs/regles.md`](docs/regles.md) (règles en vigueur).
 
 ## Règles
 
@@ -20,7 +21,8 @@ projet, décisions, questions ouvertes), puis [`docs/brief.md`](docs/brief.md).
   l'afficher.
 - Ne modifier ni GTM ni GA4.
 - Ne rien deviner : si une information manque, la demander.
-- Tenir `docs/decisions.md` à jour à chaque décision.
+- Tenir `docs/decisions.md` à jour à chaque décision, et `docs/regles.md` à
+  chaque règle nouvelle ou modifiée.
 - Branche principale : `main`. Partir de `main` ; en fin de session, fusionner
   le travail de la branche de session dans `main` (avance rapide, sans
   réécrire l'historique) et pousser `main`, pour que la session suivante parte

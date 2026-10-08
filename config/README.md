@@ -1,8 +1,9 @@
 # Configuration du graphe : `graphe.json`
 
 Seule description du tunnel. Le calcul (requêtes de `sql/calcul/`) et la page
-(`apps-script/Graphe.gs`) en sont générés. Ajouter une page au formulaire = modifier ce fichier,
-puis régénérer les requêtes.
+(`apps-script/Graphe.gs`) en sont générés. Ajouter une page au formulaire =
+modifier ce fichier, puis régénérer les requêtes. Les règles appliquées sont
+décrites dans [`docs/regles.md`](../docs/regles.md).
 
 ## Contenu
 
@@ -17,9 +18,9 @@ puis régénérer les requêtes.
     négatif = à gauche ; `ligne` : de haut en bas) ;
   - `libelle` (facultatif) : titre affiché au-dessus du chemin (ex. « SOCIAL ») ;
   - `repli` (facultatif, `true`) : étape de repli de sa page. Une page vue sans
-    parcours connu (règle 2.4 de `docs/etape2_calcul.md`) y est rattachée. Une
-    seule par page (le chemin MAIL pour `/mon-offre`, `/mon-panier` et
-    `/bienvenue-chez-elsee`) ;
+    parcours connu dans la visite (section 3 de `docs/regles.md`) y est
+    rattachée. Une seule par page (le chemin MAIL pour `/mon-offre`,
+    `/pricing/cartecadeau`, `/mon-panier` et « paiement ok ») ;
   - `fleche_entree` (facultatif, `true` ou `"droite"`) : dessine une flèche
     venant de la gauche (ou de la droite), avec le nombre de personnes arrivées
     directement sur l'étape (début de session) ;
@@ -55,7 +56,7 @@ puis régénérer les requêtes.
     paiement reprend le parcours de la session précédente (le paiement ouvre
     souvent une nouvelle session).
 - `leads` : encadré « Nombre leads » (personnes qui ont donné leurs
-  coordonnées ; règle 10 de [`docs/etape2_calcul.md`](../docs/etape2_calcul.md)).
+  coordonnées ; section 7 de [`docs/regles.md`](../docs/regles.md)).
   Les étapes citées doivent porter seules leur page.
   - `provenance_interne` : domaine du formulaire. Une page ouverte depuis ce
     domaine (navigation dans le formulaire) ne change pas l'entrée de la
@@ -71,19 +72,28 @@ puis régénérer les requêtes.
     doit avoir la session.
 
 Une même page peut porter plusieurs étapes, une par parcours (`/mon-offre`,
-`/mon-panier`, `/bienvenue-chez-elsee`) : l'étape est déduite de la page
-précédente. Une page précédente ne doit donc mener qu'à une seule de ces étapes.
+`/pricing/cartecadeau`, `/mon-panier`, « paiement ok ») : l'étape est déduite
+de la page précédente. Une page précédente ne doit donc mener qu'à une seule de
+ces étapes.
 
 ## Ajouter une étape
 
 1. Ajouter l'étape dans `etapes`, et ses flèches dans `fleches` (en remplaçant
-   la flèche qu'elle coupe, s'il y en a une).
+   la flèche qu'elle coupe, s'il y en a une). Pour retrouver le vrai chemin
+   d'une nouvelle page, lister les pages vues récentes (agrégats seulement) :
+   ```sql
+   SELECT REGEXP_EXTRACT((SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'page_location'), r'^https?://([^?#]*)') AS page,
+     COUNT(DISTINCT user_pseudo_id) AS personnes
+   FROM `ga4-chemin-form.analytics_383563328.events_*`
+   WHERE _TABLE_SUFFIX >= FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE('Europe/Paris'), INTERVAL 7 DAY))
+     AND event_name = 'page_view'
+   GROUP BY 1 ORDER BY 2 DESC
+   ```
 2. Régénérer les requêtes : `node scripts/generer_sql.mjs`. Le script vérifie
    la configuration (identifiants, flèches, pages à question, boucles, taille
-   de la fonction : 32 Ko au plus) et
-   s'arrête en cas d'erreur.
+   de la fonction : 32 Ko au plus) et s'arrête en cas d'erreur.
 3. Vérifier avec `sql/calcul/controle_coherence.sql` (aucun écart négatif).
-4. Recréer la fonction dans BigQuery :
+4. Recréer la fonction dans BigQuery (avec l'accord d'Eglantine) :
    `env -u CLOUDSDK_AUTH_ACCESS_TOKEN bq query --project_id=ga4-chemin-form --use_legacy_sql=false < sql/calcul/creer_fonction.sql`
    (après `scripts/activer_cle_gcp.sh` dans une session cloud).
 5. Mettre à jour la page : remplacer le contenu de `Graphe.gs` dans le projet
