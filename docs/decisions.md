@@ -244,6 +244,31 @@ les 5 et 6 oct. (866 lignes). La page déjà en ligne continue de fonctionner
 (elle ignore les nouvelles lignes). Reste à faire par Eglantine : remplacer
 `Page.html` et `Graphe.gs` dans Apps Script, puis publier une nouvelle version.
 
+## 2026-10-08 — Ventes : une partie se termine sur app.elsee.care/success
+
+Question d'Eglantine : 10 ventes réelles les 5 et 6 oct., mais seulement 5
+personnes sur `/bienvenue-chez-elsee` (toutes le 5 oct.).
+
+Constat (requêtes lancées dans la session, agrégats seulement) :
+
+- Le 6 oct., les personnes revenues du paiement Stripe arrivent sur
+  **app.elsee.care/success**, puis `/homefirstvisit` (première visite de
+  l'espace membre), et personne sur `/bienvenue-chez-elsee`. Le 5 oct., les deux
+  fins existent.
+- Ventes probables vues par GA4, en comptant `/bienvenue-chez-elsee` ou
+  `/success` juste après `/mon-panier` ou un retour de Stripe : 9 le 5 oct.
+  (5 + 4) et 3 le 6 oct., soit 12 pour 10 ventes réelles. `/success` apparaît
+  aussi après d'autres pages (réinitialisation du mot de passe…), d'où un
+  léger excès possible.
+- L'événement GA4 `order_paid` n'est envoyé que sur `/bienvenue-chez-elsee` :
+  aucun le 6 oct. malgré des ventes. Les rapports de ventes de GA4 eux-mêmes en
+  manquent (à signaler à la personne qui gère GTM ; nous ne touchons pas à GTM).
+
+`/success` avait été écartée le 6 oct. (« oublie ces pages ») : question
+reposée à Eglantine, avec une proposition (compter comme inscription
+`/bienvenue-chez-elsee` ou `/success` juste après `/mon-panier` ou Stripe, en une
+seule case de fin par parcours). En attente de sa réponse.
+
 ## 2026-10-08 — Premier essai de la page par Eglantine
 
 La page tourne dans Apps Script avec les données des 5 et 6 oct. Corrigé après
