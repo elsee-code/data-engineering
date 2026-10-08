@@ -58,7 +58,7 @@ Le plus récent en haut.
 - **Textes de la page allégés** (même demande) : bulles des 4 pages de
   `/obtenir-mon-offre` réduites à « page N sur 4 » ; texte des pages sans
   parcours connu remis à jour ; messages « indisponible » prévus pour une
-  ancienne fonction BigQuery retirés. `Page.html` à remplacer dans Apps Script.
+  ancienne fonction BigQuery retirés. `Page.html` publiée par Eglantine.
 - **Les 4 pages de `/obtenir-mon-offre`** (demande d'Eglantine, développée sur
   la branche `etapes-obtenir-mon-offre`, fusionnée dans `main` puis supprimée) :
   - le formulaire, à adresse unique, est suivi par l'événement GA4
@@ -78,16 +78,13 @@ Le plus récent en haut.
   Les 5 – 7 oct. : page 1 134 (abandon 48 %), page 2 67 (abandon 7 %), page 3
   62 (0 %), page 4 62. Le reste du calcul est identique ; contrôle de cohérence sans
   écart négatif sur les 61 étapes. Fonction BigQuery remplacée avec l'accord
-  d'Eglantine (résultats identiques au test). Reste à faire par Eglantine :
-  remplacer `Page.html` et `Graphe.gs` dans Apps Script et publier une nouvelle
-  version.
+  d'Eglantine (résultats identiques au test). `Page.html` publiée par
+  Eglantine ; remplacement de `Graphe.gs` à confirmer.
 - **Encadré « Clients »** à côté du nombre de leads : personnes arrivées sur
   « paiement ok » sur la période, tous chemins (somme des cases de fin ;
   identique au nombre de personnes distinctes sur les 5 – 7 oct. : 7, 3 et 4).
   Calculé dans la page : la fonction BigQuery ne change pas. Bulle d'aide par
-  chemin, courbe par jour, repris dans l'export PNG. Reste à faire par
-  Eglantine : remplacer `Page.html` dans Apps Script et publier une nouvelle
-  version.
+  chemin, courbe par jour, repris dans l'export PNG. Publié par Eglantine.
 - **Tri du dépôt** (demande d'Eglantine) :
   - règles regroupées dans [`regles.md`](regles.md) ;
   - README complet ;
