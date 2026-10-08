@@ -787,7 +787,8 @@ function bulleLeads() {
     h += `<tr><td>${echapper(m.libelle)}<div class="petit">${echapper(m.detail || '')}</div></td>` +
       `<td class="n">${nombre(l.moments[m.id] || 0)}${parts[k] === null ? '' : ` (${parts[k]}\u202f%)`}</td></tr>`;
   });
-  h += '</table><div class="petit" style="margin-top:6px">Une personne compte une fois, au premier de ces moments sur la période. ' +
+  h += '</table><div class="petit" style="margin-top:6px">Une personne n’est lead qu’une fois, à son premier moment : ' +
+    'déjà lead avant la période, elle n’est pas recomptée (historique conservé : 60 jours). ' +
     'GA4 ne voit que les personnes qui acceptent les cookies : ce nombre est plus bas que celui des contacts reçus.</div>';
   return h + courbeSerie(l.serie, 'Leads par jour');
 }

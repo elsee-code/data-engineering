@@ -376,30 +376,31 @@ leads_pages AS (
   WINDOW w AS (PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang)
 ),
 leads_periode AS (
-  SELECT * FROM (
-    SELECT jour, user_pseudo_id, rang_personne,
-      CASE
-        WHEN id_unique = 'depenses_complements' AND entree THEN 'avant_depenses_complements'
-        WHEN id_unique = 'bilan' AND precedente = 'bonus_abonnement' AND NOT entree THEN 'popup_bilan'
-        WHEN id_unique = 'depenses_sports' AND precedente = 'en_savoir_plus_sur_vous' THEN 'en_savoir_plus_sur_vous'
-      END AS moment
-    FROM leads_pages
+  SELECT premier.* FROM (
+    SELECT ARRAY_AGG(STRUCT(jour, moment) ORDER BY rang_personne LIMIT 1)[OFFSET(0)] AS premier
+    FROM (
+      SELECT jour, user_pseudo_id, rang_personne,
+        CASE
+          WHEN id_unique = 'depenses_complements' AND entree THEN 'avant_depenses_complements'
+          WHEN id_unique = 'bilan' AND precedente = 'bonus_abonnement' AND NOT entree THEN 'popup_bilan'
+          WHEN id_unique = 'depenses_sports' AND precedente = 'en_savoir_plus_sur_vous' THEN 'en_savoir_plus_sur_vous'
+        END AS moment
+      FROM leads_pages
+    )
+    WHERE moment IS NOT NULL
+    GROUP BY user_pseudo_id
   )
-  WHERE moment IS NOT NULL AND jour BETWEEN date_debut AND date_fin
+  WHERE premier.jour BETWEEN date_debut AND date_fin
 ),
 leads AS (
   SELECT 'leads' AS genre, CAST(NULL AS STRING) AS de, CAST(NULL AS STRING) AS vers,
-    CAST(NULL AS DATE) AS jour, COUNT(DISTINCT user_pseudo_id) AS utilisateurs
+    CAST(NULL AS DATE) AS jour, COUNT(*) AS utilisateurs
   FROM leads_periode
   UNION ALL
   SELECT 'leads', moment, NULL, NULL, COUNT(*)
-  FROM (
-    SELECT ARRAY_AGG(moment ORDER BY rang_personne LIMIT 1)[OFFSET(0)] AS moment
-    FROM leads_periode GROUP BY user_pseudo_id
-  )
-  GROUP BY moment
+  FROM leads_periode GROUP BY moment
   UNION ALL
-  SELECT 'leads', NULL, NULL, jour, COUNT(DISTINCT user_pseudo_id)
+  SELECT 'leads', NULL, NULL, jour, COUNT(*)
   FROM leads_periode GROUP BY jour
 ),
 resultat AS (

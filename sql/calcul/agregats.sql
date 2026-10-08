@@ -16,9 +16,9 @@
 --   pages_vues_offre  : parmi elles, celles qui ont vu leur offre
 --   hors_formulaire   : personnes vues seulement hors du formulaire (non comptées
 --                       dans pages_vues)
---   leads             : personnes ayant donné leurs coordonnées : total (de vide),
---                       par moment de recueil (de = moment, chaque personne au
---                       premier moment de la période), jour par jour (de vide)
+--   leads             : personnes dont le premier lead (coordonnées données) tombe
+--                       dans la période : total (de vide), par moment de recueil
+--                       (de = moment), jour par jour (de vide)
 -- Cases vides : chiffre non mesurable (suivi www → app), à ne pas afficher.
 DECLARE date_debut DATE DEFAULT DATE '2026-10-05';
 DECLARE date_fin   DATE DEFAULT DATE_SUB(CURRENT_DATE('Europe/Paris'), INTERVAL 1 DAY);
@@ -465,33 +465,36 @@ leads_pages AS (
 ),
 leads_periode AS (
   -- Moments où la personne a donné ses coordonnées : chargement de la page qui
-  -- suit la saisie (GA4 ne voit pas la saisie).
-  SELECT * FROM (
-    SELECT jour, user_pseudo_id, rang_personne,
-      CASE
-        WHEN id_unique = 'depenses_complements' AND entree THEN 'avant_depenses_complements'
-        WHEN id_unique = 'bilan' AND precedente = 'bonus_abonnement' AND NOT entree THEN 'popup_bilan'
-        WHEN id_unique = 'depenses_sports' AND precedente = 'en_savoir_plus_sur_vous' THEN 'en_savoir_plus_sur_vous'
-      END AS moment
-    FROM leads_pages
+  -- suit la saisie (GA4 ne voit pas la saisie). Une personne n'est un lead
+  -- qu'une fois : à son premier moment, sur tout l'historique lu (60 jours
+  -- avant la période) ; elle compte si ce premier moment tombe dans la période.
+  SELECT premier.* FROM (
+    SELECT ARRAY_AGG(STRUCT(jour, moment) ORDER BY rang_personne LIMIT 1)[OFFSET(0)] AS premier
+    FROM (
+      SELECT jour, user_pseudo_id, rang_personne,
+        CASE
+          WHEN id_unique = 'depenses_complements' AND entree THEN 'avant_depenses_complements'
+          WHEN id_unique = 'bilan' AND precedente = 'bonus_abonnement' AND NOT entree THEN 'popup_bilan'
+          WHEN id_unique = 'depenses_sports' AND precedente = 'en_savoir_plus_sur_vous' THEN 'en_savoir_plus_sur_vous'
+        END AS moment
+      FROM leads_pages
+    )
+    WHERE moment IS NOT NULL
+    GROUP BY user_pseudo_id
   )
-  WHERE moment IS NOT NULL AND jour BETWEEN date_debut AND date_fin
+  WHERE premier.jour BETWEEN date_debut AND date_fin
 ),
 leads AS (
-  -- Personnes ayant donné leurs coordonnées : total (de vide), répartition par
-  -- moment (chaque personne au premier moment de la période), jour par jour.
+  -- Une ligne par personne dans leads_periode : total (de vide), répartition
+  -- par moment, jour par jour (les jours s'additionnent).
   SELECT 'leads' AS genre, CAST(NULL AS STRING) AS de, CAST(NULL AS STRING) AS vers,
-    CAST(NULL AS DATE) AS jour, COUNT(DISTINCT user_pseudo_id) AS utilisateurs
+    CAST(NULL AS DATE) AS jour, COUNT(*) AS utilisateurs
   FROM leads_periode
   UNION ALL
   SELECT 'leads', moment, NULL, NULL, COUNT(*)
-  FROM (
-    SELECT ARRAY_AGG(moment ORDER BY rang_personne LIMIT 1)[OFFSET(0)] AS moment
-    FROM leads_periode GROUP BY user_pseudo_id
-  )
-  GROUP BY moment
+  FROM leads_periode GROUP BY moment
   UNION ALL
-  SELECT 'leads', NULL, NULL, jour, COUNT(DISTINCT user_pseudo_id)
+  SELECT 'leads', NULL, NULL, jour, COUNT(*)
   FROM leads_periode GROUP BY jour
 ),
 resultat AS (

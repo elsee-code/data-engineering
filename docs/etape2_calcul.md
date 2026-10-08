@@ -126,13 +126,14 @@ une série jour par jour.
     ses coordonnées. L'offre directe (`/signup → /mon-offre`) ne compte pas :
     ce sont des personnes déjà connues.
 
-    Une personne compte une fois sur la période (genre `leads`, `de` vide) ;
-    la répartition par moment (`de` = moment) range chaque personne à son
-    premier moment de la période, si bien que les trois parts font le total.
-    Jour par jour (`de` vide, `jour` rempli) : personnes ayant donné leurs
-    coordonnées ce jour-là. Une personne qui les redonne lors d'une visite
-    ultérieure (nouvelle entrée par www.elsee.care, par exemple) compte à
-    nouveau sur une période qui ne contient que cette visite.
+    **Une personne n'est lead qu'une fois** (Eglantine, 8 oct.) : à son
+    premier moment, cherché sur tout l'historique lu (60 jours avant la
+    période, et pas avant le 5 oct., début de l'export). Elle compte sur la
+    période si ce premier moment y tombe ; si elle redonne ses coordonnées
+    plus tard, elle n'est pas recomptée. Genre `leads` : total (`de` vide),
+    répartition par moment de ce premier lead (`de` = moment), jour par jour
+    (`de` vide, `jour` rempli). Les trois parts font le total, et les jours
+    s'additionnent.
 
 ## 4. Résultats sur la journée du 5 octobre
 

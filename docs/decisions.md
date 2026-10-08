@@ -20,14 +20,13 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 [`deploiement_apps_script.md`](deploiement_apps_script.md), d'abord en
 déploiement de test, et fait ses retours avant la publication.
 
-**Nombre leads** (8 oct.) : la fonction BigQuery est à jour. Eglantine
-remplace `Page.html`, `Graphe.gs` et `Code.gs` dans Apps Script et publie une
-nouvelle version ([`deploiement_apps_script.md`](deploiement_apps_script.md),
-« Mettre à jour la page plus tard »). Cela met aussi en ligne le tableau
-« Pages vues par personne » s'il ne l'est pas encore. Trois choix de mise en
-œuvre attendent encore sa confirmation (entrée de la session, une personne
-comptée à son premier moment, nouveau lead si les coordonnées sont redonnées
-plus tard : voir l'entrée du 8 oct. ci-dessous).
+**Nombre leads** (8 oct.) : en attente de l'accord d'Eglantine pour remplacer
+à nouveau la fonction BigQuery `elsee_funnel.agregats` (un lead par personne,
+voir ci-dessous). Ensuite, Eglantine remplace `Page.html`, `Graphe.gs` et
+`Code.gs` dans Apps Script et publie une nouvelle version
+([`deploiement_apps_script.md`](deploiement_apps_script.md), « Mettre à jour la
+page plus tard »). Cela met aussi en ligne le tableau « Pages vues par
+personne » s'il ne l'est pas encore.
 
 Autres questions :
 
@@ -42,6 +41,32 @@ Autres questions :
   l'export BigQuery. Il faudra le même export des quatre explorations sur une
   période d'au moins 7 jours couverte par l'export (au plus tôt du 5 au 11 oct.,
   disponible le 12 oct.).
+
+## 2026-10-08 — Un lead par personne (Eglantine)
+
+Réponse d'Eglantine aux choix de mise en œuvre du nombre de leads (entrée
+suivante) : « j'ai juste besoin de savoir si un utilisateur a complété à un
+moment ou un autre dans son parcours le formulaire (donc lead 1 fois max par
+utilisateur) ».
+
+1. **Personne revenue en cours de formulaire** (session sans page d'entrée) :
+   confirmé, elle ne compte ni avant `depenses_complements` ni à la pop-up.
+2. **Un lead au plus par personne** : chaque personne est lead une seule fois,
+   à son premier moment, cherché sur tout l'historique lu (60 jours avant la
+   période, et pas avant le 5 oct., début de l'export). Elle compte sur la
+   période si ce premier moment y tombe. Une personne déjà lead avant la
+   période n'est pas recomptée, même si elle redonne ses coordonnées. Cela
+   remplace la règle « une fois par période » de l'entrée suivante.
+
+Conséquence : les leads jour par jour s'additionnent pour donner le total de la
+période. Limite : « personne » = identifiant GA4 (un navigateur sur un
+appareil) ; la même personne sur un autre appareil compte à part.
+
+Testé en lecture seule : mêmes chiffres sur les 5 et 6 oct. (323 ; 145 le 6
+seul), car personne n'a été lead les deux jours ; règle vérifiée sur un jeu
+d'essai fictif (une personne lead le 5 puis le 7 ne compte pas sur le 7 ; une
+personne passée par deux moments compte une fois, au premier). Lignes hors
+leads inchangées. Fonction BigQuery à remplacer, sur accord d'Eglantine.
 
 ## 2026-10-08 — Nombre leads (Eglantine)
 
