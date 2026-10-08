@@ -51,14 +51,18 @@ Dans la colonne de gauche, la rubrique **Services** doit maintenant afficher
 
 ## 3. Vérifier l'installation
 
-1. En haut de l'éditeur, dans la liste des fonctions, choisir
-   **testerInstallation**, puis cliquer sur **Exécuter**.
-2. La première fois, Google demande une autorisation : **Examiner les
+1. Dans la liste des fichiers, cliquer sur **Code.gs** : le bouton
+   **Exécuter** et la liste des fonctions n'apparaissent en haut de l'éditeur
+   que lorsqu'un fichier `.gs` est ouvert (pas `Page.html` ni
+   `appsscript.json`).
+2. Dans la liste des fonctions, à droite de **Exécuter** et **Déboguer**,
+   choisir **testerInstallation**, puis cliquer sur **Exécuter**.
+3. La première fois, Google demande une autorisation : **Examiner les
    autorisations** → choisir hello@elsee.care → si un écran « Google n'a pas
    validé cette application » s'affiche, cliquer sur **Paramètres avancés**
-   puis **Accéder à Tunnel d'inscription Elsee** → **Autoriser**. (C'est votre
-   propre script : l'avertissement est normal.)
-3. Le **journal d'exécution** doit se terminer par **« Installation
+   puis **Accéder à** *(nom du projet)* **(non sécurisé)** → **Autoriser**.
+   (C'est votre propre script : l'avertissement est normal.)
+4. Le **journal d'exécution** doit se terminer par **« Installation
    correcte. »**, avec les dates des données disponibles et le nombre de
    personnes sur `/signup`. En cas d'erreur, copier le message et me
    l'envoyer.
@@ -96,8 +100,8 @@ Une vérification tourne chaque jour entre 15 h et 16 h (heure de Paris) et
 
 Tant qu'un même problème dure, il n'est rappelé que tous les 3 jours.
 
-1. Dans l'éditeur, choisir la fonction **installerDeclencheur**, puis
-   **Exécuter**. Google demande de nouvelles autorisations (envoyer des e-mails,
+1. Ouvrir **Code.gs**, choisir la fonction **installerDeclencheur** dans la
+   liste des fonctions, puis **Exécuter**. Google demande de nouvelles autorisations (envoyer des e-mails,
    s'exécuter à heure fixe) : les accepter comme à l'étape 3.
 2. Le journal d'exécution confirme : « Vérification installée : chaque jour
    entre 15 h et 16 h… ». La rubrique **Déclencheurs** (icône réveil, colonne de
