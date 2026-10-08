@@ -99,6 +99,7 @@ else {
     for (const c of p.apres ?? []) if (!pageValide(c)) erreurs.push(`paiement.pages (${p.page}).apres : page invalide : ${c}`);
     for (const d of p.provenance ?? []) if (!/^[a-z0-9.-]+$/.test(d)) erreurs.push(`paiement.pages (${p.page}).provenance : domaine invalide : ${d}`);
   }
+  for (const d of paiement.reprise_si_provenance ?? []) if (!/^[a-z0-9.-]+$/.test(d)) erreurs.push(`paiement.reprise_si_provenance : domaine invalide : ${d}`);
 }
 // Condition SQL pour qu'une vue d'une page de paiement compte.
 const conditionPaiement = (p) => {
@@ -237,10 +238,15 @@ function passe(n) {
   --   1. d'après la page précédente dans la session ;
   --   2. sinon, la même étape que la dernière fois que cette page a été vue dans
   --      la session (retour en arrière) ;
-  --   3. sinon, d'après la dernière étape vue par la personne, dans cette session
-  --      ou une précédente (${JOURS_RECUL} jours au plus) : l'étape de cette page la
-  --      plus proche en suivant les flèches, à défaut celle du même parcours.
-  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_personne),
+  --   3. sinon, d'après la dernière étape vue dans la session : l'étape de cette
+  --      page la plus proche en suivant les flèches, à défaut celle du même
+  --      parcours. Une personne qui revient dans une autre session (lien d'un
+  --      e-mail, retour plus tard) n'est pas rattachée à son ancien parcours (elle
+  --      va dans l'étape de repli, voir resolues), sauf sur ${paiement.page}
+  --      en venant de ${(paiement.reprise_si_provenance ?? []).join(", ") || "-"} : le paiement ouvre souvent une nouvelle
+  --      session, on reprend alors la dernière étape vue par la personne
+  --      (${JOURS_RECUL} jours au plus).
+  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_session, derniere_etape_personne),
     COALESCE(x.id_unique, pp.etape, x.derniere_meme_page, pd.etape) AS etape
   FROM (
     SELECT *,
@@ -249,12 +255,17 @@ function passe(n) {
         PARTITION BY user_pseudo_id, ga_session_id, cle ORDER BY rang
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_meme_page,
       LAST_VALUE(etape IGNORE NULLS) OVER (
+        PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_session,
+      LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id ORDER BY rang_personne
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_personne
     FROM passe${n - 1}
   ) AS x
   LEFT JOIN par_precedente AS pp ON pp.cle = x.cle AND pp.precedente = x.precedente
-  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle AND pd.derniere = x.derniere_etape_personne
+  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle
+    AND pd.derniere = IF(x.cle = ${q(paiement.page)} AND x.provenance IN UNNEST(${sqlTableau(paiement.reprise_si_provenance ?? [])}),
+                         x.derniere_etape_personne, x.derniere_etape_session)
 )`;
 }
 

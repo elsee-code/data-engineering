@@ -965,7 +965,13 @@ const GRAPHE = {
     "page": "www.elsee.care/bienvenue-chez-elsee",
     "pages": [
       {
-        "page": "www.elsee.care/bienvenue-chez-elsee"
+        "page": "www.elsee.care/bienvenue-chez-elsee",
+        "apres": [
+          "app.elsee.care/mon-panier"
+        ],
+        "provenance": [
+          "checkout.stripe.com"
+        ]
       },
       {
         "page": "app.elsee.care/success",
@@ -977,7 +983,10 @@ const GRAPHE = {
           "checkout.stripe.com"
         ]
       }
+    ],
+    "reprise_si_provenance": [
+      "checkout.stripe.com"
     ]
   },
-  "empreinte": "ca3ee89dd6"
+  "empreinte": "26f4c583db"
 };

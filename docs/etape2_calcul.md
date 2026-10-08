@@ -59,21 +59,29 @@ une série jour par jour.
    autres pages sont ignorées. **Paiement ok** (8 oct.) : `/bienvenue-chez-elsee`
    et app.elsee.care/`success` ne font qu'une page, la case de fin de chaque
    chemin (bloc `paiement` de la configuration) ; `/bienvenue-chez-elsee` puis
-   `/success` compte une fois (rechargement, règle 3). `/success` ne compte que
-   juste après `/mon-panier` ou `/bienvenue-chez-elsee`, ou en venant de
-   Stripe (checkout.stripe.com) ; vue ailleurs (espace membre, mot de passe
-   oublié…), elle est ignorée.
+   `/success` compte une fois (rechargement, règle 3). Les deux pages ne
+   comptent que juste après `/mon-panier` (ou `/bienvenue-chez-elsee` pour
+   `/success`), ou en venant de Stripe (checkout.stripe.com) ; vues ailleurs
+   (espace membre, mot de passe oublié, début de visite sans provenance…),
+   elles sont ignorées. C'est la règle qui colle le mieux aux ventes réelles
+   (5 oct. : 7 pour 6 ventes ; 6 oct. : 3 pour 4).
 2. **Étape d'une page à plusieurs parcours** (`/mon-offre`, `/mon-panier`,
-   `/bienvenue-chez-elsee`), dans l'ordre (règle validée le 7 oct.) :
+   « paiement ok »), dans l'ordre (règle validée le 7 oct., modifiée le 8 oct.) :
    1. d'après la page du graphe vue juste avant dans la session (par exemple
       `/mon-panier` après `/offres` = parcours compléments) ;
    2. sinon (retour en arrière), le même parcours que la dernière fois que cette
       page a été vue dans la session ;
-   3. sinon (personne qui revient par un lien, un e-mail, le paiement), d'après
-      la dernière étape qu'elle a vue, dans cette session ou une précédente,
-      sur 60 jours au plus : l'étape de la page la plus proche en suivant les
-      flèches (après `/offres`, `/mon-panier` du parcours compléments ; après
-      `/signup`, l'offre directe), à défaut celle du même parcours ;
+   3. sinon, d'après la dernière étape vue **dans la session** : l'étape de la
+      page la plus proche en suivant les flèches (après `/offres`, `/mon-panier`
+      du parcours compléments ; après `/signup`, l'offre directe), à défaut
+      celle du même parcours. Une personne qui revient dans une autre session
+      (lien d'un e-mail, retour plus tard) n'est plus rattachée à son ancien
+      parcours : elle va dans le chemin MAIL (règle 2.4 ; décision d'Eglantine
+      du 8 oct., pour distinguer les personnes qui arrivent après avoir répondu
+      au formulaire de celles qui reviennent). Exception : « paiement ok » en
+      venant de Stripe, car le paiement ouvre souvent une nouvelle session ; on
+      reprend alors la dernière étape vue par la personne, sur 60 jours au plus
+      (son `/mon-panier`) ;
    4. sinon (aucun parcours connu), la page va dans l'étape de repli de sa
       page, celle du chemin MAIL (décision du 8 oct., qui remplace celle du
       6 oct. : ces pages étaient comptées à part, sans être affichées). Ce

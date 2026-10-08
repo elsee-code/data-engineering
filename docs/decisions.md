@@ -20,9 +20,10 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 [`deploiement_apps_script.md`](deploiement_apps_script.md), d'abord en
 déploiement de test, et fait ses retours avant la publication.
 
-**Paiement ok** (8 oct.) : en attente du choix d'Eglantine sur la règle (voir
-l'entrée « Paiement ok » ci-dessous) et de son accord pour remplacer la
-fonction BigQuery. Ensuite, Eglantine remplace `Page.html` et `Graphe.gs` dans
+**Carte cadeau sur tous les `/mon-offre`** (8 oct.) : question posée à
+Eglantine (une branche carte cadeau par chemin, ou une seule commune). Puis son
+accord pour remplacer la fonction BigQuery (« paiement ok », retours dans le
+chemin MAIL, carte cadeau). Ensuite, Eglantine remplace `Page.html` et `Graphe.gs` dans
 Apps Script et publie une nouvelle version (cela met aussi en ligne le chemin
 MAIL et le nouveau tableau des pages vues, déjà dans la fonction).
 
@@ -39,6 +40,35 @@ Autres questions :
   l'export BigQuery. Il faudra le même export des quatre explorations sur une
   période d'au moins 7 jours couverte par l'export (au plus tôt du 5 au 11 oct.,
   disponible le 12 oct.).
+
+## 2026-10-08 — Retours dans le chemin MAIL, règle de « paiement ok » (Eglantine)
+
+Ventes réelles données par Eglantine : 6 le 5 oct., 4 le 6 oct., 3 le 7 oct.
+
+1. **« Paiement ok »** : par jour, la règle `/bienvenue-chez-elsee` ou
+   `/success` juste après `/mon-panier` ou en revenant de Stripe donne 7 et 3
+   (pour 6 et 4) ; celle à 12 (toute `/bienvenue-chez-elsee`) donne 9 et 3 ; la
+   règle littérale (toute `/success`) 9 et 6. **Retenue : la première**, la plus
+   proche des ventes réelles (les 2 `/bienvenue-chez-elsee` ouvertes en début
+   de visite sans provenance sont sans doute des acheteurs déjà comptés sous un
+   autre identifiant GA4). Le 7 oct. n'est pas encore dans BigQuery : à
+   vérifier dès son arrivée.
+2. **Retours** (demande d'Eglantine) : les personnes qui reviennent par un
+   e-mail ou plus tard, directement sur `/mon-offre` et les pages suivantes,
+   ne comptent plus que dans le chemin MAIL, plus dans le long form, l'offre
+   directe ou les compléments. Le rattachement par la dernière étape vue ne
+   regarde plus que la session en cours (règle 2.3 de
+   [`etape2_calcul.md`](etape2_calcul.md)). Exception : « paiement ok » en
+   venant de Stripe reprend le parcours de la personne (le paiement ouvre
+   souvent une nouvelle session ; ce n'est pas un retour par e-mail).
+
+Effet (5 et 6 oct.) : `/mon-offre` du chemin MAIL 58 → 62 personnes,
+`/mon-panier` 27 → 31 ; offre directe `/mon-offre` 23 → 22, `/mon-panier`
+4 → 3 ; long form `/mon-panier` 52 → 50. Les arrivées directes (début de
+visite) ne se voient plus que sur le chemin MAIL. « Paiement ok » : 10
+personnes (long form 2, compléments 1, carte cadeau 1, MAIL 6). Leads et
+tableau des pages vues inchangés ; contrôle de cohérence sans écart négatif.
+Calcul testé en lecture seule ; fonction BigQuery pas encore remplacée.
 
 ## 2026-10-08 — Paiement ok (Eglantine)
 

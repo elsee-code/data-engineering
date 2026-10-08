@@ -180,7 +180,7 @@ tunnel AS (
   FROM (
     SELECT * EXCEPT (cle_vue, page_avant),
       CASE
-        WHEN cle_vue = 'www.elsee.care/bienvenue-chez-elsee' THEN IF(TRUE, 'www.elsee.care/bienvenue-chez-elsee', NULL)
+        WHEN cle_vue = 'www.elsee.care/bienvenue-chez-elsee' THEN IF(page_avant IN UNNEST(['app.elsee.care/mon-panier']) OR provenance IN UNNEST(['checkout.stripe.com']), 'www.elsee.care/bienvenue-chez-elsee', NULL)
         WHEN cle_vue = 'app.elsee.care/success' THEN IF(page_avant IN UNNEST(['app.elsee.care/mon-panier', 'www.elsee.care/bienvenue-chez-elsee']) OR provenance IN UNNEST(['checkout.stripe.com']), 'www.elsee.care/bienvenue-chez-elsee', NULL)
         ELSE cle_vue
       END AS cle
@@ -204,7 +204,7 @@ passe0 AS (
   SELECT *, id_unique AS etape FROM tunnel
 ),
 passe1 AS (
-  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_personne),
+  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_session, derniere_etape_personne),
     COALESCE(x.id_unique, pp.etape, x.derniere_meme_page, pd.etape) AS etape
   FROM (
     SELECT *,
@@ -212,16 +212,21 @@ passe1 AS (
       LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id, ga_session_id, cle ORDER BY rang
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_meme_page,
+      LAST_VALUE(etape IGNORE NULLS) OVER (
+        PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_session,
       LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id ORDER BY rang_personne
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_personne
     FROM passe0
   ) AS x
   LEFT JOIN par_precedente AS pp ON pp.cle = x.cle AND pp.precedente = x.precedente
-  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle AND pd.derniere = x.derniere_etape_personne
+  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle
+    AND pd.derniere = IF(x.cle = 'www.elsee.care/bienvenue-chez-elsee' AND x.provenance IN UNNEST(['checkout.stripe.com']),
+                         x.derniere_etape_personne, x.derniere_etape_session)
 ),
 passe2 AS (
-  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_personne),
+  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_session, derniere_etape_personne),
     COALESCE(x.id_unique, pp.etape, x.derniere_meme_page, pd.etape) AS etape
   FROM (
     SELECT *,
@@ -229,16 +234,21 @@ passe2 AS (
       LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id, ga_session_id, cle ORDER BY rang
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_meme_page,
+      LAST_VALUE(etape IGNORE NULLS) OVER (
+        PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_session,
       LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id ORDER BY rang_personne
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_personne
     FROM passe1
   ) AS x
   LEFT JOIN par_precedente AS pp ON pp.cle = x.cle AND pp.precedente = x.precedente
-  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle AND pd.derniere = x.derniere_etape_personne
+  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle
+    AND pd.derniere = IF(x.cle = 'www.elsee.care/bienvenue-chez-elsee' AND x.provenance IN UNNEST(['checkout.stripe.com']),
+                         x.derniere_etape_personne, x.derniere_etape_session)
 ),
 passe3 AS (
-  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_personne),
+  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_session, derniere_etape_personne),
     COALESCE(x.id_unique, pp.etape, x.derniere_meme_page, pd.etape) AS etape
   FROM (
     SELECT *,
@@ -246,16 +256,21 @@ passe3 AS (
       LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id, ga_session_id, cle ORDER BY rang
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_meme_page,
+      LAST_VALUE(etape IGNORE NULLS) OVER (
+        PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_session,
       LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id ORDER BY rang_personne
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_personne
     FROM passe2
   ) AS x
   LEFT JOIN par_precedente AS pp ON pp.cle = x.cle AND pp.precedente = x.precedente
-  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle AND pd.derniere = x.derniere_etape_personne
+  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle
+    AND pd.derniere = IF(x.cle = 'www.elsee.care/bienvenue-chez-elsee' AND x.provenance IN UNNEST(['checkout.stripe.com']),
+                         x.derniere_etape_personne, x.derniere_etape_session)
 ),
 passe4 AS (
-  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_personne),
+  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_session, derniere_etape_personne),
     COALESCE(x.id_unique, pp.etape, x.derniere_meme_page, pd.etape) AS etape
   FROM (
     SELECT *,
@@ -263,16 +278,21 @@ passe4 AS (
       LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id, ga_session_id, cle ORDER BY rang
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_meme_page,
+      LAST_VALUE(etape IGNORE NULLS) OVER (
+        PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_session,
       LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id ORDER BY rang_personne
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_personne
     FROM passe3
   ) AS x
   LEFT JOIN par_precedente AS pp ON pp.cle = x.cle AND pp.precedente = x.precedente
-  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle AND pd.derniere = x.derniere_etape_personne
+  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle
+    AND pd.derniere = IF(x.cle = 'www.elsee.care/bienvenue-chez-elsee' AND x.provenance IN UNNEST(['checkout.stripe.com']),
+                         x.derniere_etape_personne, x.derniere_etape_session)
 ),
 passe5 AS (
-  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_personne),
+  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_session, derniere_etape_personne),
     COALESCE(x.id_unique, pp.etape, x.derniere_meme_page, pd.etape) AS etape
   FROM (
     SELECT *,
@@ -281,12 +301,17 @@ passe5 AS (
         PARTITION BY user_pseudo_id, ga_session_id, cle ORDER BY rang
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_meme_page,
       LAST_VALUE(etape IGNORE NULLS) OVER (
+        PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_session,
+      LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id ORDER BY rang_personne
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_personne
     FROM passe4
   ) AS x
   LEFT JOIN par_precedente AS pp ON pp.cle = x.cle AND pp.precedente = x.precedente
-  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle AND pd.derniere = x.derniere_etape_personne
+  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle
+    AND pd.derniere = IF(x.cle = 'www.elsee.care/bienvenue-chez-elsee' AND x.provenance IN UNNEST(['checkout.stripe.com']),
+                         x.derniere_etape_personne, x.derniere_etape_session)
 ),
 resolues AS (
   SELECT x.jour, x.user_pseudo_id, x.ga_session_id, x.rang, COALESCE(x.etape, rp.etape, CONCAT('?', x.cle)) AS e

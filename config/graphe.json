@@ -963,7 +963,13 @@
     "page": "www.elsee.care/bienvenue-chez-elsee",
     "pages": [
       {
-        "page": "www.elsee.care/bienvenue-chez-elsee"
+        "page": "www.elsee.care/bienvenue-chez-elsee",
+        "apres": [
+          "app.elsee.care/mon-panier"
+        ],
+        "provenance": [
+          "checkout.stripe.com"
+        ]
       },
       {
         "page": "app.elsee.care/success",
@@ -975,6 +981,9 @@
           "checkout.stripe.com"
         ]
       }
+    ],
+    "reprise_si_provenance": [
+      "checkout.stripe.com"
     ]
   }
 }

@@ -50,7 +50,10 @@ puis régénérer les requêtes.
     facultatives : `apres` (page vue juste avant dans la session) et
     `provenance` (domaine d'où l'on vient). Une page avec conditions ne compte
     que si l'une est remplie ; sinon elle est ignorée. Sans condition, elle
-    compte toujours.
+    compte toujours ;
+  - `reprise_si_provenance` : domaines (Stripe) depuis lesquels une page de
+    paiement reprend le parcours de la session précédente (le paiement ouvre
+    souvent une nouvelle session).
 - `leads` : encadré « Nombre leads » (personnes qui ont donné leurs
   coordonnées ; règle 10 de [`docs/etape2_calcul.md`](../docs/etape2_calcul.md)).
   Les étapes citées doivent porter seules leur page.

@@ -220,7 +220,7 @@ tunnel AS (
   FROM (
     SELECT * EXCEPT (cle_vue, page_avant),
       CASE
-        WHEN cle_vue = 'www.elsee.care/bienvenue-chez-elsee' THEN IF(TRUE, 'www.elsee.care/bienvenue-chez-elsee', NULL)
+        WHEN cle_vue = 'www.elsee.care/bienvenue-chez-elsee' THEN IF(page_avant IN UNNEST(['app.elsee.care/mon-panier']) OR provenance IN UNNEST(['checkout.stripe.com']), 'www.elsee.care/bienvenue-chez-elsee', NULL)
         WHEN cle_vue = 'app.elsee.care/success' THEN IF(page_avant IN UNNEST(['app.elsee.care/mon-panier', 'www.elsee.care/bienvenue-chez-elsee']) OR provenance IN UNNEST(['checkout.stripe.com']), 'www.elsee.care/bienvenue-chez-elsee', NULL)
         ELSE cle_vue
       END AS cle
@@ -248,10 +248,15 @@ passe1 AS (
   --   1. d'après la page précédente dans la session ;
   --   2. sinon, la même étape que la dernière fois que cette page a été vue dans
   --      la session (retour en arrière) ;
-  --   3. sinon, d'après la dernière étape vue par la personne, dans cette session
-  --      ou une précédente (60 jours au plus) : l'étape de cette page la
-  --      plus proche en suivant les flèches, à défaut celle du même parcours.
-  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_personne),
+  --   3. sinon, d'après la dernière étape vue dans la session : l'étape de cette
+  --      page la plus proche en suivant les flèches, à défaut celle du même
+  --      parcours. Une personne qui revient dans une autre session (lien d'un
+  --      e-mail, retour plus tard) n'est pas rattachée à son ancien parcours (elle
+  --      va dans l'étape de repli, voir resolues), sauf sur www.elsee.care/bienvenue-chez-elsee
+  --      en venant de checkout.stripe.com : le paiement ouvre souvent une nouvelle
+  --      session, on reprend alors la dernière étape vue par la personne
+  --      (60 jours au plus).
+  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_session, derniere_etape_personne),
     COALESCE(x.id_unique, pp.etape, x.derniere_meme_page, pd.etape) AS etape
   FROM (
     SELECT *,
@@ -259,23 +264,33 @@ passe1 AS (
       LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id, ga_session_id, cle ORDER BY rang
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_meme_page,
+      LAST_VALUE(etape IGNORE NULLS) OVER (
+        PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_session,
       LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id ORDER BY rang_personne
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_personne
     FROM passe0
   ) AS x
   LEFT JOIN par_precedente AS pp ON pp.cle = x.cle AND pp.precedente = x.precedente
-  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle AND pd.derniere = x.derniere_etape_personne
+  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle
+    AND pd.derniere = IF(x.cle = 'www.elsee.care/bienvenue-chez-elsee' AND x.provenance IN UNNEST(['checkout.stripe.com']),
+                         x.derniere_etape_personne, x.derniere_etape_session)
 ),
 passe2 AS (
   -- Passe 2, pour les pages à plusieurs parcours, dans l'ordre :
   --   1. d'après la page précédente dans la session ;
   --   2. sinon, la même étape que la dernière fois que cette page a été vue dans
   --      la session (retour en arrière) ;
-  --   3. sinon, d'après la dernière étape vue par la personne, dans cette session
-  --      ou une précédente (60 jours au plus) : l'étape de cette page la
-  --      plus proche en suivant les flèches, à défaut celle du même parcours.
-  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_personne),
+  --   3. sinon, d'après la dernière étape vue dans la session : l'étape de cette
+  --      page la plus proche en suivant les flèches, à défaut celle du même
+  --      parcours. Une personne qui revient dans une autre session (lien d'un
+  --      e-mail, retour plus tard) n'est pas rattachée à son ancien parcours (elle
+  --      va dans l'étape de repli, voir resolues), sauf sur www.elsee.care/bienvenue-chez-elsee
+  --      en venant de checkout.stripe.com : le paiement ouvre souvent une nouvelle
+  --      session, on reprend alors la dernière étape vue par la personne
+  --      (60 jours au plus).
+  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_session, derniere_etape_personne),
     COALESCE(x.id_unique, pp.etape, x.derniere_meme_page, pd.etape) AS etape
   FROM (
     SELECT *,
@@ -283,23 +298,33 @@ passe2 AS (
       LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id, ga_session_id, cle ORDER BY rang
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_meme_page,
+      LAST_VALUE(etape IGNORE NULLS) OVER (
+        PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_session,
       LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id ORDER BY rang_personne
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_personne
     FROM passe1
   ) AS x
   LEFT JOIN par_precedente AS pp ON pp.cle = x.cle AND pp.precedente = x.precedente
-  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle AND pd.derniere = x.derniere_etape_personne
+  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle
+    AND pd.derniere = IF(x.cle = 'www.elsee.care/bienvenue-chez-elsee' AND x.provenance IN UNNEST(['checkout.stripe.com']),
+                         x.derniere_etape_personne, x.derniere_etape_session)
 ),
 passe3 AS (
   -- Passe 3, pour les pages à plusieurs parcours, dans l'ordre :
   --   1. d'après la page précédente dans la session ;
   --   2. sinon, la même étape que la dernière fois que cette page a été vue dans
   --      la session (retour en arrière) ;
-  --   3. sinon, d'après la dernière étape vue par la personne, dans cette session
-  --      ou une précédente (60 jours au plus) : l'étape de cette page la
-  --      plus proche en suivant les flèches, à défaut celle du même parcours.
-  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_personne),
+  --   3. sinon, d'après la dernière étape vue dans la session : l'étape de cette
+  --      page la plus proche en suivant les flèches, à défaut celle du même
+  --      parcours. Une personne qui revient dans une autre session (lien d'un
+  --      e-mail, retour plus tard) n'est pas rattachée à son ancien parcours (elle
+  --      va dans l'étape de repli, voir resolues), sauf sur www.elsee.care/bienvenue-chez-elsee
+  --      en venant de checkout.stripe.com : le paiement ouvre souvent une nouvelle
+  --      session, on reprend alors la dernière étape vue par la personne
+  --      (60 jours au plus).
+  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_session, derniere_etape_personne),
     COALESCE(x.id_unique, pp.etape, x.derniere_meme_page, pd.etape) AS etape
   FROM (
     SELECT *,
@@ -307,23 +332,33 @@ passe3 AS (
       LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id, ga_session_id, cle ORDER BY rang
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_meme_page,
+      LAST_VALUE(etape IGNORE NULLS) OVER (
+        PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_session,
       LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id ORDER BY rang_personne
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_personne
     FROM passe2
   ) AS x
   LEFT JOIN par_precedente AS pp ON pp.cle = x.cle AND pp.precedente = x.precedente
-  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle AND pd.derniere = x.derniere_etape_personne
+  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle
+    AND pd.derniere = IF(x.cle = 'www.elsee.care/bienvenue-chez-elsee' AND x.provenance IN UNNEST(['checkout.stripe.com']),
+                         x.derniere_etape_personne, x.derniere_etape_session)
 ),
 passe4 AS (
   -- Passe 4, pour les pages à plusieurs parcours, dans l'ordre :
   --   1. d'après la page précédente dans la session ;
   --   2. sinon, la même étape que la dernière fois que cette page a été vue dans
   --      la session (retour en arrière) ;
-  --   3. sinon, d'après la dernière étape vue par la personne, dans cette session
-  --      ou une précédente (60 jours au plus) : l'étape de cette page la
-  --      plus proche en suivant les flèches, à défaut celle du même parcours.
-  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_personne),
+  --   3. sinon, d'après la dernière étape vue dans la session : l'étape de cette
+  --      page la plus proche en suivant les flèches, à défaut celle du même
+  --      parcours. Une personne qui revient dans une autre session (lien d'un
+  --      e-mail, retour plus tard) n'est pas rattachée à son ancien parcours (elle
+  --      va dans l'étape de repli, voir resolues), sauf sur www.elsee.care/bienvenue-chez-elsee
+  --      en venant de checkout.stripe.com : le paiement ouvre souvent une nouvelle
+  --      session, on reprend alors la dernière étape vue par la personne
+  --      (60 jours au plus).
+  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_session, derniere_etape_personne),
     COALESCE(x.id_unique, pp.etape, x.derniere_meme_page, pd.etape) AS etape
   FROM (
     SELECT *,
@@ -331,23 +366,33 @@ passe4 AS (
       LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id, ga_session_id, cle ORDER BY rang
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_meme_page,
+      LAST_VALUE(etape IGNORE NULLS) OVER (
+        PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_session,
       LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id ORDER BY rang_personne
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_personne
     FROM passe3
   ) AS x
   LEFT JOIN par_precedente AS pp ON pp.cle = x.cle AND pp.precedente = x.precedente
-  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle AND pd.derniere = x.derniere_etape_personne
+  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle
+    AND pd.derniere = IF(x.cle = 'www.elsee.care/bienvenue-chez-elsee' AND x.provenance IN UNNEST(['checkout.stripe.com']),
+                         x.derniere_etape_personne, x.derniere_etape_session)
 ),
 passe5 AS (
   -- Passe 5, pour les pages à plusieurs parcours, dans l'ordre :
   --   1. d'après la page précédente dans la session ;
   --   2. sinon, la même étape que la dernière fois que cette page a été vue dans
   --      la session (retour en arrière) ;
-  --   3. sinon, d'après la dernière étape vue par la personne, dans cette session
-  --      ou une précédente (60 jours au plus) : l'étape de cette page la
-  --      plus proche en suivant les flèches, à défaut celle du même parcours.
-  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_personne),
+  --   3. sinon, d'après la dernière étape vue dans la session : l'étape de cette
+  --      page la plus proche en suivant les flèches, à défaut celle du même
+  --      parcours. Une personne qui revient dans une autre session (lien d'un
+  --      e-mail, retour plus tard) n'est pas rattachée à son ancien parcours (elle
+  --      va dans l'étape de repli, voir resolues), sauf sur www.elsee.care/bienvenue-chez-elsee
+  --      en venant de checkout.stripe.com : le paiement ouvre souvent une nouvelle
+  --      session, on reprend alors la dernière étape vue par la personne
+  --      (60 jours au plus).
+  SELECT x.* EXCEPT (etape, precedente, derniere_meme_page, derniere_etape_session, derniere_etape_personne),
     COALESCE(x.id_unique, pp.etape, x.derniere_meme_page, pd.etape) AS etape
   FROM (
     SELECT *,
@@ -356,12 +401,17 @@ passe5 AS (
         PARTITION BY user_pseudo_id, ga_session_id, cle ORDER BY rang
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_meme_page,
       LAST_VALUE(etape IGNORE NULLS) OVER (
+        PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_session,
+      LAST_VALUE(etape IGNORE NULLS) OVER (
         PARTITION BY user_pseudo_id ORDER BY rang_personne
         ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS derniere_etape_personne
     FROM passe4
   ) AS x
   LEFT JOIN par_precedente AS pp ON pp.cle = x.cle AND pp.precedente = x.precedente
-  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle AND pd.derniere = x.derniere_etape_personne
+  LEFT JOIN par_derniere AS pd ON pd.cle = x.cle
+    AND pd.derniere = IF(x.cle = 'www.elsee.care/bienvenue-chez-elsee' AND x.provenance IN UNNEST(['checkout.stripe.com']),
+                         x.derniere_etape_personne, x.derniere_etape_session)
 ),
 resolues AS (
   -- Une page qu'on ne peut rattacher à aucun parcours va, en dernier recours,
