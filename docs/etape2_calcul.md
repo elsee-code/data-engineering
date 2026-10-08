@@ -19,6 +19,8 @@
 - 42 pages, 52 étapes : `/mon-offre`, `/mon-panier` et `/bienvenue-chez-elsee`
   existent une fois par parcours (offre directe, long form, compléments, carte
   cadeau, mail), comme sur le schéma.
+- Fin de chaque chemin : **paiement ok** (8 oct.) au lieu de
+  `/bienvenue-chez-elsee` (règle 1).
 - Chemin **MAIL** (ajouté le 8 oct., croquis d'Eglantine) : `/mon-bilan-elsee`
   (www.elsee.care, lien des e-mails) → `/mon-offre` → `/mon-panier` →
   `/bienvenue-chez-elsee`. La flèche `/mon-bilan-elsee → /mon-offre` passe de
@@ -54,7 +56,13 @@ une série jour par jour.
 
 1. **Pages retenues** : page vue (`page_view`) dont le domaine et le chemin
    (sans paramètres, en minuscules, sans « / » final) sont dans le graphe. Les
-   autres pages sont ignorées.
+   autres pages sont ignorées. **Paiement ok** (8 oct.) : `/bienvenue-chez-elsee`
+   et app.elsee.care/`success` ne font qu'une page, la case de fin de chaque
+   chemin (bloc `paiement` de la configuration) ; `/bienvenue-chez-elsee` puis
+   `/success` compte une fois (rechargement, règle 3). `/success` ne compte que
+   juste après `/mon-panier` ou `/bienvenue-chez-elsee`, ou en venant de
+   Stripe (checkout.stripe.com) ; vue ailleurs (espace membre, mot de passe
+   oublié…), elle est ignorée.
 2. **Étape d'une page à plusieurs parcours** (`/mon-offre`, `/mon-panier`,
    `/bienvenue-chez-elsee`), dans l'ordre (règle validée le 7 oct.) :
    1. d'après la page du graphe vue juste avant dans la session (par exemple

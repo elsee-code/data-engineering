@@ -124,7 +124,7 @@ const GRAPHE = {
       }
     },
     {
-      "id": "bienvenue_directe",
+      "id": "paiement_ok_directe",
       "chemin": "/bienvenue-chez-elsee",
       "domaine": "www.elsee.care",
       "parcours": "offre_directe",
@@ -465,7 +465,7 @@ const GRAPHE = {
       }
     },
     {
-      "id": "bienvenue_complements",
+      "id": "paiement_ok_complements",
       "chemin": "/bienvenue-chez-elsee",
       "domaine": "www.elsee.care",
       "parcours": "complements",
@@ -495,7 +495,7 @@ const GRAPHE = {
       }
     },
     {
-      "id": "bienvenue_long_form",
+      "id": "paiement_ok_long_form",
       "chemin": "/bienvenue-chez-elsee",
       "domaine": "www.elsee.care",
       "parcours": "long_form",
@@ -526,7 +526,7 @@ const GRAPHE = {
       }
     },
     {
-      "id": "bienvenue_carte_cadeau",
+      "id": "paiement_ok_carte_cadeau",
       "chemin": "/bienvenue-chez-elsee",
       "domaine": "www.elsee.care",
       "parcours": "carte_cadeau",
@@ -571,7 +571,7 @@ const GRAPHE = {
       "fleche_entree": true
     },
     {
-      "id": "bienvenue_mail",
+      "id": "paiement_ok_mail",
       "chemin": "/bienvenue-chez-elsee",
       "domaine": "www.elsee.care",
       "parcours": "mail",
@@ -622,7 +622,7 @@ const GRAPHE = {
     },
     {
       "de": "mon_panier_directe",
-      "vers": "bienvenue_directe",
+      "vers": "paiement_ok_directe",
       "type": "normale"
     },
     {
@@ -692,7 +692,7 @@ const GRAPHE = {
     },
     {
       "de": "mon_panier_complements",
-      "vers": "bienvenue_complements",
+      "vers": "paiement_ok_complements",
       "type": "normale"
     },
     {
@@ -848,7 +848,7 @@ const GRAPHE = {
     },
     {
       "de": "mon_panier_long_form",
-      "vers": "bienvenue_long_form",
+      "vers": "paiement_ok_long_form",
       "type": "normale"
     },
     {
@@ -863,7 +863,7 @@ const GRAPHE = {
     },
     {
       "de": "mon_panier_carte_cadeau",
-      "vers": "bienvenue_carte_cadeau",
+      "vers": "paiement_ok_carte_cadeau",
       "type": "normale"
     },
     {
@@ -880,7 +880,7 @@ const GRAPHE = {
     },
     {
       "de": "mon_panier_mail",
-      "vers": "bienvenue_mail",
+      "vers": "paiement_ok_mail",
       "type": "normale"
     }
   ],
@@ -960,5 +960,24 @@ const GRAPHE = {
       }
     ]
   },
-  "empreinte": "5e72aad0cd"
+  "paiement": {
+    "libelle": "paiement ok",
+    "page": "www.elsee.care/bienvenue-chez-elsee",
+    "pages": [
+      {
+        "page": "www.elsee.care/bienvenue-chez-elsee"
+      },
+      {
+        "page": "app.elsee.care/success",
+        "apres": [
+          "app.elsee.care/mon-panier",
+          "www.elsee.care/bienvenue-chez-elsee"
+        ],
+        "provenance": [
+          "checkout.stripe.com"
+        ]
+      }
+    ]
+  },
+  "empreinte": "ca3ee89dd6"
 };

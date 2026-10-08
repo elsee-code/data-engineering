@@ -43,6 +43,14 @@ puis régénérer les requêtes.
     « dont ont vu leur offre ») ;
   - `position` : coin supérieur gauche du tableau dans le dessin (`colonne`,
     `ligne`), dans un espace laissé libre par les étapes.
+- `paiement` : case de fin « paiement ok ».
+  - `libelle` : nom affiché ;
+  - `page` : page (domaine + chemin) qui porte les étapes de fin ;
+  - `pages` : pages regroupées sous ce nom, chacune avec ses conditions
+    facultatives : `apres` (page vue juste avant dans la session) et
+    `provenance` (domaine d'où l'on vient). Une page avec conditions ne compte
+    que si l'une est remplie ; sinon elle est ignorée. Sans condition, elle
+    compte toujours.
 - `leads` : encadré « Nombre leads » (personnes qui ont donné leurs
   coordonnées ; règle 10 de [`docs/etape2_calcul.md`](../docs/etape2_calcul.md)).
   Les étapes citées doivent porter seules leur page.

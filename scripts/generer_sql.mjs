@@ -81,6 +81,33 @@ for (const [page, ids] of pagesMultiples) {
   }
 }
 
+// Paiement : plusieurs pages de fin (ex. /bienvenue-chez-elsee, /success) ne
+// font qu'une, « paiement ok », portée par les étapes de la page « page ». Une
+// page avec « apres » ou « provenance » ne compte que juste après l'une de ces
+// pages ou en venant de l'un de ces domaines ; sans condition, toujours.
+const paiement = graphe.paiement;
+if (!paiement) erreurs.push("bloc paiement absent");
+else {
+  const cles = new Set(etapes.map(cle));
+  const pageValide = (c) => /^[a-z0-9.-]+\/[a-z0-9_\-./]*$/.test(c) && graphe.domaines.includes(c.split("/")[0]);
+  if (!paiement.libelle) erreurs.push("paiement.libelle manquant");
+  if (!cles.has(paiement.page)) erreurs.push(`paiement.page : aucune étape sur ${paiement.page}`);
+  if (!Array.isArray(paiement.pages) || !paiement.pages.some((p) => p.page === paiement.page)) erreurs.push("paiement.pages : liste attendue, avec paiement.page");
+  else for (const p of paiement.pages) {
+    if (!pageValide(p.page)) erreurs.push(`paiement.pages : page invalide : ${p.page}`);
+    else if (p.page !== paiement.page && cles.has(p.page)) erreurs.push(`paiement.pages : ${p.page} porte déjà une étape`);
+    for (const c of p.apres ?? []) if (!pageValide(c)) erreurs.push(`paiement.pages (${p.page}).apres : page invalide : ${c}`);
+    for (const d of p.provenance ?? []) if (!/^[a-z0-9.-]+$/.test(d)) erreurs.push(`paiement.pages (${p.page}).provenance : domaine invalide : ${d}`);
+  }
+}
+// Condition SQL pour qu'une vue d'une page de paiement compte.
+const conditionPaiement = (p) => {
+  const c = [];
+  if ((p.apres ?? []).length) c.push(`page_avant IN UNNEST(${sqlTableau(p.apres)})`);
+  if ((p.provenance ?? []).length) c.push(`provenance IN UNNEST(${sqlTableau(p.provenance)})`);
+  return c.length ? c.join(" OR ") : "TRUE";
+};
+
 // Leads : les étapes citées doivent porter seules leur page (le calcul les
 // reconnaît sans les règles de rattachement à un parcours).
 const leads = graphe.leads;
@@ -300,18 +327,33 @@ tunnel AS (
   -- sans « / » final), numérotées dans l'ordre de la session (rang) et dans
   -- l'ordre de toutes les sessions de la personne (rang_personne) ; provenance :
   -- domaine de la page d'où l'on vient (leads).
-  SELECT p.jour, p.user_pseudo_id, p.ga_session_id, p.cle, c.id_unique,
-    LOWER(NET.HOST(p.url_provenance)) AS provenance,
+  -- ${paiement.libelle} : ${paiement.pages.map((p) => p.page).join(", ")} ne font qu'une
+  -- page (${paiement.page}), sous conditions (bloc paiement de la configuration) ;
+  -- une vue qui ne les remplit pas est ignorée.
+  SELECT p.jour, p.user_pseudo_id, p.ga_session_id, p.cle, c.id_unique, p.provenance,
     ROW_NUMBER() OVER (PARTITION BY p.user_pseudo_id, p.ga_session_id
                        ORDER BY p.event_timestamp, p.batch_ordering_id, p.batch_page_id, p.batch_event_index) AS rang,
     ROW_NUMBER() OVER (PARTITION BY p.user_pseudo_id
                        ORDER BY p.event_timestamp, p.ga_session_id, p.batch_ordering_id, p.batch_page_id, p.batch_event_index) AS rang_personne
   FROM (
-    SELECT *,
-      CONCAT(LOWER(NET.HOST(url)),
-             IFNULL(NULLIF(REGEXP_REPLACE(LOWER(REGEXP_EXTRACT(url, r'^[a-zA-Z]+://[^/?#]+([^?#]*)')), r'/+$', ''), ''), '/')) AS cle
-    FROM pages
-    WHERE ga_session_id IS NOT NULL
+    SELECT * EXCEPT (cle_vue, page_avant),
+      CASE
+${paiement.pages.map((p) => `        WHEN cle_vue = ${q(p.page)} THEN IF(${conditionPaiement(p)}, ${q(paiement.page)}, NULL)`).join("\n")}
+        ELSE cle_vue
+      END AS cle
+    FROM (
+      SELECT *,
+        LAG(cle_vue) OVER (PARTITION BY user_pseudo_id, ga_session_id
+                           ORDER BY event_timestamp, batch_ordering_id, batch_page_id, batch_event_index) AS page_avant
+      FROM (
+        SELECT *,
+          CONCAT(LOWER(NET.HOST(url)),
+                 IFNULL(NULLIF(REGEXP_REPLACE(LOWER(REGEXP_EXTRACT(url, r'^[a-zA-Z]+://[^/?#]+([^?#]*)')), r'/+$', ''), ''), '/')) AS cle_vue,
+          LOWER(NET.HOST(url_provenance)) AS provenance
+        FROM pages
+        WHERE ga_session_id IS NOT NULL
+      )
+    )
   ) AS p
   JOIN chemins AS c USING (cle)
 ),

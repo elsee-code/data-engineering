@@ -39,7 +39,7 @@ etapes AS (
     ('signup', 'app.elsee.care/signup', 5, '0000011101111111111111111111111111111111111111110000', [6, 7, 8]),
     ('mon_offre_directe', 'app.elsee.care/mon-offre', 6, '0000001100000000000000000000000000000000000000000000', [6, 7, 8]),
     ('mon_panier_directe', 'app.elsee.care/mon-panier', 7, '0000000100000000000000000000000000000000000000000000', [6, 7, 8]),
-    ('bienvenue_directe', 'www.elsee.care/bienvenue-chez-elsee', 8, '0000000000000000000000000000000000000000000000000000', [6, 7, 8]),
+    ('paiement_ok_directe', 'www.elsee.care/bienvenue-chez-elsee', 8, '0000000000000000000000000000000000000000000000000000', [6, 7, 8]),
     ('social_signup', 'app.elsee.care/social_signup', 9, '0000000001111111111111111111111111111111111111110000', [43, 41, 42]),
     ('depenses_complements', 'app.elsee.care/signup/depenses_complements', 10, '0000000000111111111111111111111111111111111111110000', [43, 41, 42]),
     ('montant_complements', 'app.elsee.care/signup/montant_complements', 11, '0000000000011111111111111111111111111111111111110000', [43, 41, 42]),
@@ -73,17 +73,17 @@ etapes AS (
     ('bilan', 'app.elsee.care/signup/bilan', 39, '0000000000000000000000000000000000000001110000000000', [0, 41, 42]),
     ('offres', 'app.elsee.care/offres', 40, '0000000000000000000000000000000000000000110000000000', [0, 41, 42]),
     ('mon_panier_complements', 'app.elsee.care/mon-panier', 41, '0000000000000000000000000000000000000000010000000000', [0, 41, 42]),
-    ('bienvenue_complements', 'www.elsee.care/bienvenue-chez-elsee', 42, '0000000000000000000000000000000000000000000000000000', [0, 41, 42]),
+    ('paiement_ok_complements', 'www.elsee.care/bienvenue-chez-elsee', 42, '0000000000000000000000000000000000000000000000000000', [0, 41, 42]),
     ('mon_offre_long_form', 'app.elsee.care/mon-offre', 43, '0000000000000000000000000000000000000000000111110000', [43, 44, 45]),
     ('mon_panier_long_form', 'app.elsee.care/mon-panier', 44, '0000000000000000000000000000000000000000000010000000', [43, 44, 45]),
-    ('bienvenue_long_form', 'www.elsee.care/bienvenue-chez-elsee', 45, '0000000000000000000000000000000000000000000000000000', [43, 44, 45]),
+    ('paiement_ok_long_form', 'www.elsee.care/bienvenue-chez-elsee', 45, '0000000000000000000000000000000000000000000000000000', [43, 44, 45]),
     ('cartecadeau', 'app.elsee.care/pricing/cartecadeau', 46, '0000000000000000000000000000000000000000000000110000', [0, 47, 48]),
     ('mon_panier_carte_cadeau', 'app.elsee.care/mon-panier', 47, '0000000000000000000000000000000000000000000000010000', [0, 47, 48]),
-    ('bienvenue_carte_cadeau', 'www.elsee.care/bienvenue-chez-elsee', 48, '0000000000000000000000000000000000000000000000000000', [0, 47, 48]),
+    ('paiement_ok_carte_cadeau', 'www.elsee.care/bienvenue-chez-elsee', 48, '0000000000000000000000000000000000000000000000000000', [0, 47, 48]),
     ('mon_bilan_elsee', 'www.elsee.care/mon-bilan-elsee', 49, '0000000000000000000000000000000000000000000000000111', [50, 51, 52]),
     ('mon_offre_mail', 'app.elsee.care/mon-offre', 50, '0000000000000000000000000000000000000000000000000011', [50, 51, 52]),
     ('mon_panier_mail', 'app.elsee.care/mon-panier', 51, '0000000000000000000000000000000000000000000000000001', [50, 51, 52]),
-    ('bienvenue_mail', 'www.elsee.care/bienvenue-chez-elsee', 52, '0000000000000000000000000000000000000000000000000000', [50, 51, 52])
+    ('paiement_ok_mail', 'www.elsee.care/bienvenue-chez-elsee', 52, '0000000000000000000000000000000000000000000000000000', [50, 51, 52])
   ])
 ),
 chemins AS (
@@ -101,7 +101,7 @@ fleches AS (
     ('signup_corpo', 'signup'),
     ('signup', 'mon_offre_directe'),
     ('mon_offre_directe', 'mon_panier_directe'),
-    ('mon_panier_directe', 'bienvenue_directe'),
+    ('mon_panier_directe', 'paiement_ok_directe'),
     ('signup', 'depenses_complements'),
     ('social_signup', 'depenses_complements'),
     ('depenses_complements', 'montant_complements'),
@@ -115,7 +115,7 @@ fleches AS (
     ('bonus_abonnement', 'bilan'),
     ('bilan', 'offres'),
     ('offres', 'mon_panier_complements'),
-    ('mon_panier_complements', 'bienvenue_complements'),
+    ('mon_panier_complements', 'paiement_ok_complements'),
     ('sante_mentale_seances', 'montant_sante_mentale'),
     ('sante_mentale_seances', 'sante_mentale_step'),
     ('montant_sante_mentale', 'md_seances'),
@@ -146,13 +146,13 @@ fleches AS (
     ('final_step', 'offre_en_preparation'),
     ('offre_en_preparation', 'mon_offre_long_form'),
     ('mon_offre_long_form', 'mon_panier_long_form'),
-    ('mon_panier_long_form', 'bienvenue_long_form'),
+    ('mon_panier_long_form', 'paiement_ok_long_form'),
     ('mon_offre_long_form', 'cartecadeau'),
     ('cartecadeau', 'mon_panier_carte_cadeau'),
-    ('mon_panier_carte_cadeau', 'bienvenue_carte_cadeau'),
+    ('mon_panier_carte_cadeau', 'paiement_ok_carte_cadeau'),
     ('mon_bilan_elsee', 'mon_offre_mail'),
     ('mon_offre_mail', 'mon_panier_mail'),
-    ('mon_panier_mail', 'bienvenue_mail')
+    ('mon_panier_mail', 'paiement_ok_mail')
   ])
 ),
 pages_multiples AS (
@@ -183,7 +183,7 @@ replis AS (
   SELECT * FROM UNNEST(ARRAY<STRUCT<cle STRING, etape STRING>>[
     ('app.elsee.care/mon-offre', 'mon_offre_mail'),
     ('app.elsee.care/mon-panier', 'mon_panier_mail'),
-    ('www.elsee.care/bienvenue-chez-elsee', 'bienvenue_mail')
+    ('www.elsee.care/bienvenue-chez-elsee', 'paiement_ok_mail')
   ])
 ),
 pages AS (
@@ -209,18 +209,34 @@ tunnel AS (
   -- sans « / » final), numérotées dans l'ordre de la session (rang) et dans
   -- l'ordre de toutes les sessions de la personne (rang_personne) ; provenance :
   -- domaine de la page d'où l'on vient (leads).
-  SELECT p.jour, p.user_pseudo_id, p.ga_session_id, p.cle, c.id_unique,
-    LOWER(NET.HOST(p.url_provenance)) AS provenance,
+  -- paiement ok : www.elsee.care/bienvenue-chez-elsee, app.elsee.care/success ne font qu'une
+  -- page (www.elsee.care/bienvenue-chez-elsee), sous conditions (bloc paiement de la configuration) ;
+  -- une vue qui ne les remplit pas est ignorée.
+  SELECT p.jour, p.user_pseudo_id, p.ga_session_id, p.cle, c.id_unique, p.provenance,
     ROW_NUMBER() OVER (PARTITION BY p.user_pseudo_id, p.ga_session_id
                        ORDER BY p.event_timestamp, p.batch_ordering_id, p.batch_page_id, p.batch_event_index) AS rang,
     ROW_NUMBER() OVER (PARTITION BY p.user_pseudo_id
                        ORDER BY p.event_timestamp, p.ga_session_id, p.batch_ordering_id, p.batch_page_id, p.batch_event_index) AS rang_personne
   FROM (
-    SELECT *,
-      CONCAT(LOWER(NET.HOST(url)),
-             IFNULL(NULLIF(REGEXP_REPLACE(LOWER(REGEXP_EXTRACT(url, r'^[a-zA-Z]+://[^/?#]+([^?#]*)')), r'/+$', ''), ''), '/')) AS cle
-    FROM pages
-    WHERE ga_session_id IS NOT NULL
+    SELECT * EXCEPT (cle_vue, page_avant),
+      CASE
+        WHEN cle_vue = 'www.elsee.care/bienvenue-chez-elsee' THEN IF(TRUE, 'www.elsee.care/bienvenue-chez-elsee', NULL)
+        WHEN cle_vue = 'app.elsee.care/success' THEN IF(page_avant IN UNNEST(['app.elsee.care/mon-panier', 'www.elsee.care/bienvenue-chez-elsee']) OR provenance IN UNNEST(['checkout.stripe.com']), 'www.elsee.care/bienvenue-chez-elsee', NULL)
+        ELSE cle_vue
+      END AS cle
+    FROM (
+      SELECT *,
+        LAG(cle_vue) OVER (PARTITION BY user_pseudo_id, ga_session_id
+                           ORDER BY event_timestamp, batch_ordering_id, batch_page_id, batch_event_index) AS page_avant
+      FROM (
+        SELECT *,
+          CONCAT(LOWER(NET.HOST(url)),
+                 IFNULL(NULLIF(REGEXP_REPLACE(LOWER(REGEXP_EXTRACT(url, r'^[a-zA-Z]+://[^/?#]+([^?#]*)')), r'/+$', ''), ''), '/')) AS cle_vue,
+          LOWER(NET.HOST(url_provenance)) AS provenance
+        FROM pages
+        WHERE ga_session_id IS NOT NULL
+      )
+    )
   ) AS p
   JOIN chemins AS c USING (cle)
 ),

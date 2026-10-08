@@ -122,7 +122,7 @@
       }
     },
     {
-      "id": "bienvenue_directe",
+      "id": "paiement_ok_directe",
       "chemin": "/bienvenue-chez-elsee",
       "domaine": "www.elsee.care",
       "parcours": "offre_directe",
@@ -463,7 +463,7 @@
       }
     },
     {
-      "id": "bienvenue_complements",
+      "id": "paiement_ok_complements",
       "chemin": "/bienvenue-chez-elsee",
       "domaine": "www.elsee.care",
       "parcours": "complements",
@@ -493,7 +493,7 @@
       }
     },
     {
-      "id": "bienvenue_long_form",
+      "id": "paiement_ok_long_form",
       "chemin": "/bienvenue-chez-elsee",
       "domaine": "www.elsee.care",
       "parcours": "long_form",
@@ -524,7 +524,7 @@
       }
     },
     {
-      "id": "bienvenue_carte_cadeau",
+      "id": "paiement_ok_carte_cadeau",
       "chemin": "/bienvenue-chez-elsee",
       "domaine": "www.elsee.care",
       "parcours": "carte_cadeau",
@@ -569,7 +569,7 @@
       "fleche_entree": true
     },
     {
-      "id": "bienvenue_mail",
+      "id": "paiement_ok_mail",
       "chemin": "/bienvenue-chez-elsee",
       "domaine": "www.elsee.care",
       "parcours": "mail",
@@ -620,7 +620,7 @@
     },
     {
       "de": "mon_panier_directe",
-      "vers": "bienvenue_directe",
+      "vers": "paiement_ok_directe",
       "type": "normale"
     },
     {
@@ -690,7 +690,7 @@
     },
     {
       "de": "mon_panier_complements",
-      "vers": "bienvenue_complements",
+      "vers": "paiement_ok_complements",
       "type": "normale"
     },
     {
@@ -846,7 +846,7 @@
     },
     {
       "de": "mon_panier_long_form",
-      "vers": "bienvenue_long_form",
+      "vers": "paiement_ok_long_form",
       "type": "normale"
     },
     {
@@ -861,7 +861,7 @@
     },
     {
       "de": "mon_panier_carte_cadeau",
-      "vers": "bienvenue_carte_cadeau",
+      "vers": "paiement_ok_carte_cadeau",
       "type": "normale"
     },
     {
@@ -878,7 +878,7 @@
     },
     {
       "de": "mon_panier_mail",
-      "vers": "bienvenue_mail",
+      "vers": "paiement_ok_mail",
       "type": "normale"
     }
   ],
@@ -955,6 +955,25 @@
         "detail": "Entrée directe, long form. Compté à l’arrivée sur depenses_sports, la page suivante.",
         "page": "depenses_sports",
         "apres": "en_savoir_plus_sur_vous"
+      }
+    ]
+  },
+  "paiement": {
+    "libelle": "paiement ok",
+    "page": "www.elsee.care/bienvenue-chez-elsee",
+    "pages": [
+      {
+        "page": "www.elsee.care/bienvenue-chez-elsee"
+      },
+      {
+        "page": "app.elsee.care/success",
+        "apres": [
+          "app.elsee.care/mon-panier",
+          "www.elsee.care/bienvenue-chez-elsee"
+        ],
+        "provenance": [
+          "checkout.stripe.com"
+        ]
       }
     ]
   }

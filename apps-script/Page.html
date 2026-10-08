@@ -403,7 +403,11 @@ function partEnTexte(f) {
 // ---------------------------------------------------------------------------
 // Dessin du schéma
 // ---------------------------------------------------------------------------
+// Étape de fin de paiement : plusieurs pages regroupées sous un seul nom.
+const paiement = (e) => etat.graphe.paiement && e.domaine + e.chemin === etat.graphe.paiement.page;
+
 function nomAffiche(e) {
+  if (paiement(e)) return etat.graphe.paiement.libelle;
   return e.chemin.startsWith('/signup/') ? e.chemin.slice(8) : e.chemin;
 }
 
@@ -759,14 +763,18 @@ function nomEtape(id) {
   if (!e) return id.startsWith('?') ? id.slice(1) : id;
   const p = etat.graphe.parcours[e.parcours];
   const multiples = etat.graphe.etapes.filter((x) => x.chemin === e.chemin).length > 1;
-  return e.chemin + (multiples ? ` (${p.libelle.toLowerCase()})` : '');
+  return (paiement(e) ? etat.graphe.paiement.libelle : e.chemin) + (multiples ? ` (${p.libelle.toLowerCase()})` : '');
 }
 
 function bulleEtape(e, sortiesE) {
   const a = arrivees(e.id);
   const ab = tauxAbandon(e.id);
   const c = etat.index.continuent[e.id];
-  let h = `<h3>${echapper(nomEtape(e.id))}</h3><div class="petit">${echapper(e.domaine)}</div><table>` +
+  const sousTitre = paiement(e)
+    ? 'Fin du paiement : ' + etat.graphe.paiement.pages.map((x) => x.page.slice(x.page.indexOf('/'))).join(' ou ') +
+      ' (« bienvenue » puis « success » compte une fois)'
+    : e.domaine;
+  let h = `<h3>${echapper(nomEtape(e.id))}</h3><div class="petit">${echapper(sousTitre)}</div><table>` +
     `<tr><td>Personnes arrivées</td><td class="n"><b>${nombre(a)}</b></td></tr>`;
   if (ab !== null) h += `<tr><td>Taux d’abandon</td><td class="n" style="color:#c8372d"><b>${pourcent(ab)}</b> (${nombre(a - (c || 0))} pers.)</td></tr>`;
   else if (sortiesE.length) h += `<tr><td colspan="2" class="petit">Abandon non mesurable : GA4 perd la personne entre www.elsee.care et app.elsee.care.</td></tr>`;

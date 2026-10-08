@@ -60,6 +60,8 @@ Bloc compléments
 Branche compléments alimentaires (vert)
 - /signup/recap_remboursements → /signup/bonus-abonnement → /signup/bilan → /offres → /mon-panier → /bienvenue-chez-elsee
 
+Depuis le 8 oct., la case de fin /bienvenue-chez-elsee de chaque chemin est remplacée par « paiement ok » (/bienvenue-chez-elsee ou /success : voir decisions.md).
+
 Santé mentale
 - /signup/depenses_complements_step → /signup/sante_mentale_seances
 - /signup/sante_mentale_seances → /signup/montant_sante_mentale (OUI) → /signup/md_seances

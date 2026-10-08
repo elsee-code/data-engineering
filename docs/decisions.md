@@ -20,9 +20,11 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 [`deploiement_apps_script.md`](deploiement_apps_script.md), d'abord en
 déploiement de test, et fait ses retours avant la publication.
 
-**Chemin MAIL et tableau des pages vues** (8 oct.) : la fonction BigQuery est
-à jour. Eglantine remplace `Page.html` et `Graphe.gs` dans Apps Script et
-publie une nouvelle version.
+**Paiement ok** (8 oct.) : en attente du choix d'Eglantine sur la règle (voir
+l'entrée « Paiement ok » ci-dessous) et de son accord pour remplacer la
+fonction BigQuery. Ensuite, Eglantine remplace `Page.html` et `Graphe.gs` dans
+Apps Script et publie une nouvelle version (cela met aussi en ligne le chemin
+MAIL et le nouveau tableau des pages vues, déjà dans la fonction).
 
 Autres questions :
 
@@ -37,6 +39,44 @@ Autres questions :
   l'export BigQuery. Il faudra le même export des quatre explorations sur une
   période d'au moins 7 jours couverte par l'export (au plus tôt du 5 au 11 oct.,
   disponible le 12 oct.).
+
+## 2026-10-08 — Paiement ok (Eglantine)
+
+Demande : à la place de `/bienvenue-chez-elsee` en fin de chaque chemin, une
+case « paiement ok » qui regroupe les sessions avec `/bienvenue-chez-elsee` →
+`/success` ou directement `/success`. C'est la réponse à la question posée par
+l'autre session le même jour (entrée « Ventes : une partie se termine sur
+app.elsee.care/success »).
+
+Constat (5 et 6 oct., 10 ventes réelles selon Eglantine) :
+
+- `/bienvenue-chez-elsee` : 5 personnes, toutes le 5 oct., toutes avec
+  l'événement `order_paid` ; 3 juste après `/mon-panier`, 2 en début de visite
+  sans provenance. 2 seulement continuent sur `/success`.
+- `/success` : 15 personnes. Juste après `/mon-panier`, `/bienvenue-chez-elsee`
+  ou en venant de Stripe pour la plupart ; d'autres en début de visite (souvent
+  suivies de `/homefirstvisit`, première visite de l'espace membre) ou après
+  l'espace membre, un mot de passe oublié, une page marque.
+- Selon la règle, « paiement ok » compte : 10 personnes (`/bienvenue` ou
+  `/success` juste après `/mon-panier` ou Stripe), 12 (avec toutes les
+  `/bienvenue-chez-elsee`), 15 (règle littérale : toute `/success`, ou
+  `/bienvenue` puis `/success`), 17 (en ajoutant `/success` suivie de
+  `/homefirstvisit`), 18 (toute page des deux).
+
+Mise en œuvre (à confirmer par Eglantine) : la règle à 12, qui garde les 5
+`/bienvenue-chez-elsee` (toutes avec `order_paid`) et ne garde `/success` que
+juste après `/mon-panier` ou `/bienvenue-chez-elsee`, ou en venant de Stripe.
+Les cinq cases de fin (`paiement_ok_…`, anciennement `bienvenue_…`) s'appellent
+« paiement ok » ; bloc `paiement` de la configuration, règle 1 de
+[`etape2_calcul.md`](etape2_calcul.md). Résultat : 12 personnes, dont long form
+2, compléments 1, carte cadeau 1, MAIL 8 (5 venues de `/mon-panier`, 3
+directes). Contrôle de cohérence sans écart négatif ; leads et tableau des
+pages vues inchangés. Page testée dans Chromium, aucune erreur.
+
+Tableau des pages vues : Eglantine garde la règle du jour (personnes qui
+commencent par `/signup`, `/social_signup` ou `/signup-corpo`), sans y ajouter
+les pages d'entrée de www.elsee.care (106 des 127 personnes de
+`/offres-remboursement-elsee` n'y seraient vues que sur www.elsee.care).
 
 ## 2026-10-08 — Tableau des pages vues : personnes qui commencent le formulaire (Eglantine)
 
