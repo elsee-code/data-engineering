@@ -20,13 +20,6 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 [`deploiement_apps_script.md`](deploiement_apps_script.md), d'abord en
 déploiement de test, et fait ses retours avant la publication.
 
-**Nombre leads** (8 oct.) : la fonction BigQuery est à jour (un lead par
-personne). Eglantine remplace `Page.html`, `Graphe.gs` et `Code.gs` dans Apps
-Script et publie une nouvelle version
-([`deploiement_apps_script.md`](deploiement_apps_script.md), « Mettre à jour la
-page plus tard »). Cela met aussi en ligne le tableau « Pages vues par
-personne » s'il ne l'est pas encore.
-
 Autres questions :
 
 - **Réglages GA4** (utiles pour expliquer les écarts à la recette) : mode de
@@ -71,7 +64,9 @@ Fonction BigQuery `elsee_funnel.agregats` remplacée le 8 oct., sur accord
 d'Eglantine : elle renvoie exactement les mêmes lignes que `agregats.sql` sur
 les 5 et 6 oct. (871 lignes) et sur le 6 oct. seul (514 lignes). Reste à faire
 par Eglantine : remplacer `Page.html`, `Graphe.gs` et `Code.gs` dans Apps
-Script, puis publier une nouvelle version.
+Script, puis publier une nouvelle version. **Fait par Eglantine le 8 oct.** :
+la page publiée affiche le nombre de leads (et le tableau « Pages vues par
+personne »).
 
 ## 2026-10-08 — Nombre leads (Eglantine)
 
