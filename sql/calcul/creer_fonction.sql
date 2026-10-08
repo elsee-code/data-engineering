@@ -333,12 +333,34 @@ agregats AS (
   SELECT genre, de, vers, jour, COUNT(DISTINCT user_pseudo_id)
   FROM faits GROUP BY genre, de, vers, jour
 ),
+pages_personne AS (
+  SELECT user_pseudo_id,
+    COUNT(DISTINCT cle) AS pages,
+    LOGICAL_OR(STARTS_WITH(cle, 'app.elsee.care/')) AS formulaire,
+    LOGICAL_OR(cle IN UNNEST(['app.elsee.care/mon-offre', 'app.elsee.care/offres'])) AS offre
+  FROM tunnel
+  WHERE jour BETWEEN date_debut AND date_fin
+  GROUP BY user_pseudo_id
+),
+repartition AS (
+  SELECT 'pages_vues' AS genre, CAST(pages AS STRING) AS de, CAST(NULL AS STRING) AS vers,
+    CAST(NULL AS DATE) AS jour, COUNT(*) AS utilisateurs
+  FROM pages_personne WHERE formulaire GROUP BY pages
+  UNION ALL
+  SELECT 'pages_vues_offre', CAST(pages AS STRING), NULL, NULL, COUNTIF(offre)
+  FROM pages_personne WHERE formulaire GROUP BY pages
+  UNION ALL
+  SELECT 'hors_formulaire', NULL, NULL, NULL, COUNTIF(NOT formulaire)
+  FROM pages_personne
+),
 resultat AS (
   SELECT genre, de, vers, jour,
     IF((genre = 'fleche' AND CONCAT(de, '>', vers) IN UNNEST(['obtenir_mon_offre>signup', 'offres_remboursement_elsee>signup', 'remboursement_complements_alimentaires>signup']))
        OR (genre = 'continuent' AND de IN UNNEST(['remboursement_complements_alimentaires', 'offres_remboursement_elsee', 'obtenir_mon_offre'])),
        NULL, utilisateurs) AS utilisateurs
   FROM agregats
+  UNION ALL
+  SELECT * FROM repartition
 )
 SELECT * FROM resultat
 );

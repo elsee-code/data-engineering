@@ -135,6 +135,7 @@ Les résultats sont gardés en cache quelques heures : une modification de
 | « BigQuery is not defined » | Le service BigQuery n'est pas ajouté : étape 2, rubrique **Services**. |
 | « Access Denied » ou « Permission denied » | Le compte qui a déployé n'a pas accès au projet `ga4-chemin-form` : déployer avec hello@elsee.care. |
 | « Not found: … elsee_funnel.agregats » | La fonction BigQuery a disparu : la recréer avec `sql/calcul/creer_fonction.sql` (voir `config/README.md`). |
+| « Tableau indisponible : la fonction de calcul dans BigQuery n'est pas à jour » (tableau « Pages vues par personne ») | La page est plus récente que la fonction BigQuery : recréer la fonction avec `sql/calcul/creer_fonction.sql` (voir `config/README.md`). |
 | « Les données d'hier ne sont pas encore arrivées » | Normal : GA4 envoie chaque journée dans le courant du lendemain, parfois l'après-midi (le 6 oct. est arrivé à 15 h 51). En attendant, « Hier » affiche la dernière journée disponible. |
 | Alerte « Aucune nouvelle donnée GA4 depuis le … » | L'export GA4 vers BigQuery est arrêté : dans GA4, Administration → rubrique des liaisons de produits (*Product links*) → BigQuery : vérifier que la liaison et l'export quotidien sont actifs. |
 | Alerte « Le calcul du tunnel … échoue » | Recréer la fonction avec `sql/calcul/creer_fonction.sql` (voir `config/README.md`), ou me transmettre le message. |

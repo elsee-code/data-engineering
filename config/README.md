@@ -26,6 +26,13 @@ puis régénérer les requêtes.
   - `mesurable` (facultatif, `false`) : passage impossible à mesurer, laissé
     vide par le calcul, avec la `raison` ;
   - `note` (facultatif) : explication affichée avec la flèche.
+- `pages_vues` : tableau « Pages vues par personne », à côté du schéma.
+  - `formulaire` : domaine du formulaire. Seules les personnes qui y ont vu au
+    moins une page sont comptées (les autres sont données à part) ;
+  - `offre` : `id` des étapes qui montrent son offre à la personne (colonne
+    « dont ont vu leur offre ») ;
+  - `position` : coin supérieur gauche du tableau dans le dessin (`colonne`,
+    `ligne`), dans un espace laissé libre par les étapes.
 
 Une même page peut porter plusieurs étapes, une par parcours (`/mon-offre`,
 `/mon-panier`, `/bienvenue-chez-elsee`) : l'étape est déduite de la page

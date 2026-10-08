@@ -84,6 +84,20 @@ une série jour par jour.
    comme sorties pour le taux d'abandon. Ils viennent probablement d'une page
    vue non enregistrée. Ils sont listés par le calcul (genre `saut`) pour être
    surveillés.
+9. **Pages vues par personne** (tableau à côté du schéma, ajouté le 8 oct.) :
+   pour chaque personne, nombre de pages différentes du graphe vues sur la
+   période, pages d'entrée comprises. Une page vue plusieurs fois (retour en
+   arrière, rechargement, autre jour) compte une fois ; `/mon-offre`,
+   `/mon-panier` et `/bienvenue-chez-elsee` comptent chacune pour une page,
+   quel que soit le parcours. Seules les personnes ayant vu au moins une page
+   de app.elsee.care sont comptées (genre `pages_vues`, nombre de pages dans
+   `de`) ; parmi elles, celles qui ont vu `/mon-offre` ou `/offres` (genre
+   `pages_vues_offre`). Les personnes vues seulement sur www.elsee.care sont
+   comptées à part (genre `hors_formulaire`) : GA4 les perd en passant sur le
+   formulaire, et pour la même raison la page d'entrée www manque presque
+   toujours aux personnes qui en viennent. Les pages vues sont comptées telles
+   quelles, sans les règles 2 à 4 (une visite de `/pricing/cartecadeau` suivie
+   d'un retour compte comme une page vue).
 
 ## 4. Résultats sur la journée du 5 octobre
 

@@ -44,6 +44,16 @@ for (const f of fleches) {
   if (clesFleches.has(cle)) erreurs.push(`flèche en double : ${f.de} → ${f.vers}`);
   clesFleches.add(cle);
 }
+const pagesVues = graphe.pages_vues;
+if (!pagesVues) erreurs.push("bloc pages_vues absent");
+else {
+  if (!graphe.domaines.includes(pagesVues.formulaire)) erreurs.push(`pages_vues.formulaire : domaine non retenu : ${pagesVues.formulaire}`);
+  if (!Array.isArray(pagesVues.offre) || !pagesVues.offre.length) erreurs.push("pages_vues.offre : liste d'étapes attendue");
+  else for (const id of pagesVues.offre) if (!parId.has(id)) erreurs.push(`pages_vues.offre : étape inconnue : ${id}`);
+  if (!pagesVues.position || !Number.isFinite(pagesVues.position.colonne) || !Number.isFinite(pagesVues.position.ligne)) {
+    erreurs.push("pages_vues.position : colonne et ligne attendues");
+  }
+}
 for (const e of etapes) {
   const sorties = fleches.filter((f) => f.de === e.id);
   const oui = sorties.filter((f) => f.type === "oui").length;
@@ -101,6 +111,8 @@ const sansSortieMesurable = etapes
     return s.length > 0 && s.every((f) => f.mesurable === false);
   })
   .map((e) => e.id);
+// Pages (domaine + chemin) qui montrent son offre à la personne.
+const pagesOffre = [...new Set(pagesVues.offre.map((id) => cle(parId.get(id))))];
 
 // Encodages compacts : le texte d'une fonction BigQuery est limité à 32 Ko.
 // Chaque étape a un numéro (1, 2, …) dans l'ordre de la configuration.
@@ -336,6 +348,32 @@ agregats AS (
   SELECT genre, de, vers, jour, COUNT(DISTINCT user_pseudo_id)
   FROM faits GROUP BY genre, de, vers, jour
 ),
+pages_personne AS (
+  -- Par personne, sur la période : pages différentes du graphe vues (une page
+  -- vue plusieurs fois compte une fois, entrées comprises), au moins une page
+  -- du formulaire (${pagesVues.formulaire}) vue, offre vue (${pagesOffre.join(", ")}).
+  SELECT user_pseudo_id,
+    COUNT(DISTINCT cle) AS pages,
+    LOGICAL_OR(STARTS_WITH(cle, ${q(pagesVues.formulaire + "/")})) AS formulaire,
+    LOGICAL_OR(cle IN UNNEST(${sqlTableau(pagesOffre)})) AS offre
+  FROM tunnel
+  WHERE jour BETWEEN date_debut AND date_fin
+  GROUP BY user_pseudo_id
+),
+repartition AS (
+  -- Personnes arrivées sur le formulaire, selon le nombre de pages vues (de) ;
+  -- hors_formulaire : personnes vues seulement sur les autres domaines (GA4 les
+  -- perd en passant sur le formulaire).
+  SELECT 'pages_vues' AS genre, CAST(pages AS STRING) AS de, CAST(NULL AS STRING) AS vers,
+    CAST(NULL AS DATE) AS jour, COUNT(*) AS utilisateurs
+  FROM pages_personne WHERE formulaire GROUP BY pages
+  UNION ALL
+  SELECT 'pages_vues_offre', CAST(pages AS STRING), NULL, NULL, COUNTIF(offre)
+  FROM pages_personne WHERE formulaire GROUP BY pages
+  UNION ALL
+  SELECT 'hors_formulaire', NULL, NULL, NULL, COUNTIF(NOT formulaire)
+  FROM pages_personne
+),
 resultat AS (
   -- Pas de chiffre faux : flèches non mesurables et abandons qui en dépendent
   -- laissés vides.
@@ -344,6 +382,8 @@ resultat AS (
        OR (genre = 'continuent' AND de IN UNNEST(${sqlTableau(sansSortieMesurable)})),
        NULL, utilisateurs) AS utilisateurs
   FROM agregats
+  UNION ALL
+  SELECT * FROM repartition
 )`;
 
 function sqlTableau(valeurs) {
@@ -388,6 +428,11 @@ const fichiers = {
       "  retour, autre     : retours en arrière et autres passages hors graphe",
       "  entrees_directes  : utilisateurs dont la session commence sur l'étape (contrôle)",
       "  non_rattache      : pages à plusieurs parcours sans parcours déductible (contrôle)",
+      "  pages_vues        : personnes arrivées sur le formulaire ayant vu « de » pages",
+      "                      différentes du graphe sur la période (entrées comprises)",
+      "  pages_vues_offre  : parmi elles, celles qui ont vu leur offre",
+      "  hors_formulaire   : personnes vues seulement hors du formulaire (non comptées",
+      "                      dans pages_vues)",
       "Cases vides : chiffre non mesurable (suivi www → app), à ne pas afficher.",
     ]) + declarations + `\nWITH\n${corps}\nSELECT * FROM resultat\nORDER BY genre, de, vers, jour;\n`,
 

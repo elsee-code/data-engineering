@@ -2,7 +2,7 @@
 // ne pas modifier à la main.
 const GRAPHE = {
   "version": 1,
-  "mis_a_jour_le": "2026-10-07",
+  "mis_a_jour_le": "2026-10-08",
   "source": "docs/reference/schema-tunnel.pdf (schéma du 6 oct. 2026) et réponses d'Eglantine du 6 oct.",
   "domaines": [
     "app.elsee.care",
@@ -816,5 +816,17 @@ const GRAPHE = {
       "type": "normale"
     }
   ],
-  "empreinte": "31b5223b1d"
+  "pages_vues": {
+    "formulaire": "app.elsee.care",
+    "offre": [
+      "mon_offre_directe",
+      "mon_offre_long_form",
+      "offres"
+    ],
+    "position": {
+      "colonne": 1.7,
+      "ligne": 2.6
+    }
+  },
+  "empreinte": "8c75b1dca9"
 };

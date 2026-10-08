@@ -20,6 +20,11 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 [`deploiement_apps_script.md`](deploiement_apps_script.md), d'abord en
 déploiement de test, et fait ses retours avant la publication.
 
+**Tableau « Pages vues par personne »** (8 oct.) : remplacer la fonction
+BigQuery `elsee_funnel.agregats` par la nouvelle version (sur accord
+d'Eglantine), puis Eglantine remplace `Page.html` et `Graphe.gs` dans Apps
+Script et publie une nouvelle version.
+
 Autres questions :
 
 - **Réglages GA4** (utiles pour expliquer les écarts à la recette) : mode de
@@ -33,6 +38,59 @@ Autres questions :
   l'export BigQuery. Il faudra le même export des quatre explorations sur une
   période d'au moins 7 jours couverte par l'export (au plus tôt du 5 au 11 oct.,
   disponible le 12 oct.).
+
+## 2026-10-08 — Tableau « Pages vues par personne » (Eglantine)
+
+Demande : à côté du schéma, la répartition des personnes selon le nombre total
+de pages vues, pages d'entrée comprises, pour savoir au bout de combien de
+pages les gens se lassent du questionnaire.
+
+Choix validés par Eglantine :
+
+1. **Personnes comptées : celles arrivées sur le formulaire** (au moins une
+   page de app.elsee.care). Toutes leurs pages du schéma comptent, entrées
+   comprises (`/signup-corpo`, `/social_signup`, `/signup` ; une entrée de
+   www.elsee.care seulement quand GA4 garde la personne, ce qui est rare). Les
+   personnes vues seulement sur www.elsee.care sont données à part, sous le
+   tableau : GA4 les perd en passant sur le formulaire (étape 1), elles
+   gonfleraient sinon la ligne « 1 page ».
+2. **Une page vue plusieurs fois compte une fois** : nombre de pages
+   différentes vues sur la période (jusqu'où la personne est allée).
+3. **Colonne « dont ont vu leur offre »** (`/mon-offre` ou `/offres`) : sans
+   elle, une personne qui finit en peu de pages grâce aux raccourcis NON se
+   confondrait avec une personne qui abandonne.
+
+Réalisé : bloc `pages_vues` dans [`config/graphe.json`](../config/graphe.json)
+(domaine du formulaire, étapes « offre », position du tableau), trois genres
+de plus dans le calcul (`pages_vues`, `pages_vues_offre`, `hors_formulaire` ;
+[`etape2_calcul.md`](etape2_calcul.md), règle 9), tableau dessiné dans le
+schéma, dans l'espace libre à droite de la colonne principale (il est donc
+aussi dans l'export PNG) : une ligne par nombre de pages, avec une barre
+(rouge : arrêtées sans voir leur offre ; gris : ont vu leur offre), le nombre
+de personnes, leur part, le nombre ayant vu leur offre et la part ayant vu au
+moins ce nombre de pages ; bulle d'aide sur chaque ligne. Testé en lecture
+seule sur les 5 et 6 oct. (contrôle de cohérence toujours sans écart négatif,
+fonction validée par simulation) et dans Chromium (aucune erreur). Si la page
+reçoit les chiffres de l'ancienne fonction, le tableau l'indique au lieu
+d'afficher des zéros.
+
+Premiers chiffres (5 et 6 oct., deux jours seulement : à confirmer) : 532
+personnes arrivées sur le formulaire, 155 vues seulement sur www.elsee.care.
+
+- 1 page : 116 personnes, dont 54 ont vu leur offre (retour direct sur
+  `/mon-offre` ou `/offres`, par un lien ou un e-mail).
+- **4 pages : 71 personnes, dont 64 arrêtées sans voir leur offre** ; 62
+  d'entre elles s'arrêtent sur `network_complements`, après `/signup` (ou
+  `/social_signup`), `depenses_complements` et `montant_complements`. C'est le
+  plus gros point d'arrêt.
+- 9 pages : 46 personnes, dont 44 ont vu leur offre (c'est la longueur de la
+  branche compléments jusqu'à `/offres`).
+- 23 à 28 pages : 131 personnes, presque toutes allées jusqu'à leur offre (long
+  form).
+
+Reste à faire : remplacer la fonction BigQuery (`sql/calcul/creer_fonction.sql`)
+sur accord d'Eglantine, puis mettre à jour `Page.html` et `Graphe.gs` dans Apps
+Script.
 
 ## 2026-10-08 — Premier essai de la page par Eglantine
 

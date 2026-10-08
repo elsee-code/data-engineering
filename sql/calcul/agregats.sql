@@ -11,6 +11,11 @@
 --   retour, autre     : retours en arrière et autres passages hors graphe
 --   entrees_directes  : utilisateurs dont la session commence sur l'étape (contrôle)
 --   non_rattache      : pages à plusieurs parcours sans parcours déductible (contrôle)
+--   pages_vues        : personnes arrivées sur le formulaire ayant vu « de » pages
+--                       différentes du graphe sur la période (entrées comprises)
+--   pages_vues_offre  : parmi elles, celles qui ont vu leur offre
+--   hors_formulaire   : personnes vues seulement hors du formulaire (non comptées
+--                       dans pages_vues)
 -- Cases vides : chiffre non mesurable (suivi www → app), à ne pas afficher.
 DECLARE date_debut DATE DEFAULT DATE '2026-10-05';
 DECLARE date_fin   DATE DEFAULT DATE_SUB(CURRENT_DATE('Europe/Paris'), INTERVAL 1 DAY);
@@ -402,6 +407,32 @@ agregats AS (
   SELECT genre, de, vers, jour, COUNT(DISTINCT user_pseudo_id)
   FROM faits GROUP BY genre, de, vers, jour
 ),
+pages_personne AS (
+  -- Par personne, sur la période : pages différentes du graphe vues (une page
+  -- vue plusieurs fois compte une fois, entrées comprises), au moins une page
+  -- du formulaire (app.elsee.care) vue, offre vue (app.elsee.care/mon-offre, app.elsee.care/offres).
+  SELECT user_pseudo_id,
+    COUNT(DISTINCT cle) AS pages,
+    LOGICAL_OR(STARTS_WITH(cle, 'app.elsee.care/')) AS formulaire,
+    LOGICAL_OR(cle IN UNNEST(['app.elsee.care/mon-offre', 'app.elsee.care/offres'])) AS offre
+  FROM tunnel
+  WHERE jour BETWEEN date_debut AND date_fin
+  GROUP BY user_pseudo_id
+),
+repartition AS (
+  -- Personnes arrivées sur le formulaire, selon le nombre de pages vues (de) ;
+  -- hors_formulaire : personnes vues seulement sur les autres domaines (GA4 les
+  -- perd en passant sur le formulaire).
+  SELECT 'pages_vues' AS genre, CAST(pages AS STRING) AS de, CAST(NULL AS STRING) AS vers,
+    CAST(NULL AS DATE) AS jour, COUNT(*) AS utilisateurs
+  FROM pages_personne WHERE formulaire GROUP BY pages
+  UNION ALL
+  SELECT 'pages_vues_offre', CAST(pages AS STRING), NULL, NULL, COUNTIF(offre)
+  FROM pages_personne WHERE formulaire GROUP BY pages
+  UNION ALL
+  SELECT 'hors_formulaire', NULL, NULL, NULL, COUNTIF(NOT formulaire)
+  FROM pages_personne
+),
 resultat AS (
   -- Pas de chiffre faux : flèches non mesurables et abandons qui en dépendent
   -- laissés vides.
@@ -410,6 +441,8 @@ resultat AS (
        OR (genre = 'continuent' AND de IN UNNEST(['remboursement_complements_alimentaires', 'offres_remboursement_elsee', 'obtenir_mon_offre'])),
        NULL, utilisateurs) AS utilisateurs
   FROM agregats
+  UNION ALL
+  SELECT * FROM repartition
 )
 SELECT * FROM resultat
 ORDER BY genre, de, vers, jour;

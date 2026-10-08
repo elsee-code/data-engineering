@@ -109,7 +109,8 @@
     <span><b>En gras</b> dans chaque étape : personnes arrivées sur l’étape</span>
     <span><span class="r">En rouge</span> dans chaque étape : taux d’abandon de l’étape</span>
     <span><span class="g">En gris</span> sur chaque flèche : personnes passées d’une étape à l’autre, et en % la répartition entre les sorties d’une étape qui en a plusieurs</span>
-    <span>Survolez une étape ou une flèche pour le détail</span>
+    <span>À droite, le tableau « Pages vues par personne » : jusqu’où les personnes vont dans le formulaire</span>
+    <span>Survolez une étape, une flèche ou une ligne du tableau pour le détail</span>
   </div>
   <div class="zone" id="zone">
     <div id="attente">Calcul en cours…</div>
@@ -324,9 +325,13 @@ function effacerMessages(seulementErreurs) {
 // Données
 // ---------------------------------------------------------------------------
 function indexer(d) {
-  const i = { arrivees: {}, continuent: {}, entrees: {}, fleche: {}, horsSchema: [], nonRattache: [], serie: {}, sauts: {} };
+  const i = { arrivees: {}, continuent: {}, entrees: {}, fleche: {}, horsSchema: [], nonRattache: [], serie: {}, sauts: {},
+    pagesVues: {}, horsFormulaire: null };
   for (const [genre, de, vers, n] of d.totaux) {
     if (genre === 'arrivees') i.arrivees[de] = n;
+    else if (genre === 'pages_vues') (i.pagesVues[de] = i.pagesVues[de] || {}).personnes = n;
+    else if (genre === 'pages_vues_offre') (i.pagesVues[de] = i.pagesVues[de] || {}).offre = n;
+    else if (genre === 'hors_formulaire') i.horsFormulaire = n;
     else if (genre === 'continuent') i.continuent[de] = n;
     else if (genre === 'entrees_directes') i.entrees[de] = n;
     else if (genre === 'fleche') i.fleche[de + '>' + vers] = n;
@@ -418,6 +423,9 @@ function dessiner() {
   const sorties = {};
   for (const f of g.fleches) (sorties[f.de] = sorties[f.de] || []).push(f);
   bulles.clear();
+  const tableau = tableauPagesVues(geo);
+  const largeur = Math.max(geo.largeur, tableau.droite + MARGE);
+  const hauteur = Math.max(geo.hauteur, tableau.bas + MARGE);
 
   const couleurFleche = (f) => {
     if (f.mesurable === false) return COULEUR_NON_MESURABLE;
@@ -446,8 +454,13 @@ function dessiner() {
     .nb { font-size: 12px; font-weight: 700; fill: #8c8c8c; }
     .part { font-size: 10.5px; font-weight: 600; fill: #5f5f5f; }
     .non { font-size: 10px; font-weight: 700; fill: #1a1a1a; }
+    .pv-sous { font-size: 11px; fill: #5f5f5f; }
+    .pv-tete { font-size: 10.5px; font-weight: 600; fill: #5f5f5f; }
+    .pv-n { font-size: 11.5px; fill: #1a1a1a; font-variant-numeric: tabular-nums; }
+    .pv-fond { fill: transparent; }
+    .pv-ligne:hover .pv-fond { fill: #f3f3f1; }
   </style>
-  <rect x="0" y="0" width="${geo.largeur}" height="${geo.hauteur}" fill="#ffffff"/>
+  <rect x="0" y="0" width="${largeur}" height="${hauteur}" fill="#ffffff"/>
   <defs>${couleurs.map((c) => `<marker id="${idCouleur(c)}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`).join('')}</defs>`;
 
   // Titres des parcours
@@ -500,11 +513,152 @@ function dessiner() {
     bulles.set(id, () => bulleEtape(e, sorties[e.id] || []));
   }
 
+  svg += tableau.svg;
   const el = document.getElementById('schema');
-  el.setAttribute('viewBox', `0 0 ${geo.largeur} ${geo.hauteur}`);
-  el.setAttribute('width', geo.largeur);
-  el.setAttribute('height', geo.hauteur);
+  el.setAttribute('viewBox', `0 0 ${largeur} ${hauteur}`);
+  el.setAttribute('width', largeur);
+  el.setAttribute('height', hauteur);
   el.innerHTML = svg;
+}
+
+// ---------------------------------------------------------------------------
+// Tableau à côté du schéma : personnes selon le nombre de pages vues
+// ---------------------------------------------------------------------------
+const PV_LARGEUR = 560;
+const PV_LIGNE = 18;           // hauteur d'une ligne du tableau
+const PV_BARRE = 180;          // longueur de la plus grande barre
+const COULEUR_SANS_OFFRE = '#c8372d';
+const COULEUR_OFFRE = '#a3a3a3';
+// Colonnes, depuis le bord gauche du tableau : bord droit des nombres, début de la barre.
+const PV_COL = { n: 34, barre: 46, personnes: 296, part: 346, offre: 446, auMoins: 546 };
+
+// Une ligne par nombre de pages (de 1 au maximum observé), avec le nombre de
+// personnes ayant vu au moins ce nombre de pages.
+function lignesPagesVues() {
+  const pv = etat.index.pagesVues;
+  const max = Math.max(0, ...Object.keys(pv).map(Number));
+  const total = Object.values(pv).reduce((s, l) => s + (l.personnes || 0), 0);
+  const lignes = [];
+  let auMoins = total;
+  for (let n = 1; n <= max; n++) {
+    const l = pv[n] || {};
+    lignes.push({ n, personnes: l.personnes || 0, offre: l.offre || 0, auMoins });
+    auMoins -= l.personnes || 0;
+  }
+  return { lignes, total };
+}
+
+// Part en %, « < 1 % » plutôt que « 0 % » quand il y a quelqu'un.
+const part = (x) => (x > 0 && x < 0.005 ? '< 1 %' : pourcent(x).replace(' ', ' '));
+
+function envelopper(texte, max) {
+  const lignes = [''];
+  for (const mot of texte.split(' ')) {
+    const l = lignes[lignes.length - 1];
+    if (l && (l + ' ' + mot).length > max) lignes.push(mot); else lignes[lignes.length - 1] = l ? l + ' ' + mot : mot;
+  }
+  return lignes;
+}
+
+// Barre horizontale, bout droit arrondi si demandé.
+function barre(x, y, w, h, arrondi, couleur) {
+  if (w <= 0) return '';
+  const r = arrondi ? Math.min(4, w / 2, h / 2) : 0;
+  return `<path d="M${x},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${y + h - r} Q${x + w},${y + h} ${x + w - r},${y + h} H${x} Z" fill="${couleur}"/>`;
+}
+
+function tableauPagesVues(geo) {
+  const g = etat.graphe;
+  const cfg = g.pages_vues;
+  const x0 = geo.x(cfg.position.colonne), y0 = geo.y(cfg.position.ligne);
+  const cheminsOffre = [...new Set(cfg.offre.map((id) => g.etapes.find((e) => e.id === id).chemin))];
+  const autres = g.domaines.filter((d) => d !== cfg.formulaire);
+  const { lignes, total } = lignesPagesVues();
+  const hors = etat.index.horsFormulaire;
+  let s = `<text class="titre" x="${x0}" y="${y0}" fill="#1a1a1a">PAGES VUES PAR PERSONNE</text>`;
+  let y = y0 + 20;
+  const texte = (t) => { s += `<text class="pv-sous" x="${x0}" y="${y}">${echapper(t)}</text>`; y += 14; };
+  const fin = () => ({ svg: s, droite: x0 + PV_LARGEUR, bas: y });
+
+  if (hors === null) {
+    // Résultat calculé par une ancienne version de la fonction BigQuery.
+    texte('Tableau indisponible : la fonction de calcul dans BigQuery n’est pas à jour.');
+    return fin();
+  }
+  for (const l of envelopper('Nombre de pages différentes du schéma vues par chaque personne sur la période, ' +
+    `pages d’entrée comprises. Personnes arrivées sur le formulaire (${cfg.formulaire}) : ${nombre(total)}.`, 92)) texte(l);
+  if (!total) {
+    y += 6;
+    texte('Personne n’est arrivé sur le formulaire pendant la période.');
+    return fin();
+  }
+
+  // Légende
+  y += 8;
+  for (const [couleur, libelle] of [[COULEUR_SANS_OFFRE, 'se sont arrêtées sans voir leur offre'],
+    [COULEUR_OFFRE, `ont vu leur offre (${cheminsOffre.join(' ou ')})`]]) {
+    s += `<rect x="${x0}" y="${y - 9}" width="10" height="10" rx="2" fill="${couleur}"/>` +
+      `<text class="pv-sous" x="${x0 + 16}" y="${y}">${echapper(libelle)}</text>`;
+    y += 15;
+  }
+
+  // En-tête
+  y += 8;
+  const tete = (col, l1, l2) => {
+    if (l1) s += `<text class="pv-tete" x="${x0 + col}" y="${y}" text-anchor="end">${l1}</text>`;
+    s += `<text class="pv-tete" x="${x0 + col}" y="${y + 13}" text-anchor="end">${l2}</text>`;
+  };
+  tete(PV_COL.n, 'Pages', 'vues');
+  tete(PV_COL.personnes, '', 'Personnes');
+  tete(PV_COL.part, '', '%');
+  tete(PV_COL.offre, 'dont ont vu', 'leur offre');
+  tete(PV_COL.auMoins, 'Ont vu au moins', 'ce nb de pages');
+  y += 20;
+  s += `<line x1="${x0}" x2="${x0 + PV_LARGEUR}" y1="${y}" y2="${y}" stroke="#dcdcdc" stroke-width="1"/>`;
+  y += 15;
+
+  // Lignes
+  const maxPersonnes = Math.max(...lignes.map((l) => l.personnes));
+  const echelle = PV_BARRE / maxPersonnes;
+  const nb = (col, v) => `<text class="pv-n" x="${x0 + col}" y="${y}" text-anchor="end">${v}</text>`;
+  for (const l of lignes) {
+    const sans = l.personnes - l.offre;
+    const wS = sans ? Math.max(2, sans * echelle) : 0;
+    const wO = l.offre ? Math.max(2, l.offre * echelle) : 0;
+    const xb = x0 + PV_COL.barre;
+    s += `<g class="pv-ligne" data-bulle="p:${l.n}">` +
+      `<rect class="pv-fond" x="${x0 - 4}" y="${y - 13}" width="${PV_LARGEUR + 8}" height="${PV_LIGNE}" rx="3"/>` +
+      nb(PV_COL.n, l.n) +
+      barre(xb, y - 9, wS, 10, !wO, COULEUR_SANS_OFFRE) +
+      barre(xb + wS + (wS ? 2 : 0), y - 9, wO, 10, true, COULEUR_OFFRE) +
+      nb(PV_COL.personnes, nombre(l.personnes)) +
+      nb(PV_COL.part, part(l.personnes / total)) +
+      nb(PV_COL.offre, nombre(l.offre)) +
+      nb(PV_COL.auMoins, part(l.auMoins / total)) +
+      '</g>';
+    bulles.set('p:' + l.n, () => bulleLignePages(l, total));
+    y += PV_LIGNE;
+  }
+
+  // Notes
+  y += 6;
+  for (const t of [
+    `Non comptées : ${nombre(hors)} personnes vues seulement sur ${autres.join(', ')}.`,
+    `Pour les personnes venues d’une page d’entrée de ${autres.join(', ')}, cette page manque presque toujours ` +
+      '(une page de moins) : GA4 les perd en passant sur le formulaire.',
+  ]) for (const l of envelopper(t, 92)) texte(l);
+  return fin();
+}
+
+function bulleLignePages(l, total) {
+  const pages = l.n > 1 ? `${l.n} pages différentes` : '1 seule page';
+  return `<h3>${pages}</h3>` +
+    `<div class="petit">Personnes arrivées sur le formulaire qui ont vu ${pages} du schéma sur la période.</div><table>` +
+    `<tr><td>Personnes</td><td class="n"><b>${nombre(l.personnes)}</b> (${part(l.personnes / total)})</td></tr>` +
+    `<tr><td>dont ont vu leur offre</td><td class="n">${nombre(l.offre)}</td></tr>` +
+    `<tr><td>dont se sont arrêtées sans voir leur offre</td><td class="n" style="color:#c8372d"><b>${nombre(l.personnes - l.offre)}</b></td></tr>` +
+    `<tr><td>Personnes ayant vu au moins ${l.n > 1 ? l.n + ' pages' : '1 page'}</td><td class="n">${nombre(l.auMoins)} (${part(l.auMoins / total)})</td></tr>` +
+    '</table>';
 }
 
 // Tracé d'une flèche : chemin SVG et position de l'étiquette.
