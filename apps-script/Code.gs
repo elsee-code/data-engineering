@@ -77,7 +77,7 @@ function etatDonnees_(sansCache) {
  * Chiffres du tunnel du jour debut au jour fin (inclus), au format AAAA-MM-JJ.
  * totaux : [genre, de, vers, utilisateurs] sur toute la période ;
  * jours  : [genre, de, vers, jour, utilisateurs] jour par jour (arrivées,
- *          sorties et flèches seulement, pour les courbes).
+ *          sorties, flèches et leads seulement, pour les courbes).
  */
 function lireTunnel(debut, fin) {
   verifierAcces_();
@@ -97,7 +97,7 @@ function lireTunnel(debut, fin) {
       calculeLe: new Date().toISOString(),
       totaux: lignes.filter((l) => l[3] === null).map((l) => [l[0], l[1], l[2], nombre(l[4])]),
       jours: lignes
-        .filter((l) => l[3] !== null && ['arrivees', 'continuent', 'fleche'].indexOf(l[0]) >= 0)
+        .filter((l) => l[3] !== null && ['arrivees', 'continuent', 'fleche', 'leads'].indexOf(l[0]) >= 0)
         .map((l) => [l[0], l[1], l[2], l[3], nombre(l[4])]),
     };
     ecrireCache_(cle, resultat, DUREE_CACHE_TUNNEL);
@@ -119,6 +119,8 @@ function testerInstallation() {
   const signup = arrivees.find((l) => l[1] === 'signup');
   console.log('Calcul du ' + etat.dernierJour + ' : ' + arrivees.length + ' étapes avec des arrivées, dont /signup : ' +
     (signup ? signup[3] : 0) + ' personnes.');
+  const leads = resultat.totaux.find((l) => l[0] === 'leads' && !l[1]);
+  console.log('Nombre leads : ' + (leads ? leads[3] : 'indisponible (fonction BigQuery pas à jour)') + '.');
   console.log('Installation correcte.');
 }
 

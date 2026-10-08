@@ -76,6 +76,37 @@ for (const [page, ids] of pagesMultiples) {
   }
 }
 
+// Leads : les étapes citées doivent porter seules leur page (le calcul les
+// reconnaît sans les règles de rattachement à un parcours).
+const leads = graphe.leads;
+const COORDONNEES = ["a_l_entree", "plus_tard"];
+const etapeSeule = (id, ou) => {
+  if (!parId.has(id)) erreurs.push(`${ou} : étape inconnue : ${id}`);
+  else if (parPage.get(cle(parId.get(id))).length > 1) erreurs.push(`${ou} : ${id} partage sa page avec une autre étape`);
+};
+if (!leads) erreurs.push("bloc leads absent");
+else {
+  if (!graphe.domaines.includes(leads.provenance_interne)) erreurs.push(`leads.provenance_interne : domaine non retenu : ${leads.provenance_interne}`);
+  if (!Array.isArray(leads.entrees) || !leads.entrees.length) erreurs.push("leads.entrees : liste attendue");
+  else for (const e of leads.entrees) {
+    etapeSeule(e.etape, "leads.entrees");
+    if (!COORDONNEES.includes(e.coordonnees)) erreurs.push(`leads.entrees : coordonnees inconnu pour ${e.etape} : ${e.coordonnees}`);
+    if (e.provenance !== undefined && !/^[a-z0-9.-]+$/.test(e.provenance)) erreurs.push(`leads.entrees : provenance invalide pour ${e.etape} : ${e.provenance}`);
+  }
+  if (!Array.isArray(leads.moments) || !leads.moments.length) erreurs.push("leads.moments : liste attendue");
+  else {
+    const ids = new Set();
+    for (const m of leads.moments) {
+      if (!/^[a-z0-9_]+$/.test(m.id) || ids.has(m.id)) erreurs.push(`leads.moments : id invalide ou en double : ${m.id}`);
+      ids.add(m.id);
+      if (!m.libelle) erreurs.push(`leads.moments : libellé manquant pour ${m.id}`);
+      etapeSeule(m.page, `leads.moments (${m.id})`);
+      if (m.apres !== undefined) etapeSeule(m.apres, `leads.moments (${m.id})`);
+      if (m.entree !== undefined && !COORDONNEES.includes(m.entree)) erreurs.push(`leads.moments : entree inconnue pour ${m.id} : ${m.entree}`);
+    }
+  }
+}
+
 // Fermeture transitive : (a, b) si b est plus loin que a en suivant les flèches.
 const suivants = new Map(etapes.map((e) => [e.id, fleches.filter((f) => f.de === e.id).map((f) => f.vers)]));
 const atteignables = [];
@@ -233,6 +264,7 @@ pages AS (
     user_pseudo_id,
     (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'ga_session_id') AS ga_session_id,
     (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'page_location') AS url,
+    (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'page_referrer') AS url_provenance,
     event_timestamp, batch_ordering_id, batch_page_id, batch_event_index
   FROM ${SOURCE}
   WHERE REGEXP_CONTAINS(_TABLE_SUFFIX, r'^\\d{8}$')
@@ -244,8 +276,10 @@ pages AS (
 tunnel AS (
   -- Pages du graphe seulement (domaine + chemin sans paramètres, en minuscules,
   -- sans « / » final), numérotées dans l'ordre de la session (rang) et dans
-  -- l'ordre de toutes les sessions de la personne (rang_personne).
+  -- l'ordre de toutes les sessions de la personne (rang_personne) ; provenance :
+  -- domaine de la page d'où l'on vient (leads).
   SELECT p.jour, p.user_pseudo_id, p.ga_session_id, p.cle, c.id_unique,
+    LOWER(NET.HOST(p.url_provenance)) AS provenance,
     ROW_NUMBER() OVER (PARTITION BY p.user_pseudo_id, p.ga_session_id
                        ORDER BY p.event_timestamp, p.batch_ordering_id, p.batch_page_id, p.batch_event_index) AS rang,
     ROW_NUMBER() OVER (PARTITION BY p.user_pseudo_id
@@ -374,6 +408,57 @@ repartition AS (
   SELECT 'hors_formulaire', NULL, NULL, NULL, COUNTIF(NOT formulaire)
   FROM pages_personne
 ),
+leads_pages AS (
+  -- Pages du graphe avec l'entrée de la session : coordonnées données à l'entrée
+  -- (TRUE) ou plus tard (FALSE), d'après la dernière page d'entrée vue dans la
+  -- session. Une page ouverte depuis ${leads.provenance_interne} (navigation dans le
+  -- formulaire, retour en arrière) n'est pas une nouvelle entrée.
+  SELECT *,
+    LAST_VALUE(a_l_entree IGNORE NULLS) OVER w AS entree,
+    LAG(id_unique) OVER w AS precedente
+  FROM (
+    SELECT jour, user_pseudo_id, ga_session_id, rang, rang_personne, id_unique,
+      CASE
+        WHEN provenance = ${q(leads.provenance_interne)} THEN NULL
+${leads.entrees.map((e) => `        WHEN id_unique = ${q(e.etape)}${e.provenance ? ` AND provenance = ${q(e.provenance)}` : ""} THEN ${e.coordonnees === "a_l_entree" ? "TRUE" : "FALSE"}`).join("\n")}
+      END AS a_l_entree
+    FROM tunnel
+  )
+  WINDOW w AS (PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang)
+),
+leads_periode AS (
+  -- Moments où la personne a donné ses coordonnées : chargement de la page qui
+  -- suit la saisie (GA4 ne voit pas la saisie).
+  SELECT * FROM (
+    SELECT jour, user_pseudo_id, rang_personne,
+      CASE
+${leads.moments.map((m) => `        WHEN ${[
+  `id_unique = ${q(m.page)}`,
+  m.apres ? `precedente = ${q(m.apres)}` : null,
+  m.entree === "a_l_entree" ? "entree" : m.entree === "plus_tard" ? "NOT entree" : null,
+].filter(Boolean).join(" AND ")} THEN ${q(m.id)}`).join("\n")}
+      END AS moment
+    FROM leads_pages
+  )
+  WHERE moment IS NOT NULL AND jour BETWEEN date_debut AND date_fin
+),
+leads AS (
+  -- Personnes ayant donné leurs coordonnées : total (de vide), répartition par
+  -- moment (chaque personne au premier moment de la période), jour par jour.
+  SELECT 'leads' AS genre, CAST(NULL AS STRING) AS de, CAST(NULL AS STRING) AS vers,
+    CAST(NULL AS DATE) AS jour, COUNT(DISTINCT user_pseudo_id) AS utilisateurs
+  FROM leads_periode
+  UNION ALL
+  SELECT 'leads', moment, NULL, NULL, COUNT(*)
+  FROM (
+    SELECT ARRAY_AGG(moment ORDER BY rang_personne LIMIT 1)[OFFSET(0)] AS moment
+    FROM leads_periode GROUP BY user_pseudo_id
+  )
+  GROUP BY moment
+  UNION ALL
+  SELECT 'leads', NULL, NULL, jour, COUNT(DISTINCT user_pseudo_id)
+  FROM leads_periode GROUP BY jour
+),
 resultat AS (
   -- Pas de chiffre faux : flèches non mesurables et abandons qui en dépendent
   -- laissés vides.
@@ -384,6 +469,8 @@ resultat AS (
   FROM agregats
   UNION ALL
   SELECT * FROM repartition
+  UNION ALL
+  SELECT * FROM leads
 )`;
 
 function sqlTableau(valeurs) {
@@ -433,6 +520,9 @@ const fichiers = {
       "  pages_vues_offre  : parmi elles, celles qui ont vu leur offre",
       "  hors_formulaire   : personnes vues seulement hors du formulaire (non comptées",
       "                      dans pages_vues)",
+      "  leads             : personnes ayant donné leurs coordonnées : total (de vide),",
+      "                      par moment de recueil (de = moment, chaque personne au",
+      "                      premier moment de la période), jour par jour (de vide)",
       "Cases vides : chiffre non mesurable (suivi www → app), à ne pas afficher.",
     ]) + declarations + `\nWITH\n${corps}\nSELECT * FROM resultat\nORDER BY genre, de, vers, jour;\n`,
 

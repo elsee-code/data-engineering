@@ -828,5 +828,63 @@ const GRAPHE = {
       "ligne": 2.6
     }
   },
-  "empreinte": "8c75b1dca9"
+  "leads": {
+    "provenance_interne": "app.elsee.care",
+    "entrees": [
+      {
+        "etape": "signup_corpo",
+        "coordonnees": "a_l_entree"
+      },
+      {
+        "etape": "remboursement_complements_alimentaires",
+        "coordonnees": "a_l_entree"
+      },
+      {
+        "etape": "offres_remboursement_elsee",
+        "coordonnees": "a_l_entree"
+      },
+      {
+        "etape": "obtenir_mon_offre",
+        "coordonnees": "a_l_entree"
+      },
+      {
+        "etape": "signup",
+        "provenance": "www.elsee.care",
+        "coordonnees": "a_l_entree"
+      },
+      {
+        "etape": "signup",
+        "coordonnees": "plus_tard"
+      },
+      {
+        "etape": "social_signup",
+        "coordonnees": "plus_tard"
+      }
+    ],
+    "moments": [
+      {
+        "id": "avant_depenses_complements",
+        "libelle": "Avant depenses_complements",
+        "detail": "Entrée par /obtenir-mon-offre, /offres-remboursement-elsee, /remboursement-complements-alimentaires (/signup ouverte depuis www.elsee.care) ou /signup-corpo. Compté à l’arrivée sur depenses_complements.",
+        "page": "depenses_complements",
+        "entree": "a_l_entree"
+      },
+      {
+        "id": "popup_bilan",
+        "libelle": "Pop-up avant bilan",
+        "detail": "Entrée directe (/social_signup, ou /signup ouverte sans venir de www.elsee.care), chemin compléments : pop-up entre bonus-abonnement et bilan. Compté à l’arrivée sur bilan.",
+        "page": "bilan",
+        "apres": "bonus_abonnement",
+        "entree": "plus_tard"
+      },
+      {
+        "id": "en_savoir_plus_sur_vous",
+        "libelle": "en_savoir_plus_sur_vous",
+        "detail": "Entrée directe, long form. Compté à l’arrivée sur depenses_sports, la page suivante.",
+        "page": "depenses_sports",
+        "apres": "en_savoir_plus_sur_vous"
+      }
+    ]
+  },
+  "empreinte": "027f5962f4"
 };

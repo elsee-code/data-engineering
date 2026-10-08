@@ -20,10 +20,12 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 [`deploiement_apps_script.md`](deploiement_apps_script.md), d'abord en
 déploiement de test, et fait ses retours avant la publication.
 
-**Tableau « Pages vues par personne »** (8 oct.) : la fonction BigQuery est à
-jour ; Eglantine remplace `Page.html` et `Graphe.gs` dans Apps Script et publie
-une nouvelle version ([`deploiement_apps_script.md`](deploiement_apps_script.md),
-« Mettre à jour la page plus tard »).
+**Nombre leads** (8 oct.) : en attente de l'accord d'Eglantine pour remplacer
+la fonction BigQuery `elsee_funnel.agregats`. Ensuite, et dans cet ordre,
+Eglantine remplace `Page.html`, `Graphe.gs` et `Code.gs` dans Apps Script et
+publie une nouvelle version ([`deploiement_apps_script.md`](deploiement_apps_script.md),
+« Mettre à jour la page plus tard »). Cela met aussi en ligne le tableau
+« Pages vues par personne » s'il ne l'est pas encore.
 
 Autres questions :
 
@@ -38,6 +40,71 @@ Autres questions :
   l'export BigQuery. Il faudra le même export des quatre explorations sur une
   période d'au moins 7 jours couverte par l'export (au plus tôt du 5 au 11 oct.,
   disponible le 12 oct.).
+
+## 2026-10-08 — Nombre leads (Eglantine)
+
+Demande : un encadré « Nombre leads », le nombre de personnes qui ont donné
+leurs coordonnées (e-mail) sur la période choisie.
+
+Règles validées par Eglantine (reformulation de sa demande, puis réponses à
+quatre questions) :
+
+1. **GA4 ne voit pas la saisie** : un lead est compté au chargement de la page
+   qui la suit, à l'un de trois moments selon l'entrée de la personne :
+   - entrée par `/obtenir-mon-offre`, `/offres-remboursement-elsee`,
+     `/remboursement-complements-alimentaires` ou `/signup-corpo` :
+     coordonnées données juste avant `/signup/depenses_complements`, compté à
+     l'arrivée sur cette page ;
+   - entrée directe (`/social_signup` ou `/signup`), chemin compléments :
+     pop-up entre `bonus-abonnement` et `bilan` (sans changement d'adresse),
+     compté à l'arrivée sur `bilan` ;
+   - entrée directe, long form : `en_savoir_plus_sur_vous`, compté à l'arrivée
+     sur la page suivante, `depenses_sports`.
+2. **La pop-up est obligatoire** : arriver sur `bilan` juste après
+   `bonus-abonnement` prouve que l'e-mail a été donné.
+3. **Offre directe** (`/signup → /mon-offre` sans `depenses_complements`) : ce
+   sont des personnes déjà connues, **pas comptées**.
+4. **Reconnaître l'entrée** (GA4 perd la personne entre www et app, et ne garde
+   que le domaine de la page d'où l'on vient) : `/signup` ouverte depuis
+   www.elsee.care, ou `/signup-corpo` = coordonnées déjà données ;
+   `/social_signup`, ou `/signup` ouverte sans venir de www.elsee.care (lien
+   direct, publicité, e-mail) = entrée directe.
+5. **Affichage** : encadré « Nombre leads » à côté de la période, avec une bulle
+   d'aide (répartition entre les trois moments, courbe par jour), repris dans
+   l'export PNG.
+
+Précisions de mise en œuvre ([`etape2_calcul.md`](etape2_calcul.md), règle 10) :
+l'entrée est celle de la session (dernière page d'entrée vue) ; une page
+ouverte depuis app.elsee.care (retour en arrière dans le formulaire) ne la
+change pas, si bien que `/signup-corpo → /signup` reste une entrée avec
+coordonnées. Une session sans page d'entrée (personne revenue au milieu du
+formulaire) ne compte ni à `depenses_complements` ni à `bilan`, faute de
+savoir. Une personne compte une fois sur la période ; la répartition la range à
+son premier moment, donc les trois parts font le total.
+
+Vérifié dans les données (5 et 6 oct.) : 340 personnes arrivent sur `/signup`
+depuis www.elsee.care, 8 seulement d'ailleurs ; les entrées directes passent
+surtout par `/social_signup` (90 personnes). Sur `bilan`, les 70 arrivées
+après `bonus-abonnement` se partagent entre 57 entrées avec coordonnées (pas de
+pop-up) et 13 entrées directes.
+
+Premiers chiffres (5 et 6 oct., à confirmer) : **323 leads** (178 le 5, 145 le
+6), dont 287 avant `depenses_complements` (89 %), 23 par
+`en_savoir_plus_sur_vous` (7 %) et 13 par la pop-up (4 %). 5 personnes au plus
+passent par deux moments (par exemple la pop-up, puis une nouvelle entrée par
+www.elsee.care jusqu'à `depenses_complements`) : elles comptent une fois.
+
+Réalisé : bloc `leads` dans [`config/graphe.json`](../config/graphe.json)
+(entrées, moments, libellés de la bulle), genre `leads` dans le calcul, encadré
+dans la page et dans l'export PNG, courbe par jour transmise par `Code.gs`, et
+nombre de leads affiché par `testerInstallation`. Testé : calcul en lecture
+seule sur les 5 et 6 oct., dont les 865 lignes existantes sont identiques à
+celles de la fonction en place ; page dans Chromium (ordinateur, téléphone,
+bulle, export PNG ; « indisponible » plutôt que zéro avec l'ancienne
+fonction), aucune erreur. Texte de la fonction : 22 Ko sur 32.
+
+Reste à faire : remplacer la fonction BigQuery (accord d'Eglantine attendu),
+puis mettre à jour la page dans Apps Script.
 
 ## 2026-10-08 — Tableau « Pages vues par personne » (Eglantine)
 

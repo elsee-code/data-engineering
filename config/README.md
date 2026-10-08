@@ -33,6 +33,21 @@ puis régénérer les requêtes.
     « dont ont vu leur offre ») ;
   - `position` : coin supérieur gauche du tableau dans le dessin (`colonne`,
     `ligne`), dans un espace laissé libre par les étapes.
+- `leads` : encadré « Nombre leads » (personnes qui ont donné leurs
+  coordonnées ; règle 10 de [`docs/etape2_calcul.md`](../docs/etape2_calcul.md)).
+  Les étapes citées doivent porter seules leur page.
+  - `provenance_interne` : domaine du formulaire. Une page ouverte depuis ce
+    domaine (navigation dans le formulaire) ne change pas l'entrée de la
+    session ;
+  - `entrees` : pages d'entrée, dans l'ordre (la première qui convient
+    s'applique). `etape` ; `provenance` (facultatif) : domaine de la page d'où
+    l'on vient ; `coordonnees` : `a_l_entree` (coordonnées données avant le
+    questionnaire) ou `plus_tard` ;
+  - `moments` : moments où un lead est compté. `id`, `libelle` et `detail`
+    (affichés dans la bulle d'aide) ; `page` : étape dont l'arrivée compte ;
+    `apres` (facultatif) : étape qui doit la précéder juste avant dans la
+    session ; `entree` (facultatif) : `a_l_entree` ou `plus_tard`, l'entrée que
+    doit avoir la session.
 
 Une même page peut porter plusieurs étapes, une par parcours (`/mon-offre`,
 `/mon-panier`, `/bienvenue-chez-elsee`) : l'étape est déduite de la page

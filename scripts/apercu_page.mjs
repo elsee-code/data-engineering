@@ -35,7 +35,7 @@ const donnees = {
   calculeLe: new Date().toISOString(),
   totaux: lignes.filter((l) => l[3] === "").map((l) => [l[0], l[1], valeur(l[2]), nombre(l[4])]),
   jours: lignes
-    .filter((l) => l[3] !== "" && ["arrivees", "continuent", "fleche"].includes(l[0]))
+    .filter((l) => l[3] !== "" && ["arrivees", "continuent", "fleche", "leads"].includes(l[0]))
     .map((l) => [l[0], l[1], valeur(l[2]), l[3], nombre(l[4])]),
 };
 const etat = {

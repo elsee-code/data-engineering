@@ -20,7 +20,7 @@ Un seul filtre : la période (hier, 7 jours, 28 jours, 90 jours, mois en cours, 
 Le rendu reprend la disposition du schéma : colonne principale au centre, raccourcis « NON » à droite, branche compléments alimentaires en vert à gauche, short form et offre directe en haut (bleu et jaune), points d'entrée alignés en haut à gauche.
 
 ### Hors périmètre pour l'instant
-Les sous-étapes 1 à 4 de /obtenir-mon-offre, les pop-ups (dont « POPUP LEAD ») et les marqueurs « LEAD » du schéma. Ne pas les traiter, mais garder une configuration qui permettra de les ajouter plus tard.
+Les sous-étapes 1 à 4 de /obtenir-mon-offre, les pop-ups (dont « POPUP LEAD ») et les marqueurs « LEAD » du schéma. Ne pas les traiter, mais garder une configuration qui permettra de les ajouter plus tard. (Depuis le 8 oct., la page affiche le nombre de leads, sans les dessiner : voir decisions.md.)
 
 ### Contexte (à vérifier, ne rien tenir pour acquis)
 - Le formulaire est sur elsee.care ; l'offre, le panier et le paiement sur app.elsee.care. Le suivi inter-domaines est configuré dans GA4 : vérifier dans les données qu'une même session continue bien d'un domaine à l'autre.

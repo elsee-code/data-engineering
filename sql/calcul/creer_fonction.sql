@@ -148,6 +148,7 @@ pages AS (
     user_pseudo_id,
     (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'ga_session_id') AS ga_session_id,
     (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'page_location') AS url,
+    (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'page_referrer') AS url_provenance,
     event_timestamp, batch_ordering_id, batch_page_id, batch_event_index
   FROM `ga4-chemin-form.analytics_383563328.events_*`
   WHERE REGEXP_CONTAINS(_TABLE_SUFFIX, r'^\d{8}$')
@@ -158,6 +159,7 @@ pages AS (
 ),
 tunnel AS (
   SELECT p.jour, p.user_pseudo_id, p.ga_session_id, p.cle, c.id_unique,
+    LOWER(NET.HOST(p.url_provenance)) AS provenance,
     ROW_NUMBER() OVER (PARTITION BY p.user_pseudo_id, p.ga_session_id
                        ORDER BY p.event_timestamp, p.batch_ordering_id, p.batch_page_id, p.batch_event_index) AS rang,
     ROW_NUMBER() OVER (PARTITION BY p.user_pseudo_id
@@ -353,6 +355,53 @@ repartition AS (
   SELECT 'hors_formulaire', NULL, NULL, NULL, COUNTIF(NOT formulaire)
   FROM pages_personne
 ),
+leads_pages AS (
+  SELECT *,
+    LAST_VALUE(a_l_entree IGNORE NULLS) OVER w AS entree,
+    LAG(id_unique) OVER w AS precedente
+  FROM (
+    SELECT jour, user_pseudo_id, ga_session_id, rang, rang_personne, id_unique,
+      CASE
+        WHEN provenance = 'app.elsee.care' THEN NULL
+        WHEN id_unique = 'signup_corpo' THEN TRUE
+        WHEN id_unique = 'remboursement_complements_alimentaires' THEN TRUE
+        WHEN id_unique = 'offres_remboursement_elsee' THEN TRUE
+        WHEN id_unique = 'obtenir_mon_offre' THEN TRUE
+        WHEN id_unique = 'signup' AND provenance = 'www.elsee.care' THEN TRUE
+        WHEN id_unique = 'signup' THEN FALSE
+        WHEN id_unique = 'social_signup' THEN FALSE
+      END AS a_l_entree
+    FROM tunnel
+  )
+  WINDOW w AS (PARTITION BY user_pseudo_id, ga_session_id ORDER BY rang)
+),
+leads_periode AS (
+  SELECT * FROM (
+    SELECT jour, user_pseudo_id, rang_personne,
+      CASE
+        WHEN id_unique = 'depenses_complements' AND entree THEN 'avant_depenses_complements'
+        WHEN id_unique = 'bilan' AND precedente = 'bonus_abonnement' AND NOT entree THEN 'popup_bilan'
+        WHEN id_unique = 'depenses_sports' AND precedente = 'en_savoir_plus_sur_vous' THEN 'en_savoir_plus_sur_vous'
+      END AS moment
+    FROM leads_pages
+  )
+  WHERE moment IS NOT NULL AND jour BETWEEN date_debut AND date_fin
+),
+leads AS (
+  SELECT 'leads' AS genre, CAST(NULL AS STRING) AS de, CAST(NULL AS STRING) AS vers,
+    CAST(NULL AS DATE) AS jour, COUNT(DISTINCT user_pseudo_id) AS utilisateurs
+  FROM leads_periode
+  UNION ALL
+  SELECT 'leads', moment, NULL, NULL, COUNT(*)
+  FROM (
+    SELECT ARRAY_AGG(moment ORDER BY rang_personne LIMIT 1)[OFFSET(0)] AS moment
+    FROM leads_periode GROUP BY user_pseudo_id
+  )
+  GROUP BY moment
+  UNION ALL
+  SELECT 'leads', NULL, NULL, jour, COUNT(DISTINCT user_pseudo_id)
+  FROM leads_periode GROUP BY jour
+),
 resultat AS (
   SELECT genre, de, vers, jour,
     IF((genre = 'fleche' AND CONCAT(de, '>', vers) IN UNNEST(['obtenir_mon_offre>signup', 'offres_remboursement_elsee>signup', 'remboursement_complements_alimentaires>signup']))
@@ -361,6 +410,8 @@ resultat AS (
   FROM agregats
   UNION ALL
   SELECT * FROM repartition
+  UNION ALL
+  SELECT * FROM leads
 )
 SELECT * FROM resultat
 );

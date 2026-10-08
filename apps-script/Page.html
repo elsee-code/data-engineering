@@ -42,7 +42,14 @@
   .libre { display: none; align-items: center; gap: 6px; font-size: 13px; }
   .libre.visible { display: flex; }
   .libre input { font: inherit; font-size: 13px; padding: 4px 6px; border: 1px solid var(--trait); border-radius: 6px; }
-  .infos { margin-top: 8px; font-size: 12.5px; color: var(--doux); display: flex; flex-wrap: wrap; gap: 4px 16px; }
+  .infos { margin-top: 8px; font-size: 12.5px; color: var(--doux); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
+  .leads {
+    display: inline-flex; align-items: baseline; gap: 6px; cursor: help;
+    border: 1px solid var(--trait); border-radius: 8px; padding: 2px 10px;
+    background: var(--fond-2); color: var(--texte); font-size: 13px;
+  }
+  .leads b { font-size: 15px; font-variant-numeric: tabular-nums; }
+  .leads[hidden] { display: none; }
   .messages { padding: 0 16px; }
   .message {
     margin-top: 10px; padding: 8px 12px; border-radius: 8px; font-size: 13px;
@@ -100,6 +107,7 @@
   </div>
   <div class="infos">
     <span id="info-periode">Chargement…</span>
+    <span class="leads" id="leads" data-bulle="leads" hidden>Nombre leads <b id="leads-n">…</b></span>
     <span id="info-donnees"></span>
   </div>
 </header>
@@ -110,7 +118,8 @@
     <span><span class="r">En rouge</span> dans chaque étape : taux d’abandon de l’étape</span>
     <span><span class="g">En gris</span> sur chaque flèche : personnes passées d’une étape à l’autre, et en % la répartition entre les sorties d’une étape qui en a plusieurs</span>
     <span>À droite, le tableau « Pages vues par personne » : jusqu’où les personnes vont dans le formulaire</span>
-    <span>Survolez une étape, une flèche ou une ligne du tableau pour le détail</span>
+    <span>En haut, « Nombre leads » : personnes qui ont donné leurs coordonnées sur la période</span>
+    <span>Survolez une étape, une flèche, une ligne du tableau ou le nombre de leads pour le détail</span>
   </div>
   <div class="zone" id="zone">
     <div id="attente">Calcul en cours…</div>
@@ -256,6 +265,7 @@ function vider(texte) {
   document.getElementById('zone').classList.remove('chargement');
   document.getElementById('zone').hidden = true;
   document.getElementById('details').hidden = true;
+  document.getElementById('leads').hidden = true;
   document.getElementById('export').disabled = true;
   document.getElementById('bulle').style.display = 'none';
 }
@@ -284,6 +294,9 @@ function charger(debutDemande, finDemandee, libelle) {
     (tronquee ? ` · période ramenée aux jours disponibles (demandée : ${periodeEnTexte(debutDemande, finDemandee)})` : '');
   document.getElementById('zone').classList.add('chargement');
   document.getElementById('export').disabled = true;
+  document.getElementById('leads').hidden = false;
+  document.getElementById('leads-n').textContent = '…';
+  bulles.delete('leads');
   const numero = ++etat.demande;
   google.script.run
     .withSuccessHandler((donnees) => { if (numero === etat.demande) afficher(donnees); })
@@ -298,6 +311,8 @@ function afficher(donnees) {
   document.getElementById('zone').hidden = false;
   document.getElementById('details').hidden = false;
   document.getElementById('export').disabled = false;
+  const total = etat.index.leads.total;
+  document.getElementById('leads-n').textContent = total === null ? 'indisponible' : nombre(total);
   dessiner();
   remplirDetails();
 }
@@ -326,9 +341,10 @@ function effacerMessages(seulementErreurs) {
 // ---------------------------------------------------------------------------
 function indexer(d) {
   const i = { arrivees: {}, continuent: {}, entrees: {}, fleche: {}, horsSchema: [], nonRattache: [], serie: {}, sauts: {},
-    pagesVues: {}, horsFormulaire: null };
+    pagesVues: {}, horsFormulaire: null, leads: { total: null, moments: {}, serie: {} } };
   for (const [genre, de, vers, n] of d.totaux) {
     if (genre === 'arrivees') i.arrivees[de] = n;
+    else if (genre === 'leads') { if (de) i.leads.moments[de] = n; else i.leads.total = n; }
     else if (genre === 'pages_vues') (i.pagesVues[de] = i.pagesVues[de] || {}).personnes = n;
     else if (genre === 'pages_vues_offre') (i.pagesVues[de] = i.pagesVues[de] || {}).offre = n;
     else if (genre === 'hors_formulaire') i.horsFormulaire = n;
@@ -343,6 +359,7 @@ function indexer(d) {
   }
   for (const [genre, de, , jour, n] of d.jours) {
     if (genre === 'arrivees') (i.serie[de] = i.serie[de] || {})[jour] = n;
+    else if (genre === 'leads' && !de) i.leads.serie[jour] = n;
   }
   return i;
 }
@@ -423,6 +440,7 @@ function dessiner() {
   const sorties = {};
   for (const f of g.fleches) (sorties[f.de] = sorties[f.de] || []).push(f);
   bulles.clear();
+  bulles.set('leads', bulleLeads);
   const tableau = tableauPagesVues(geo);
   const largeur = Math.max(geo.largeur, tableau.droite + MARGE);
   const hauteur = Math.max(geo.hauteur, tableau.bas + MARGE);
@@ -755,18 +773,40 @@ function bulleFleche(f, sortiesA) {
   return h;
 }
 
+// Nombre leads : personnes qui ont donné leurs coordonnées, par moment de recueil.
+function bulleLeads() {
+  const l = etat.index.leads;
+  let h = '<h3>Nombre leads</h3>';
+  if (l.total === null) return h + '<div>Indisponible : la fonction de calcul dans BigQuery n’est pas à jour.</div>';
+  h += '<div class="petit">Personnes qui ont donné leurs coordonnées (e-mail) sur la période. GA4 ne voit pas la saisie : ' +
+    'chaque lead est compté à l’arrivée sur la page qui la suit.</div><table>' +
+    `<tr><td>Personnes</td><td class="n"><b>${nombre(l.total)}</b></td></tr>`;
+  const moments = (etat.graphe.leads || {}).moments || [];
+  const parts = repartir(moments.map((m) => l.moments[m.id] || 0));
+  moments.forEach((m, k) => {
+    h += `<tr><td>${echapper(m.libelle)}<div class="petit">${echapper(m.detail || '')}</div></td>` +
+      `<td class="n">${nombre(l.moments[m.id] || 0)}${parts[k] === null ? '' : ` (${parts[k]}\u202f%)`}</td></tr>`;
+  });
+  h += '</table><div class="petit" style="margin-top:6px">Une personne compte une fois, au premier de ces moments sur la période. ' +
+    'GA4 ne voit que les personnes qui acceptent les cookies : ce nombre est plus bas que celui des contacts reçus.</div>';
+  return h + courbeSerie(l.serie, 'Leads par jour');
+}
+
 // Petite courbe des arrivées jour par jour.
 function courbe(id) {
+  return courbeSerie(etat.index.serie[id] || {}, 'Arrivées par jour');
+}
+
+function courbeSerie(serie, titre) {
   const p = etat.periode;
   const jours = nbJours(p.debut, p.fin);
   if (jours < 2) return '';
-  const serie = etat.index.serie[id] || {};
   const valeurs = [];
   for (let i = 0; i < jours; i++) valeurs.push(serie[ajouterJours(p.debut, i)] || 0);
   const max = Math.max(1, ...valeurs);
   const L = 280, H = 46;
   const pts = valeurs.map((v, i) => `${(i / (jours - 1)) * L},${H - (v / max) * H}`).join(' ');
-  return `<div class="petit" style="margin-top:6px">Arrivées par jour (max ${nombre(Math.max(...valeurs))})</div>` +
+  return `<div class="petit" style="margin-top:6px">${titre} (max ${nombre(Math.max(...valeurs))})</div>` +
     `<svg width="${L}" height="${H + 14}" viewBox="0 -2 ${L} ${H + 16}"><polyline points="${pts}" fill="none" stroke="#1a1a1a" stroke-width="1.5"/>` +
     `<text x="0" y="${H + 12}" font-size="10" fill="#8c8c8c">${dateCourte(p.debut)}</text>` +
     `<text x="${L}" y="${H + 12}" font-size="10" fill="#8c8c8c" text-anchor="end">${dateCourte(p.fin)}</text></svg>`;
@@ -786,19 +826,21 @@ function montrerBulle(cible, x, y) {
   bulle.style.top = top + 'px';
 }
 const schema = document.getElementById('schema');
-schema.addEventListener('mousemove', (ev) => {
-  if (bulleFixe) return;
-  const cible = ev.target.closest('[data-bulle]');
-  if (cible) montrerBulle(cible, ev.clientX, ev.clientY); else bulle.style.display = 'none';
-});
-schema.addEventListener('mouseleave', () => { if (!bulleFixe) bulle.style.display = 'none'; });
-// Sur écran tactile : un appui affiche la bulle, un autre la ferme.
-schema.addEventListener('click', (ev) => {
-  const cible = ev.target.closest('[data-bulle]');
-  if (bulleFixe && bulleFixe === cible) { bulleFixe = null; bulle.style.display = 'none'; return; }
-  bulleFixe = cible || null;
-  if (cible) montrerBulle(cible, ev.clientX, ev.clientY); else bulle.style.display = 'none';
-});
+for (const zoneBulles of [schema, document.getElementById('leads')]) {
+  zoneBulles.addEventListener('mousemove', (ev) => {
+    if (bulleFixe) return;
+    const cible = ev.target.closest('[data-bulle]');
+    if (cible) montrerBulle(cible, ev.clientX, ev.clientY); else bulle.style.display = 'none';
+  });
+  zoneBulles.addEventListener('mouseleave', () => { if (!bulleFixe) bulle.style.display = 'none'; });
+  // Sur écran tactile : un appui affiche la bulle, un autre la ferme.
+  zoneBulles.addEventListener('click', (ev) => {
+    const cible = ev.target.closest('[data-bulle]');
+    if (bulleFixe && bulleFixe === cible) { bulleFixe = null; bulle.style.display = 'none'; return; }
+    bulleFixe = cible || null;
+    if (cible) montrerBulle(cible, ev.clientX, ev.clientY); else bulle.style.display = 'none';
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Détails et contrôles
@@ -852,6 +894,18 @@ function exporterPng() {
     ctx.font = '13px -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif';
     ctx.fillStyle = '#5f5f5f';
     ctx.fillText(`Du ${dateLisible(p.debut)} au ${dateLisible(p.fin)} · personnes distinctes · source GA4 (BigQuery)`, MARGE, 44);
+    const leads = etat.index.leads.total;
+    if (leads !== null) {
+      // Nombre leads, en haut à droite.
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#1a1a1a';
+      ctx.font = '700 16px -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif';
+      ctx.fillText(`Nombre leads : ${nombre(leads)}`, largeur - MARGE, 26);
+      ctx.font = '13px -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif';
+      ctx.fillStyle = '#5f5f5f';
+      ctx.fillText('personnes qui ont donné leurs coordonnées', largeur - MARGE, 44);
+      ctx.textAlign = 'left';
+    }
     ctx.drawImage(image, 0, entete, largeur, hauteur);
     const url = canvas.toDataURL('image/png');
     document.getElementById('apercu-image').src = url;

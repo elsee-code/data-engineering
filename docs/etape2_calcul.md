@@ -37,7 +37,8 @@
   ainsi que le taux d'abandon de ces trois pages : **aucun chiffre faux**.
 - Hors périmètre, comme prévu : sous-étapes 1 à 4 de `/obtenir-mon-offre`,
   pop-ups (dont le recueil des coordonnées entre `bonus-abonnement` et `bilan`,
-  sans changement d'adresse), marqueurs LEAD.
+  sans changement d'adresse), marqueurs LEAD. Le nombre de leads est compté
+  depuis le 8 oct. (règle 10), sans rien ajouter au dessin.
 
 ## 3. Règles de calcul
 
@@ -98,6 +99,40 @@ une série jour par jour.
    toujours aux personnes qui en viennent. Les pages vues sont comptées telles
    quelles, sans les règles 2 à 4 (une visite de `/pricing/cartecadeau` suivie
    d'un retour compte comme une page vue).
+10. **Nombre leads** (encadré à côté de la période, ajouté le 8 oct.) :
+    personnes qui ont donné leurs coordonnées (e-mail) sur la période. GA4 ne
+    voit pas la saisie : un lead est compté au chargement de la page qui la
+    suit, à l'un de ces trois moments (bloc `leads` de la configuration) :
+    1. **avant `depenses_complements`** : arrivée sur
+       `/signup/depenses_complements` dans une session entrée **avec
+       coordonnées** ;
+    2. **pop-up avant `bilan`** (obligatoire) : arrivée sur `/signup/bilan`
+       juste après `/signup/bonus-abonnement`, dans une session entrée **sans
+       coordonnées** ;
+    3. **`en_savoir_plus_sur_vous`** : arrivée sur `/signup/depenses_sports`
+       juste après `/signup/en_savoir_plus_sur_vous`, quelle que soit l'entrée
+       (la page n'est montrée qu'aux personnes sans coordonnées).
+
+    L'entrée de la session est la dernière page d'entrée vue dans la session :
+    avec coordonnées pour `/signup-corpo`, `/obtenir-mon-offre`,
+    `/offres-remboursement-elsee`, `/remboursement-complements-alimentaires` et
+    `/signup` ouverte depuis www.elsee.care (GA4 ne garde que le domaine de la
+    page d'où l'on vient) ; sans coordonnées pour `/social_signup` et `/signup`
+    ouverte d'ailleurs (lien direct, publicité, e-mail). Une page ouverte depuis
+    app.elsee.care (navigation dans le formulaire, retour en arrière) ne change
+    pas l'entrée : `/signup-corpo → /signup` reste une entrée avec coordonnées.
+    Une session sans page d'entrée (personne revenue au milieu du formulaire)
+    ne compte pas aux moments 1 et 2 : on ne sait pas si elle avait déjà donné
+    ses coordonnées. L'offre directe (`/signup → /mon-offre`) ne compte pas :
+    ce sont des personnes déjà connues.
+
+    Une personne compte une fois sur la période (genre `leads`, `de` vide) ;
+    la répartition par moment (`de` = moment) range chaque personne à son
+    premier moment de la période, si bien que les trois parts font le total.
+    Jour par jour (`de` vide, `jour` rempli) : personnes ayant donné leurs
+    coordonnées ce jour-là. Une personne qui les redonne lors d'une visite
+    ultérieure (nouvelle entrée par www.elsee.care, par exemple) compte à
+    nouveau sur une période qui ne contient que cette visite.
 
 ## 4. Résultats sur la journée du 5 octobre
 
@@ -143,7 +178,7 @@ datasets.
 
 - Le texte d'une fonction BigQuery est limité à 32 Ko : le générateur décrit
   donc le graphe de façon compacte et refuse de produire une fonction trop
-  longue (19 Ko aujourd'hui, pour 48 étapes).
+  longue (22 Ko depuis l'ajout des leads le 8 oct., pour 48 étapes).
 - Coût : la fonction lit les 60 jours qui précèdent la période (règle 2.3),
   soit environ 6 Mo par jour de données, au plus 370 Mo par appel. Le quota
   gratuit du bac à sable (1 To par mois) permet plus de 2 500 appels par mois ;
