@@ -34,6 +34,26 @@ Autres questions :
   période d'au moins 7 jours couverte par l'export (au plus tôt du 5 au 11 oct.,
   disponible le 12 oct.).
 
+## 2026-10-08 — Premier essai de la page par Eglantine
+
+La page tourne dans Apps Script avec les données des 5 et 6 oct. Corrigé après
+son essai :
+
+- « Hier » quand la journée d'hier n'est pas encore arrivée : la page affiche
+  la dernière journée disponible (« Dernière journée disponible : le … »), au
+  lieu d'une erreur sous le schéma d'une autre période.
+- Période sans données (ex. « Mois précédent », avant le début de l'export) ou
+  invalide : le schéma est masqué et l'en-tête indique la période choisie.
+- « Période libre » s'affiche dès le clic.
+- La table du 6 oct. est arrivée à 15 h 51 (celle du 5 à 10 h 06) : le message
+  ne dit plus « dans la matinée » mais « dans le courant du lendemain, parfois
+  l'après-midi ». La vérification de 15 h tolère un jour de retard : pas
+  d'alerte pour cela.
+- Contrôle de cohérence sur les 5 et 6 oct. : aucun écart négatif. Aucune
+  inscription (`/bienvenue-chez-elsee`, 5 personnes) n'est encore rattachée à un
+  parcours : aucune de ces personnes n'a de visite du tunnel dans l'export
+  avant son inscription (elles ont dû remplir le formulaire avant le 5 oct.).
+
 ## 2026-10-07 — Alertes (étape 4)
 
 Eglantine : alertes à **hello@elsee.care**, **seulement en cas de gros

@@ -8,14 +8,15 @@
 //     FROM `ga4-chemin-form.elsee_funnel.agregats`(DATE "…", DATE "…")'
 // Le CSV ne contient que des agrégats : aucun identifiant de personne.
 //
-// Usage : node scripts/apercu_page.mjs agregats.csv premier-jour dernier-jour sortie.html
-// La page s'ouvre sur « 7 jours », ramenée aux jours disponibles.
+// Usage : node scripts/apercu_page.mjs agregats.csv premier-jour dernier-jour sortie.html [aujourd'hui]
+// La page s'ouvre sur « 7 jours », ramenée aux jours disponibles. Par défaut,
+// aujourd'hui = lendemain du dernier jour (les données d'hier sont arrivées).
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const [csv, premierJour, dernierJour, sortie] = process.argv.slice(2);
+const [csv, premierJour, dernierJour, sortie, aujourdhuiImpose] = process.argv.slice(2);
 if (!sortie) {
   console.error("Usage : node scripts/apercu_page.mjs agregats.csv premier-jour dernier-jour sortie.html");
   process.exit(1);
@@ -42,7 +43,7 @@ const etat = {
   premierJour,
   dernierJour,
   miseAJour: new Date().toISOString(),
-  aujourdhui: new Date(Date.parse(dernierJour) + 86400000).toISOString().slice(0, 10),
+  aujourdhui: aujourdhuiImpose || new Date(Date.parse(dernierJour) + 86400000).toISOString().slice(0, 10),
 };
 
 const imitation = `<script>

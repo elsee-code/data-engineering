@@ -155,8 +155,9 @@ const versDate = (s) => new Date(s + 'T00:00:00Z');
 const versTexte = (d) => d.toISOString().slice(0, 10);
 const ajouterJours = (s, n) => { const d = versDate(s); d.setUTCDate(d.getUTCDate() + n); return versTexte(d); };
 const debutMois = (s) => s.slice(0, 8) + '01';
-const dateLisible = (s) => versDate(s).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-const dateCourte = (s) => versDate(s).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+const premier = (texte) => texte.replace(/^1 /, '1er ');
+const dateLisible = (s) => premier(versDate(s).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }));
+const dateCourte = (s) => premier(versDate(s).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', timeZone: 'UTC' }));
 const nbJours = (d, f) => Math.round((versDate(f) - versDate(d)) / 86400000) + 1;
 
 const PERIODES = [
@@ -199,7 +200,7 @@ function recevoirEtat(serveur) {
     if (serveur.dernierJour) champ.max = serveur.dernierJour;
   }
   document.getElementById('libre-ok').addEventListener('click', () => {
-    if (debut.value && fin.value) charger(debut.value, fin.value);
+    if (debut.value && fin.value) charger(debut.value, fin.value, 'Période libre');
   });
   document.getElementById('export').addEventListener('click', exporterPng);
   document.getElementById('apercu-fermer').addEventListener('click', () => document.getElementById('apercu').classList.remove('visible'));
@@ -215,7 +216,7 @@ function recevoirEtat(serveur) {
     (recu ? ` (dernière mise à jour reçue le ${recu})` : '');
   if (serveur.dernierJour < hier) {
     afficherMessage(`Les données d’hier (${dateLisible(hier)}) ne sont pas encore arrivées : ` +
-      `GA4 les envoie en général dans la matinée. Dernière journée disponible : ${dateLisible(serveur.dernierJour)}.`);
+      `GA4 envoie chaque journée dans le courant du lendemain, parfois l’après-midi. Dernière journée disponible : ${dateLisible(serveur.dernierJour)}.`);
   }
   choisirPeriode('7j');
 }
@@ -230,31 +231,56 @@ function choisirPeriode(cle) {
     const fin = document.getElementById('libre-fin');
     if (!fin.value) fin.value = etat.serveur.dernierJour;
     if (!debut.value) debut.value = ajouterJours(fin.value, -6) < etat.serveur.premierJour ? etat.serveur.premierJour : ajouterJours(fin.value, -6);
+    charger(debut.value, fin.value, p.libelle);
     return;
   }
-  const [debut, fin] = p.calcul(etat.serveur.aujourdhui);
-  charger(debut, fin, p.libelle);
+  let [debut, fin] = p.calcul(etat.serveur.aujourdhui);
+  let libelle = p.libelle;
+  if (cle === 'hier' && debut > etat.serveur.dernierJour) {
+    // Les données d'hier ne sont pas encore arrivées : dernière journée disponible.
+    debut = fin = etat.serveur.dernierJour;
+    libelle = 'Dernière journée disponible';
+  }
+  charger(debut, fin, libelle);
+}
+
+const periodeEnTexte = (d, f) => (d === f ? `le ${dateLisible(d)}` : `du ${dateLisible(d)} au ${dateLisible(f)}`);
+
+// Pas de schéma à montrer (période vide ou invalide) : on le masque plutôt que
+// de laisser celui d'une autre période.
+function vider(texte) {
+  etat.demande++;
+  etat.periode = null;
+  document.getElementById('info-periode').innerHTML = texte;
+  document.getElementById('zone').classList.remove('chargement');
+  document.getElementById('zone').hidden = true;
+  document.getElementById('details').hidden = true;
+  document.getElementById('export').disabled = true;
+  document.getElementById('bulle').style.display = 'none';
 }
 
 function charger(debutDemande, finDemandee, libelle) {
   effacerMessages(true);
   const s = etat.serveur;
+  const titre = libelle ? libelle + ' : ' : '';
   if (debutDemande > finDemandee) {
+    vider(`<b>${titre}période invalide</b>`);
     afficherMessage('La date de début doit précéder la date de fin.', true);
     return;
   }
   const debut = debutDemande < s.premierJour ? s.premierJour : debutDemande;
   const fin = finDemandee > s.dernierJour ? s.dernierJour : finDemandee;
   if (debut > fin) {
+    vider(`<b>${titre}${periodeEnTexte(debutDemande, finDemandee)}</b> · aucune donnée`);
     afficherMessage(`Aucune donnée sur cette période. Données disponibles du ${dateLisible(s.premierJour)} au ${dateLisible(s.dernierJour)}.`, true);
     return;
   }
   etat.periode = { debut, fin, libelle };
   const tronquee = debut !== debutDemande || fin !== finDemandee;
   document.getElementById('info-periode').innerHTML =
-    `<b>${libelle ? libelle + ' : ' : ''}du ${dateLisible(debut)} au ${dateLisible(fin)}</b>` +
-    ` (${nbJours(debut, fin)} jour${nbJours(debut, fin) > 1 ? 's' : ''})` +
-    (tronquee ? ` · période ramenée aux jours disponibles (demandée : du ${dateLisible(debutDemande)} au ${dateLisible(finDemandee)})` : '');
+    `<b>${titre}${periodeEnTexte(debut, fin)}</b>` +
+    (debut !== fin ? ` (${nbJours(debut, fin)} jours)` : '') +
+    (tronquee ? ` · période ramenée aux jours disponibles (demandée : ${periodeEnTexte(debutDemande, finDemandee)})` : '');
   document.getElementById('zone').classList.add('chargement');
   document.getElementById('export').disabled = true;
   const numero = ++etat.demande;
@@ -268,6 +294,8 @@ function afficher(donnees) {
   etat.donnees = donnees;
   etat.index = indexer(donnees);
   document.getElementById('zone').classList.remove('chargement');
+  document.getElementById('zone').hidden = false;
+  document.getElementById('details').hidden = false;
   document.getElementById('export').disabled = false;
   dessiner();
   remplirDetails();
