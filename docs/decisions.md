@@ -57,9 +57,13 @@ Le plus récent en haut.
     partie des personnes de la page 4 est passée sur `/signup` (remarque
     d'Eglantine).
 
-  Les 5 – 7 oct. : page 1 122 (abandon 52 %), page 2 67 (dont 12 sans page 1
-  vue par GA4, sans doute des cookies acceptés en cours de formulaire), page 3
-  62, page 4 62. Le reste du calcul est identique ; contrôle de cohérence sans
+  Précision d'Eglantine : atteindre une page, c'est avoir vu toutes celles
+  d'avant. Les personnes arrivées à la page 2 sans que GA4 ait vu leur page 1
+  (12, sans doute des cookies acceptés en cours de formulaire) comptent donc
+  aussi à la page 1 et dans le passage page 1 → page 2.
+
+  Les 5 – 7 oct. : page 1 134 (abandon 48 %), page 2 67 (abandon 7 %), page 3
+  62 (0 %), page 4 62. Le reste du calcul est identique ; contrôle de cohérence sans
   écart négatif sur les 61 étapes. Fonction BigQuery à remplacer avec l'accord
   d'Eglantine, puis `Page.html` et `Graphe.gs` à remplacer dans Apps Script.
 - **Encadré « Clients »** à côté du nombre de leads : personnes arrivées sur

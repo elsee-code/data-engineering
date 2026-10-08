@@ -577,7 +577,7 @@ periode AS (
 sous_etapes AS (
   -- Pages de www.elsee.care/obtenir-mon-offre suivies par l'événement step_form (paramètre
   -- form_derniere_page) : m = rang de la page la plus loin atteinte ce jour-là,
-  -- vu = la première page a été vue par GA4 (page_view) ce jour-là.
+  -- vu = la première page a aussi été vue par GA4 (page_view) ce jour-là.
   SELECT s.jour, s.user_pseudo_id, MAX(s.rang) AS m, LOGICAL_OR(t.vu IS NOT NULL) AS vu
   FROM (
     SELECT PARSE_DATE('%Y%m%d', event_date) AS jour, user_pseudo_id,
@@ -600,16 +600,17 @@ sous_etapes AS (
 sous_faits AS (
   -- (rang atteint au moins, page 1 vue ou non (vide : peu importe), genre, de, vers)
   SELECT * FROM UNNEST(ARRAY<STRUCT<seuil INT64, vu BOOL, genre STRING, de STRING, vers STRING>>[
-    (2, TRUE, 'continuent', 'obtenir_mon_offre', NULL),
-    (2, TRUE, 'fleche', 'obtenir_mon_offre', 'obtenir_mon_offre_2'),
+    (1, FALSE, 'entrees_directes', 'obtenir_mon_offre', NULL),
+    (1, NULL, 'arrivees', 'obtenir_mon_offre', NULL),
+    (2, NULL, 'continuent', 'obtenir_mon_offre', NULL),
+    (2, NULL, 'fleche', 'obtenir_mon_offre', 'obtenir_mon_offre_2'),
     (2, NULL, 'arrivees', 'obtenir_mon_offre_2', NULL),
     (3, NULL, 'continuent', 'obtenir_mon_offre_2', NULL),
     (3, NULL, 'fleche', 'obtenir_mon_offre_2', 'obtenir_mon_offre_3'),
     (3, NULL, 'arrivees', 'obtenir_mon_offre_3', NULL),
     (4, NULL, 'continuent', 'obtenir_mon_offre_3', NULL),
     (4, NULL, 'fleche', 'obtenir_mon_offre_3', 'obtenir_mon_offre_4'),
-    (4, NULL, 'arrivees', 'obtenir_mon_offre_4', NULL),
-    (2, FALSE, 'entrees_directes', 'obtenir_mon_offre_2', NULL)
+    (4, NULL, 'arrivees', 'obtenir_mon_offre_4', NULL)
   ])
 ),
 faits AS (

@@ -93,13 +93,13 @@ personne (son `/mon-panier`), sur 60 jours au plus.
   `form_derniere_page` = `/obtenir-mon-offre-1` à `-4`. Un retour en arrière
   ne renvoie rien.
   - **Page atteinte** : pour chaque personne et chaque jour, la page la plus
-    loin atteinte.
-  - **Page 1** : arrivées d'après les pages vues de `/obtenir-mon-offre`, comme
-    toute page.
-  - **Pages 2 à 4** : arrivées d'après l'événement.
-  - **Passages** : le passage page 1 → page 2 n'est compté que si GA4 a vu la
-    page 1. Sinon (cookies acceptés en cours de formulaire, par exemple), c'est
-    une arrivée directe sur la page 2.
+    loin atteinte. Atteindre une page, c'est avoir vu toutes celles d'avant :
+    une personne arrivée à la page 3 compte aux pages 1, 2 et 3, et dans les
+    passages 1 → 2 et 2 → 3.
+  - **Page 1** : les personnes vues sur `/obtenir-mon-offre` (pages vues) et
+    celles qui ont envoyé l'événement. Ces dernières peuvent ne pas avoir de
+    page vue (cookies acceptés en cours de formulaire, par exemple) : elles
+    comptent alors comme arrivées directes sur la page 1.
   - **Page 4 → `/signup`** : flèche non mesurable, donc pas de taux d'abandon
     sur la page 4. Une partie des personnes restées sur la page 4 est passée
     sur `/signup` (sous un autre identifiant GA4).

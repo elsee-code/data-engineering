@@ -467,16 +467,17 @@ GROUP BY s.jour, s.user_pseudo_id
 ),
 sous_faits AS (
 SELECT * FROM UNNEST(ARRAY<STRUCT<seuil INT64, vu BOOL, genre STRING, de STRING, vers STRING>>[
-(2, TRUE, 'continuent', 'obtenir_mon_offre', NULL),
-(2, TRUE, 'fleche', 'obtenir_mon_offre', 'obtenir_mon_offre_2'),
+(1, FALSE, 'entrees_directes', 'obtenir_mon_offre', NULL),
+(1, NULL, 'arrivees', 'obtenir_mon_offre', NULL),
+(2, NULL, 'continuent', 'obtenir_mon_offre', NULL),
+(2, NULL, 'fleche', 'obtenir_mon_offre', 'obtenir_mon_offre_2'),
 (2, NULL, 'arrivees', 'obtenir_mon_offre_2', NULL),
 (3, NULL, 'continuent', 'obtenir_mon_offre_2', NULL),
 (3, NULL, 'fleche', 'obtenir_mon_offre_2', 'obtenir_mon_offre_3'),
 (3, NULL, 'arrivees', 'obtenir_mon_offre_3', NULL),
 (4, NULL, 'continuent', 'obtenir_mon_offre_3', NULL),
 (4, NULL, 'fleche', 'obtenir_mon_offre_3', 'obtenir_mon_offre_4'),
-(4, NULL, 'arrivees', 'obtenir_mon_offre_4', NULL),
-(2, FALSE, 'entrees_directes', 'obtenir_mon_offre_2', NULL)
+(4, NULL, 'arrivees', 'obtenir_mon_offre_4', NULL)
 ])
 ),
 faits AS (

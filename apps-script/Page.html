@@ -793,8 +793,8 @@ function bulleEtape(e, sortiesE) {
       ' (« bienvenue » puis « success » compte une fois)'
     : rang >= 0
       ? `${se.page}, page ${rang + 1} sur ${se.etapes.length} du formulaire (même adresse) : ` +
-        (rang === 0 ? 'arrivées d’après les pages vues, passage aux pages suivantes' : 'arrivées') +
-        ` d’après l’événement GA4 ${se.evenement}`
+        (rang === 0 ? 'arrivées d’après les pages vues et ' : 'arrivées d’après ') +
+        `l’événement GA4 ${se.evenement} (atteindre une page, c’est avoir vu celles d’avant)`
       : e.domaine;
   let h = `<h3>${echapper(nomEtape(e.id))}</h3><div class="petit">${echapper(sousTitre)}</div><table>` +
     `<tr><td>Personnes arrivées</td><td class="n"><b>${nombre(a)}</b></td></tr>`;
@@ -814,10 +814,7 @@ function bulleEtape(e, sortiesE) {
     h += `<tr><td>→ plus loin, ${rang === 0 ? 'sans les pages suivantes du formulaire vues par GA4 (surtout vers /signup' : 'en sautant une étape (page non enregistrée par GA4'} ; pas un abandon)</td><td class="n">${nombre(saut)}</td></tr>`;
   }
   const directes = etat.index.entrees[e.id];
-  const texteDirectes = rang === 1
-    ? 'Dont arrivées sans que GA4 ait vu la page 1 (cookies acceptés en cours de formulaire, par exemple)'
-    : 'Dont arrivées directement sur cette page, sans l’étape d’avant (lien, e-mail, retour après une pause)';
-  if (directes) h += `<tr><td class="petit">${texteDirectes}</td><td class="n petit">${nombre(directes)}</td></tr>`;
+  if (directes) h += `<tr><td class="petit">Dont arrivées directement sur cette page, sans l’étape d’avant (lien, e-mail, retour après une pause)</td><td class="n petit">${nombre(directes)}</td></tr>`;
   h += '</table>' + courbe(e.id);
   return h;
 }

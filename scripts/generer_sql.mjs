@@ -629,27 +629,26 @@ resultat AS (
 )`;
 
 // Sous-étapes : par personne et par jour, rang de la page la plus loin atteinte
-// d'après l'événement, et première page vue par GA4 (page_view). Faits produits :
-// arrivées sur les pages 2 et suivantes, passages et sorties entre pages ; un
-// passage page 1 → page 2 n'est compté que si GA4 a vu la page 1, sinon c'est
-// une arrivée directe sur la page 2 (cookies acceptés en cours de formulaire).
+// d'après l'événement, et première page vue ou non par GA4 (page_view). Atteindre
+// une page, c'est avoir vu toutes celles d'avant (Eglantine, 8 oct.). Faits
+// produits : arrivées sur chaque page (la page 1 aussi pour les personnes que
+// GA4 n'y a pas vues, comptées alors comme arrivées directes), passages et
+// sorties entre pages.
 function sousEtapesSql() {
   const se = sousEtapes;
   const ids = se.etapes.map((x) => x.etape);
-  const faits = [];
+  const faits = [`(1, FALSE, 'entrees_directes', ${q(ids[0])}, NULL)`];
   ids.forEach((id, k) => {
     const rang = k + 1;
-    if (k > 0) faits.push(`(${rang}, NULL, 'arrivees', ${q(id)}, NULL)`);
+    faits.push(`(${rang}, NULL, 'arrivees', ${q(id)}, NULL)`);
     if (k + 1 < ids.length) {
-      const vu = k === 0 ? "TRUE" : "NULL";
-      faits.push(`(${rang + 1}, ${vu}, 'continuent', ${q(id)}, NULL)`, `(${rang + 1}, ${vu}, 'fleche', ${q(id)}, ${q(ids[k + 1])})`);
+      faits.push(`(${rang + 1}, NULL, 'continuent', ${q(id)}, NULL)`, `(${rang + 1}, NULL, 'fleche', ${q(id)}, ${q(ids[k + 1])})`);
     }
   });
-  faits.push(`(2, FALSE, 'entrees_directes', ${q(ids[1])}, NULL)`);
   return `sous_etapes AS (
   -- Pages de ${se.page} suivies par l'événement ${se.evenement} (paramètre
   -- ${se.parametre}) : m = rang de la page la plus loin atteinte ce jour-là,
-  -- vu = la première page a été vue par GA4 (page_view) ce jour-là.
+  -- vu = la première page a aussi été vue par GA4 (page_view) ce jour-là.
   SELECT s.jour, s.user_pseudo_id, MAX(s.rang) AS m, LOGICAL_OR(t.vu IS NOT NULL) AS vu
   FROM (
     SELECT PARSE_DATE('%Y%m%d', event_date) AS jour, user_pseudo_id,
