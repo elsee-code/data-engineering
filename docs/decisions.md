@@ -20,12 +20,14 @@ pourquoi. Ce journal prime sur [`brief.md`](brief.md).
 [`deploiement_apps_script.md`](deploiement_apps_script.md), d'abord en
 déploiement de test, et fait ses retours avant la publication.
 
-**Nombre leads** (8 oct.) : en attente de l'accord d'Eglantine pour remplacer
-la fonction BigQuery `elsee_funnel.agregats`. Ensuite, et dans cet ordre,
-Eglantine remplace `Page.html`, `Graphe.gs` et `Code.gs` dans Apps Script et
-publie une nouvelle version ([`deploiement_apps_script.md`](deploiement_apps_script.md),
+**Nombre leads** (8 oct.) : la fonction BigQuery est à jour. Eglantine
+remplace `Page.html`, `Graphe.gs` et `Code.gs` dans Apps Script et publie une
+nouvelle version ([`deploiement_apps_script.md`](deploiement_apps_script.md),
 « Mettre à jour la page plus tard »). Cela met aussi en ligne le tableau
-« Pages vues par personne » s'il ne l'est pas encore.
+« Pages vues par personne » s'il ne l'est pas encore. Trois choix de mise en
+œuvre attendent encore sa confirmation (entrée de la session, une personne
+comptée à son premier moment, nouveau lead si les coordonnées sont redonnées
+plus tard : voir l'entrée du 8 oct. ci-dessous).
 
 Autres questions :
 
@@ -103,8 +105,12 @@ celles de la fonction en place ; page dans Chromium (ordinateur, téléphone,
 bulle, export PNG ; « indisponible » plutôt que zéro avec l'ancienne
 fonction), aucune erreur. Texte de la fonction : 22 Ko sur 32.
 
-Reste à faire : remplacer la fonction BigQuery (accord d'Eglantine attendu),
-puis mettre à jour la page dans Apps Script.
+Fonction BigQuery `elsee_funnel.agregats` remplacée le 8 oct., sur accord
+d'Eglantine : elle renvoie exactement les mêmes lignes que `agregats.sql` sur
+les 5 et 6 oct. (871 lignes, dont les leads). La page déjà en ligne continue de
+fonctionner (elle ignore les nouvelles lignes). Reste à faire par Eglantine :
+remplacer `Page.html`, `Graphe.gs` et `Code.gs` dans Apps Script, puis publier
+une nouvelle version.
 
 ## 2026-10-08 — Tableau « Pages vues par personne » (Eglantine)
 
